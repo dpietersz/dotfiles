@@ -1,8 +1,8 @@
 #!/bin/bash
 {{- if not .remote }}
 
-# Check if already installed
-if command -v zed >/dev/null; then
+# Check if Zed editor is installed (not system zed utility)
+if [ -f "$HOME/.local/zed.app/bin/zed" ] || [ -f "$HOME/.local/bin/zed" ]; then
   echo "Zed already installed"
   exit 0
 fi
