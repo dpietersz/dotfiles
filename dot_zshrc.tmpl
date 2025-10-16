@@ -54,12 +54,13 @@ elif command -v vim > /dev/null ; then
   export VISUAL="vim"
 fi
 
-if command -v lsd > /dev/null ; then
-  alias ls="lsd"
-  alias ll="ls -lgh"
-  alias la='ls -a'
-  alias lla='ls -lgha'
-  alias lt='ls --tree'
+alias ls='ls --color=auto'
+
+if command -v eza > /dev/null ; then
+  alias la='eza -laghm --all --icons --git --color=always --group-duirectories-first'
+  alias ll="eza -l --color=always --group-directories-first --icons"
+  alias lt="eza -aT --color=always --group-directories-first --icons -I '.git|.vscode|node_modules'"
+  alias l="eza -lah --color=always --group-directories-first --icons"
 fi
 
 # enable zsh vi-mode
