@@ -14,14 +14,7 @@ else
   echo "Homebrew not installed. Visit: https://zed.dev/download"
 fi
 
-{{- else if eq .chezmoi.osRelease.id "bluefin" }}
-if command -v flatpak >/dev/null; then
-  flatpak install -y flathub dev.zed.Zed
-else
-  echo "Flatpak not installed."
-fi
-
-{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+{{- else if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
 curl -f https://zed.dev/install.sh | sh
 
 {{- else }}
