@@ -1,19 +1,56 @@
-set-window-option -g mode-keys vi
-bind-key -r -T prefix k select-pane -U
-bind-key -r -T prefix j select-pane -D
-bind-key -r -T prefix h select-pane -L
-bind-key -r -T prefix l select-pane -R
+# don't do anything when a 'bell' rings
+set -g visual-activity off
+set -g visual-bell off
+set -g visual-silence off
+setw -g monitor-activity off
+set -g bell-action none
 
-set-option -sg escape-time 10
+set-option -g history-limit 25000
+set -g mouse on
 
-{{ if and .chezmoi.osRelease (eq .chezmoi.osRelease.id "ubuntu" "debian") -}}
-source /usr/share/powerline/bindings/tmux/powerline.conf
+# for neovim
+set -sg escape-time 10
+set-option -g focus-events on
+set-option -g allow-passthrough on
 
-{{- else if and .chezmoi.osRelease (eq .chezmoi.osRelease.id "fedora") -}}
-source /usr/share/tmux/powerline.conf
+# vi for copy mode
+set -g mode-keys vi
 
-{{- else if eq .chezmoi.os "darwin" -}}
-run-shell "/Users/{{ .chezmoi.username }}/Library/Python/3.10/bin/powerline-daemon -q"
-run-shell "/Users/{{ .chezmoi.username }}/Library/Python/3.10/bin/powerline-config tmux setup"
+# vi for command status
+set -g status-keys vi
 
-{{- end }}
+# disable status
+set -g status on
+
+# count the panes from 1
+set -g base-index 1
+setw -g pane-base-index 1
+
+# reload configuration
+bind-key -r r source-file ~/.tmux.conf
+
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ',xterm-256color:Tc'
+set -a terminal-features 'xterm-256color':RGB
+set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm'  # undercurl support
+# set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'  # underscore colours - needs tmux-3.0
+
+# List of plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'christoomey/vim-tmux-navigator'
+set -g @plugin 'tmux-plugins/tmux-yank'
+
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @resurrect-processes 'ssh psql'
+set -g @resurrect-strategy-nvim 'session'
+set -g @resurrect-save on
+
+
+set -g @plugin 'egel/tmux-gruvbox'
+set -g @tmux-gruvbox 'dark'
+set -g @plugin 'omerxx/tmux-sessionx'
+set -g @sessionx-bind 'o'
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+run '~/.tmux/plugins/tpm/tpm'
+set -g focus-events on
