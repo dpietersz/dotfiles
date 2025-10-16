@@ -8,7 +8,6 @@ if command -v zen-browser >/dev/null || command -v zen >/dev/null; then
 fi
 
 {{- if eq .chezmoi.os "darwin" }}
-# macOS - use Homebrew
 if command -v brew >/dev/null; then
   brew install --cask zen-browser
 else
@@ -16,22 +15,20 @@ else
 fi
 
 {{- else if eq .chezmoi.osRelease.id "bluefin" }}
-# Bluefin - use COPR
-if ! dnf copr list | grep -q "sneexy/zen-browser"; then
-  sudo dnf copr enable -y sneexy/zen-browser
+if command -v flatpak >/dev/null; then
+  flatpak install -y flathub io.github.zen_browser.zen
+else
+  echo "Flatpak not installed."
 fi
-rpm-ostree install zen-browser
-echo "Reboot required to complete Zen Browser installation"
 
 {{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
-# Fedora - use COPR
 if command -v dnf >/dev/null; then
   sudo dnf copr enable -y sneexy/zen-browser
   sudo dnf install -y zen-browser
 fi
 
 {{- else }}
-echo "No installation instructions for Zen Browser on this distribution."
+echo "No installation instructions for this distribution."
 echo "Visit: https://zen-browser.app/download/"
 
 {{- end }}
