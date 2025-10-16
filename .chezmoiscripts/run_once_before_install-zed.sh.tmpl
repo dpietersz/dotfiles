@@ -15,11 +15,13 @@ else
 fi
 
 {{- else if eq .chezmoi.osRelease.id "bluefin" }}
-# Bluefin - use official install script
-curl -f https://zed.dev/install.sh | sh
+if command -v flatpak >/dev/null; then
+  flatpak install -y flathub dev.zed.Zed
+else
+  echo "Flatpak not installed."
+fi
 
 {{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
-# Fedora - use official install script
 curl -f https://zed.dev/install.sh | sh
 
 {{- else }}
