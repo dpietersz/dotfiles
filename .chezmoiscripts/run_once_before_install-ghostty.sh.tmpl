@@ -1,0 +1,63 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if eq .chezmoi.os "darwin" }}
+if command -v brew >/dev/null; then
+  brew install --cask ghostty
+else
+  echo "Homebrew not installed. Download from: https://ghostty.org/download"
+fi
+
+{{- else if eq .chezmoi.osRelease.id "bazzite" "bluefin" }}
+. /etc/os-release
+curl -fsSL "https://copr.fedorainfracloud.org/coprs/scottames/ghostty/repo/fedora-${VERSION_ID}/scottames-ghostty-fedora-${VERSION_ID}.repo" | sudo tee /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo > /dev/null
+rpm-ostree refresh-md && rpm-ostree install ghostty
+echo "Reboot required to complete Ghostty installation"
+
+{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+if command -v dnf >/dev/null; then
+  sudo dnf copr enable -y scottames/ghostty
+  sudo dnf install -y ghostty
+fi
+
+{{- else if eq .chezmoi.osRelease.id "arch" "manjaro" }}
+if command -v pacman >/dev/null; then
+  sudo pacman -S --noconfirm ghostty
+fi
+
+{{- else if eq .chezmoi.osRelease.id "void" }}
+if command -v xbps-install >/dev/null; then
+  sudo xbps-install -y ghostty
+fi
+
+{{- else if eq .chezmoi.osRelease.id "ubuntu" }}
+UBUNTU_VERSION="{{ .chezmoi.osRelease.versionCodename }}"
+LATEST_URL=$(curl -s https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest | grep "browser_download_url.*${UBUNTU_VERSION}.*\.deb" | cut -d '"' -f 4)
+
+if [ -n "$LATEST_URL" ]; then
+  cd /tmp
+  curl -LO "$LATEST_URL"
+  sudo apt install -y ./ghostty_*.deb
+  rm ghostty_*.deb
+else
+  echo "No Ghostty package found for Ubuntu ${UBUNTU_VERSION}"
+  echo "Check: https://github.com/mkasberg/ghostty-ubuntu/releases"
+fi
+
+{{- else if eq .chezmoi.osRelease.id "debian" }}
+# Add debian.griffo.io repository GPG key
+curl -sS https://debian.griffo.io/EA0F721D231FDD3A0A17B9AC7808B4DD62C41256.asc | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/debian.griffo.io.gpg
+
+# Add repository to sources
+echo "deb https://debian.griffo.io/apt $(lsb_release -sc 2>/dev/null) main" | sudo tee /etc/apt/sources.list.d/debian.griffo.io.list
+
+# Update and install
+sudo apt update
+sudo apt install -y ghostty
+
+{{- else }}
+echo "Ghostty not available for this distribution."
+echo "Build from source: https://ghostty.org/docs/install/build"
+
+{{- end }}
+{{- end }}

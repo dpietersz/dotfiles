@@ -1,0 +1,28 @@
+#!/bin/bash
+{{- if not .remote }}
+
+# Check if Homebrew is already installed
+if command -v brew >/dev/null; then
+  echo "Homebrew already installed"
+  exit 0
+fi
+
+{{- if eq .chezmoi.os "darwin" }}
+# macOS - Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+{{- else if eq .chezmoi.osRelease.id "bazzite" "bluefin" }}
+# Fedora Atomic (Bluefin/Bazzite) - Usually pre-installed
+echo "Homebrew should be pre-installed on Bluefin/Bazzite"
+echo "If missing, manually install from: https://brew.sh"
+
+{{- else if or (eq .chezmoi.osRelease.id "fedora" "centos") (eq .chezmoi.osRelease.idLike "fedora") (eq .chezmoi.osRelease.id "arch" "manjaro" "void" "ubuntu" "debian") }}
+# Linux - Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+{{- else }}
+echo "Homebrew installation not configured for this distribution"
+echo "Visit: https://brew.sh"
+
+{{- end }}
+{{- end }}
