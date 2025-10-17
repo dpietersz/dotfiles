@@ -2,19 +2,13 @@
 {{- $inDistrobox := env "CONTAINER_ID" | not | not -}}
 {{- $containerName := output "hostname" | trim -}}
 
-{{- /* Only prompt if we're on a host machine (not in distrobox/remote) */ -}}
-{{- $installArchToolbox := false -}}
-{{- if not $remote -}}
-{{-   $installArchToolbox = promptBoolOnce . "installArchToolbox" "Do you want to install arch-toolbox container" false -}}
-{{- end -}}
-
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
   remote = {{ $remote }}
   inDistrobox = {{ $inDistrobox }}
   containerName = {{ $containerName | quote }}
-  installArchToolbox = {{ $installArchToolbox }}
+  installArchToolbox = true
   dotfilesRepo = {{ .chezmoi.sourceDir | quote }}
 
 {{- if not $remote }}
