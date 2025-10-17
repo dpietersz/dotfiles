@@ -1,0 +1,15 @@
+#!/bin/bash
+{{- if and .inDistrobox (eq .containerName "arch-toolbox") }}
+
+set -euo pipefail
+
+echo "==> Updating arch-toolbox packages"
+
+# Force update all packages
+yay -Syu --noconfirm
+
+echo "✓ Updates complete"
+
+{{- else }}
+exit 0
+{{- end }}
