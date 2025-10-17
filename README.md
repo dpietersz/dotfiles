@@ -84,12 +84,12 @@ DevPod is supported via `.chezmoiexternals/devpod.toml`, which ensures the DevPo
 
 ## Highlights
 
-- **Shells**: zsh (default with vi-mode), bash (modular config)
+- **Shells**: bash (default, modular config with vi-mode), zsh (with vi-mode)
 - **Prompt**: [starship](https://starship.rs/) with Gruvbox theme
 - **Editors**: [Neovim](https://neovim.io/) (LazyVim-based), [Zed](https://zed.dev/), [opencode](https://github.com/jdx/opencode)
 - **Terminals**: [Ghostty](https://ghostty.org/), [Alacritty](https://alacritty.org/)
 - **Browser**: [Zen Browser](https://zen-browser.app/)
-- **Multiplexers**: tmux, [zellij](https://zellij.dev/)
+- **Multiplexers**: tmux, [zellij](https://zellij.dev/) (default shell: bash)
 - **Tools**: Managed with [mise](https://mise.jdx.dev/) - bat, btop, eza, fd, fzf, lazygit, lazydocker, ripgrep, yazi, zoxide, and more
 - **AI Tools**: [llm](https://llm.datasette.io/) CLI (via uv)
 - **Kubernetes**: k9s with custom skin
