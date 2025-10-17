@@ -16,20 +16,3 @@ starship = "1.23.0"
 yazi = "latest"
 zellij = "0.43.1"
 zoxide = "latest"
-
-{{- if eq .containerName "arch-toolbox" }}
-# Arch toolbox specific tools
-go = "latest"
-rust = "latest"
-{{- end }}
-
-# Tasks
-[tasks.distrobox-update]
-description = "Update all packages in distrobox"
-run = '''
-{{- if eq .containerName "arch-toolbox" }}
-yay -Syu --noconfirm
-{{- else }}
-echo "Not in a configured distrobox"
-{{- end }}
-'''
