@@ -1,0 +1,67 @@
+#!/bin/bash
+{{- if and (not .inDistrobox) .installArchToolbox }}
+
+set -euo pipefail
+
+echo "==> Creating and setting up arch-toolbox..."
+
+# Check if distrobox is installed
+if ! command -v distrobox &> /dev/null; then
+    echo "⚠ distrobox not found. Installing..."
+    {{- if eq .chezmoi.osRelease.id "fedora" }}
+    sudo dnf install -y distrobox podman
+    {{- else if eq .chezmoi.osRelease.id "arch" }}
+    sudo pacman -S --noconfirm distrobox podman
+    {{- else if or (eq .chezmoi.osRelease.id "ubuntu") (eq .chezmoi.osRelease.id "debian") }}
+    sudo apt-get update && sudo apt-get install -y distrobox podman
+    {{- end }}
+fi
+
+# Check if arch-toolbox already exists
+if distrobox list | grep -q "arch-toolbox"; then
+    echo "✓ arch-toolbox already exists"
+    exit 0
+fi
+
+# Create the container
+echo "Creating arch-toolbox container..."
+distrobox create \
+    --name arch-toolbox \
+    --image quay.io/toolbx/arch-toolbox:latest \
+    --pull \
+    --yes
+
+echo "✓ arch-toolbox container created"
+
+# Get git remote URL if available
+DOTFILES_REPO=""
+if [ -d "{{ .chezmoi.sourceDir }}/.git" ]; then
+    DOTFILES_REPO=$(cd "{{ .chezmoi.sourceDir }}" && git config --get remote.origin.url || echo "")
+fi
+
+# Clone dotfiles and run setup inside the container
+if [ -n "$DOTFILES_REPO" ]; then
+    echo "Cloning dotfiles and running setup inside arch-toolbox..."
+    distrobox enter arch-toolbox -- bash -c "
+        set -euo pipefail
+        
+        # Clone dotfiles if not exists
+        if [ ! -d ~/.dotfiles ]; then
+            git clone '$DOTFILES_REPO' ~/.dotfiles
+        fi
+        
+        # Run setup
+        cd ~/.dotfiles
+        ./setup
+    "
+    echo "✓ arch-toolbox fully configured"
+else
+    echo "⚠ No git remote found. You can manually setup the container with:"
+    echo "   distrobox enter arch-toolbox"
+    echo "   git clone <your-repo> ~/.dotfiles && cd ~/.dotfiles && ./setup"
+fi
+
+{{- else }}
+# Skip if in distrobox or user chose not to install
+exit 0
+{{- end }}
