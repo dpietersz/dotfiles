@@ -2,3 +2,4 @@
 **/*.zwc
 setup
 README.md
+.chezmoiscripts/create-arch-toolbox.sh
