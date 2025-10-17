@@ -41,17 +41,6 @@ alias ....="cd ../../.."
 alias .....="cd ../../../.."
 alias ~="cd ~"
 alias cl="clear"
-alias dev="cd '$DEV'"
-alias scripts="cd '$SCRIPTS'"
-alias projects="cd '$PROJECTS'"
-alias dot="cd '$DOTFILES'"
-alias repos="cd '$REPOS'"
-alias glrepos="cd '$GLREPOS'"
-alias ghrepos="cd '$GHREPOS'"
-alias rwdot="cd '$REPOS/github.com/rwxrob/dot'"
-alias mvdot="cd '$REPOS/github.com/mischavandenburg/dotfiles'"
-alias tpdot="cd '$REPOS/github.com/ThePrimeagen/.dotfiles/'"
-alias ttdot="cd '$REPOS/github.com/techno-tim'"
 
 # ------------------ Shell / Config ------------------
 
@@ -73,7 +62,7 @@ alias la="eza -laghm --all --icons --git --color=always --group-directories-firs
 alias ll="eza -l --color=always --group-directories-first --icons"
 alias lt="eza -aT --color=always --group-directories-first --icons -I '.git|.vscode|node_modules'"
 alias l="eza -lah --color=always --group-directories-first --icons"
-alias last="find . -type f -not -path "*/\.*" -exec ls -lrt {} +"
+alias last='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
 
 # ------------------ passwordstore ------------------
 

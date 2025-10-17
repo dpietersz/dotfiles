@@ -1,11 +1,16 @@
 {{- $remote := or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not) -}}
 
+# Source zsh shell options first (includes compinit)
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/15-shell-options.sh" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/15-shell-options.sh"
+
 # Source shared shell configs
 for file in "${XDG_CONFIG_HOME:-$HOME/.config}/shell"/*.sh; do
   [[ -r "$file" ]] && source "$file"
 done
 
-# Source zsh-specific configs
+# Source remaining zsh-specific configs
 for file in "${XDG_CONFIG_HOME:-$HOME/.config}/zsh"/*.sh; do
+  # Skip 15-shell-options.sh since we already sourced it
+  [[ "$(basename "$file")" == "15-shell-options.sh" ]] && continue
   [[ -r "$file" ]] && source "$file"
 done
