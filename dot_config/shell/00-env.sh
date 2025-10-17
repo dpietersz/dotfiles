@@ -1,4 +1,7 @@
-# 00-env.sh - Basic Environment variables
+# 00-env.sh - Basic Environment variables (shared between bash and zsh)
+
+# Locale settings
+export LANG="en_US.UTF-8"
 
 # (neo)vim
 if command -v nvim >/dev/null; then
@@ -17,11 +20,19 @@ export SAVEHIST=25000
 export HISTCONTROL=ignorespace
 
 export DOTFILES="$HOME/dotfiles"
-export SCRIPTS="$DOTFILES/dot_local/executable_bin"
+export SCRIPTS="$HOME/.local/bin/scripts"
 
-export DEV="$HOME/Dev"
+export DEV="$HOME/dev"
 export PROJECTS="$DEV/Projects"
 export NOTES="$DEV/Notes"
+export DESKTOP="$DEV/Desktop"
+export DOWNLOADS="$DEV/Downloads"
+export TEMPLATES="$DEV/Templates"
+export PUBLIC="$DEV/Public"
+export MUSIC="$DEV/Music"
+export PICTURES="$DEV/Pictures"
+export VIDEOS="$DEV/Videos"
+export DOCUMENTS="$DEV/Documents"
 
 export GITUSER="dpietersz"
 export REPOS="$DEV/Repos"
@@ -30,6 +41,11 @@ export GLREPOS="$REPOS/gitlab.com"
 export AZREPOS="$REPOS/dev.azure.com"
 
 export BROWSER="zen"
+
+# Dagger - disable nag messages
+if command -v dagger >/dev/null; then
+  export DAGGER_NO_NAG=1
+fi
 
 if command -v pass &>/dev/null; then
   export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
@@ -49,3 +65,4 @@ if command -v pass &>/dev/null; then
 else
   echo "Install pass to load API keys securely."
 fi
+

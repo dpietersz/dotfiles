@@ -1,4 +1,4 @@
-# 40-functions.sh — Custom Shell Functions
+# 30-functions.sh — Custom Shell Functions (shared between bash and zsh)
 
 # ------------------------------
 # Archive Helpers
@@ -123,3 +123,4 @@ html_to_md() {
   local base="${input%.html}"
   pandoc --resource-path="$(dirname "$input")" -f html -t markdown "$input" -o "${base}.md"
 }
+

@@ -1,4 +1,4 @@
-# 50-aliases.sh — Custom Aliases
+# 40-aliases.sh — Custom Aliases (shared between bash and zsh)
 
 # ------------------ Tools ------------------
 
@@ -14,9 +14,9 @@ if command -v kubectl >/dev/null; then
   alias k="kubectl"
 fi
 
-# if command -v zoxide >/dev/null; then
-#   alias cd="z"
-# fi
+if command -v zoxide >/dev/null; then
+  alias cd="z"
+fi
 
 # use bat instead of cat
 if command -v bat >/dev/null; then
@@ -56,9 +56,16 @@ alias ttdot="cd '$REPOS/github.com/techno-tim'"
 # ------------------ Shell / Config ------------------
 
 alias espansoconf="v '$DOTFILES/dot_config/espanso/match/base.yml'"
-alias bashconf="v ~/.bashrc"
 alias nvimconf="cd '$DOTFILES/dot_config/nvim && nvim init.lua'"
-alias sbr="source '$HOME/.bashrc'"
+
+# Shell-specific aliases (detect current shell)
+if [ -n "$BASH_VERSION" ]; then
+  alias bashconf="v ~/.bashrc"
+  alias sbr="source '$HOME/.bashrc'"
+elif [ -n "$ZSH_VERSION" ]; then
+  alias zshconf="v ~/.zshrc"
+  alias szr="source '$HOME/.zshrc'"
+fi
 
 # ------------------ Better ls commands ------------------
 alias ls="ls --color=auto"
@@ -80,3 +87,4 @@ alias psearch="pass search"
 alias psh="pass show"
 alias psc="pass show -c"
 alias ppp="pass show -c Sites/canva.com"
+
