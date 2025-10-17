@@ -60,18 +60,16 @@ fi
 if command -v bat >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
     eval "$(bat --completion bash)"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    eval "$(bat --completion zsh)"
   fi
+  # zsh: bat completion is typically installed via package manager
 fi
 
 # chezmoi - dotfile manager
 if command -v chezmoi >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
     eval "$(chezmoi completion bash)"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    eval "$(chezmoi completion zsh)"
   fi
+  # zsh: chezmoi completion is typically installed via package manager
 fi
 
 # eza - modern ls replacement
@@ -95,27 +93,23 @@ fi
 if command -v zellij >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
     eval "$(zellij setup --generate-completion bash)"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    eval "$(zellij setup --generate-completion zsh)"
   fi
+  # zsh: zellij completion is typically installed via package manager
 fi
 
 # uv - Python package installer
 if command -v uv >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
     eval "$(uv generate-shell-completion bash)"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    eval "$(uv generate-shell-completion zsh)"
   fi
+  # zsh: uv completion is typically installed via package manager
 fi
 
 # npm - Node package manager (from node)
 if command -v npm >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
     eval "$(npm completion)"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    # npm completion for zsh
-    eval "$(npm completion)"
   fi
+  # zsh: npm completion is typically installed via package manager or use zsh-completions
 fi
 
