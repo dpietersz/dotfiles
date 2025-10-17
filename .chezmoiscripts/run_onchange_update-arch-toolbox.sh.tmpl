@@ -1,15 +1,41 @@
 #!/bin/bash
-{{- if and .inDistrobox (eq .containerName "arch-toolbox") }}
 
 set -euo pipefail
 
-echo "==> Updating arch-toolbox packages"
+{{- if .inDistrobox }}
+{{-   if eq .containerName "arch-toolbox" }}
 
-# Force update all packages
+# ============================================
+# RUNNING INSIDE arch-toolbox CONTAINER
+# ============================================
+
+echo "==> Updating packages inside arch-toolbox..."
 yay -Syu --noconfirm
+echo "✓ arch-toolbox updated from inside container"
 
-echo "✓ Updates complete"
-
-{{- else }}
+{{-   else }}
+# Inside distrobox but not arch-toolbox, skip
 exit 0
+{{-   end }}
+{{- else }}
+
+# ============================================
+# RUNNING ON HOST MACHINE
+# ============================================
+
+# Check if arch-toolbox exists
+if ! distrobox list | grep -q "arch-toolbox"; then
+    echo "⚠ arch-toolbox container not found, skipping update"
+    exit 0
+fi
+
+# Check if container is running
+if ! distrobox list | grep "arch-toolbox" | grep -q "Up"; then
+    echo "Starting arch-toolbox container..."
+fi
+
+echo "==> Updating arch-toolbox from host..."
+distrobox enter arch-toolbox -- bash -c "yay -Syu --noconfirm"
+echo "✓ arch-toolbox updated from host"
+
 {{- end }}
