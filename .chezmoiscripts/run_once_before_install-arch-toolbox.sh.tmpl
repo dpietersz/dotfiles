@@ -1,0 +1,77 @@
+#!/bin/bash
+{{- if and .inDistrobox (eq .containerName "arch-toolbox") }}
+
+set -euo pipefail
+
+echo "==> Setting up arch-toolbox environment"
+
+# Install base-devel and git if not present
+if ! pacman -Qi base-devel &> /dev/null; then
+    echo "Installing base-devel..."
+    sudo pacman -S --needed --noconfirm base-devel git
+fi
+
+# Install yay if not present
+if ! command -v yay &> /dev/null; then
+    echo "Installing yay..."
+    cd /tmp
+    git clone https://aur.archlinux.org/yay.git
+    cd yay
+    makepkg -si --noconfirm
+    cd ..
+    rm -rf yay
+fi
+
+# Install AUR packages
+echo "Installing AUR packages..."
+yay -S --needed --noconfirm \
+    beekeeper-studio \
+    storageexplorer \
+    pass \
+    cursor-appimage \
+    obsidian \
+    anytype-bin \
+    teams-for-linux \
+    zen-browser-bin \
+    thorium-browser-bin \
+    brave-bin
+
+# Install browserpass for all browsers
+echo "Installing browserpass..."
+sudo pacman -S --needed --noconfirm browserpass
+yay -S --needed --noconfirm browserpass-chromium browserpass-chrome
+
+# Configure browserpass for each browser
+echo "Configuring browserpass..."
+cd /usr/lib/browserpass
+
+# Zen Browser (Firefox-based)
+make hosts-firefox-user
+
+# Brave Browser
+make hosts-brave-user
+
+# Thorium (Chromium-based)
+make hosts-chromium-user
+
+echo "✓ All packages installed"
+
+# Export applications to host
+echo "Exporting applications to host..."
+
+distrobox-export --app beekeeper-studio
+distrobox-export --app storageexplorer  
+distrobox-export --app cursor
+distrobox-export --app obsidian
+distrobox-export --app anytype
+distrobox-export --app teams-for-linux
+distrobox-export --app zen-browser
+distrobox-export --app thorium-browser
+distrobox-export --app brave
+
+echo "✓ arch-toolbox setup complete"
+
+{{- else }}
+# Not in arch-toolbox, skip
+exit 0
+{{- end }}
