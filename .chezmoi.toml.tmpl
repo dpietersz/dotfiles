@@ -1,15 +1,10 @@
 {{- $remote := or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not) -}}
-{{- $inDistrobox := env "CONTAINER_ID" | not | not -}}
 {{- $containerName := output "hostname" | trim -}}
 
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
   remote = {{ $remote }}
-  inDistrobox = {{ $inDistrobox }}
-  containerName = {{ $containerName | quote }}
-  installArchToolbox = true
-  dotfilesRepo = {{ .chezmoi.sourceDir | quote }}
 
 {{- if not $remote }}
 [git]
