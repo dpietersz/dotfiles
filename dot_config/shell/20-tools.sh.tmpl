@@ -56,3 +56,71 @@ if command -v zoxide >/dev/null; then
   eval "$(zoxide init $CURRENT_SHELL)"
 fi
 
+# bat - better cat with syntax highlighting
+if command -v bat >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(bat --completion bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    eval "$(bat --completion zsh)"
+  fi
+fi
+
+# chezmoi - dotfile manager
+if command -v chezmoi >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(chezmoi completion bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    eval "$(chezmoi completion zsh)"
+  fi
+fi
+
+# eza - modern ls replacement
+if command -v eza >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    # eza bash completion is typically installed via package manager
+    # or can be sourced from: https://github.com/eza-community/eza/blob/main/completions/bash/eza
+    [[ -f /usr/share/bash-completion/completions/eza ]] && source /usr/share/bash-completion/completions/eza
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    # eza zsh completion is typically in fpath
+    # or can be sourced from: https://github.com/eza-community/eza/blob/main/completions/zsh/_eza
+    [[ -f /usr/share/zsh/site-functions/_eza ]] && source /usr/share/zsh/site-functions/_eza
+  fi
+fi
+
+# yazi - terminal file manager
+if command -v yazi >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(yazi --completion bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    eval "$(yazi --completion zsh)"
+  fi
+fi
+
+# zellij - terminal multiplexer
+if command -v zellij >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(zellij setup --generate-completion bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    eval "$(zellij setup --generate-completion zsh)"
+  fi
+fi
+
+# uv - Python package installer
+if command -v uv >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(uv generate-shell-completion bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    eval "$(uv generate-shell-completion zsh)"
+  fi
+fi
+
+# npm - Node package manager (from node)
+if command -v npm >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(npm completion)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    # npm completion for zsh
+    eval "$(npm completion)"
+  fi
+fi
+
