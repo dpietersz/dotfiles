@@ -16,9 +16,25 @@ This repository contains my personal dotfiles, managed with [chezmoi](https://ww
 ├── .chezmoiexternals/         # chezmoi-managed external resources (tools, fonts, configs)
 ├── .chezmoiscripts/           # chezmoi hook scripts (e.g., install packages)
 ├── .devcontainer/             # VS Code Dev Container config (Dockerfile, devcontainer.json)
-├── dot_*                      # Dotfiles (bashrc, gitconfig, tmux, wezterm, zshrc, etc.)
-├── dot_config/                # XDG config files (alacritty, git, k9s, mise, nvim, opencode, starship, zellij)
-├── private_dot_gnupg/         # Private GPG config (not tracked by chezmoi)
+├── dot_bashrc.tmpl            # Bash configuration
+├── dot_gitconfig              # Git configuration
+├── dot_psqlrc.tmpl            # PostgreSQL client configuration
+├── dot_tmux.conf.tmpl         # tmux configuration
+├── dot_zshrc.tmpl             # Zsh configuration
+├── dot_dircolors              # Directory colors configuration
+├── dot_config/                # XDG config files
+│   ├── alacritty/             # Alacritty terminal config
+│   ├── bash/                  # Modular bash configs (env, path, tools, functions, aliases)
+│   ├── ghostty/               # Ghostty terminal config
+│   ├── git/                   # Git ignore patterns
+│   ├── k9s/                   # Kubernetes k9s config and skins
+│   ├── mise/                  # mise tool manager config
+│   ├── nvim/                  # Neovim (LazyVim) config
+│   ├── opencode/              # opencode config
+│   ├── starship.toml          # Starship prompt config (Gruvbox theme)
+│   ├── zellij/                # Zellij multiplexer config
+│   └── user-dirs.*            # Custom XDG user directories
+├── private_dot_gnupg/         # Private GPG config
 ├── setup                      # Bootstrap script for new machines
 ```
 
@@ -35,9 +51,14 @@ Clone the repo and run the setup script:
 ```
 
 This will:
-- Set your shell to zsh (if available)
 - Install chezmoi (if not present)
+- Create custom dev directory structure (`~/dev/Projects`, `~/dev/Repos`, etc.)
+- Install Homebrew (macOS/Linux, local only)
+- Install GUI applications (Ghostty, Zed, Zen browser - local only)
+- Download external resources (mise, fonts, LazyVim config)
 - Apply all dotfiles to your home directory
+- Install all tools via mise (neovim, starship, zellij, etc.)
+- Install llm CLI tool via uv
 
 ### 2. chezmoi
 
@@ -52,7 +73,7 @@ DevPod is supported via `.chezmoiexternals/devpod.toml`, which ensures the DevPo
 
 ### 4. VS Code Dev Containers
 
-- The `.devcontainer/` folder contains a `devcontainer.json` and a `Dockerfile` based on `ghcr.io/rio/toolbox:latest`.
+- The `.devcontainer/` folder contains a `devcontainer.json` and a `Dockerfile` based on `mcr.microsoft.com/devcontainers/base:debian-13`.
 - Open the repo in VS Code and "Reopen in Container" to get a fully provisioned environment with all tools and dotfiles.
 
 ### 5. GitHub Codespaces
@@ -63,14 +84,17 @@ DevPod is supported via `.chezmoiexternals/devpod.toml`, which ensures the DevPo
 
 ## Highlights
 
-- **Shells**: zsh (default), bash
-- **Prompt**: [starship](https://starship.rs/) with custom theme
-- **Editor**: [Neovim](https://neovim.io/) (LazyVim-based), with plugins and extras
-- **Terminal**: [WezTerm](https://wezfurlong.org/wezterm/), [alacritty](https://alacritty.org/)
-- **Multiplexers**: tmux, zellij
-- **Tools**: Managed with [mise](https://mise.jdx.dev/) (see `.config/mise/config.toml`)
+- **Shells**: zsh (default with vi-mode), bash (modular config)
+- **Prompt**: [starship](https://starship.rs/) with Gruvbox theme
+- **Editors**: [Neovim](https://neovim.io/) (LazyVim-based), [Zed](https://zed.dev/), [opencode](https://github.com/jdx/opencode)
+- **Terminals**: [Ghostty](https://ghostty.org/), [Alacritty](https://alacritty.org/)
+- **Browser**: [Zen Browser](https://zen-browser.app/)
+- **Multiplexers**: tmux, [zellij](https://zellij.dev/)
+- **Tools**: Managed with [mise](https://mise.jdx.dev/) - bat, btop, eza, fd, fzf, lazygit, lazydocker, ripgrep, yazi, zoxide, and more
+- **AI Tools**: [llm](https://llm.datasette.io/) CLI (via uv)
 - **Kubernetes**: k9s with custom skin
-- **Fonts**: DepartureMono (auto-installed)
+- **Fonts**: DepartureMono, Monaspace Nerd Fonts (auto-installed)
+- **Security**: GPG/SSH integration (local only)
 
 ---
 
