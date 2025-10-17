@@ -1,0 +1,15 @@
+#!/bin/bash
+
+mkdir -p "$HOME/Dev/Desktop"
+mkdir -p "$HOME/Dev/Documents"
+mkdir -p "$HOME/Dev/Downloads"
+mkdir -p "$HOME/Dev/Templates"
+mkdir -p "$HOME/Dev/Public"
+mkdir -p "$HOME/Dev/Music"
+mkdir -p "$HOME/Dev/Pictures"
+mkdir -p "$HOME/Dev/Videos"
+mkdir -p "$HOME/Dev/Notes"
+mkdir -p "$HOME/Dev/Repos/github.com"
+mkdir -p "$HOME/Dev/Repos/gitlab.com"
+mkdir -p "$HOME/Dev/Repos/dev.azure.com"
+mkdir -p "$HOME/Dev/Projects"
