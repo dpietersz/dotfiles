@@ -1,0 +1,23 @@
+#!/bin/bash
+# llm installation hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+
+set -euo pipefail
+
+# Check if llm is already installed
+if command -v llm >/dev/null 2>&1; then
+  echo "llm is already installed"
+  exit 0
+fi
+
+# Install llm via uv (managed by mise on all platforms)
+MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+
+if [ -x "$MISE_BIN_PATH" ]; then
+  echo "Installing llm via uv..."
+  $MISE_BIN_PATH exec -- uv tool install llm
+  echo "llm installed successfully"
+else
+  echo "Error: mise not found. Cannot install llm."
+  exit 1
+fi
+
