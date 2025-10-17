@@ -1,6 +1,11 @@
 {{- $remote := or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not) -}}
 
-# Source modular configs
+# Source shared shell configs
+for file in "${XDG_CONFIG_HOME:-$HOME/.config}/shell"/*.sh; do
+  [[ -r "$file" ]] && source "$file"
+done
+
+# Source bash-specific configs
 for file in "${XDG_CONFIG_HOME:-$HOME/.config}/bash"/*.sh; do
   [[ -r "$file" ]] && source "$file"
 done

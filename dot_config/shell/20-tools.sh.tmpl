@@ -1,0 +1,58 @@
+# 20-tools.sh - Tools management (shared between bash and zsh)
+
+# Detect current shell
+if [ -n "$BASH_VERSION" ]; then
+  CURRENT_SHELL="bash"
+elif [ -n "$ZSH_VERSION" ]; then
+  CURRENT_SHELL="zsh"
+else
+  CURRENT_SHELL="unknown"
+fi
+
+{{if not .remote -}}
+# setup gpg-agent ssh
+unset SSH_AGENT_PID
+if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+  export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+fi
+{{- end}}
+
+# Homebrew - enable if found on Linux
+if [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# activate mise
+if command -v mise >/dev/null; then
+  eval "$(mise activate $CURRENT_SHELL)"
+fi
+
+# enable the starship prompt
+if command -v starship >/dev/null; then
+  eval "$(starship init $CURRENT_SHELL)"
+fi
+
+# fzf - fuzzy finder with key bindings and completion
+if command -v fzf >/dev/null; then
+  if [ "$CURRENT_SHELL" = "bash" ]; then
+    eval "$(fzf --bash)"
+  elif [ "$CURRENT_SHELL" = "zsh" ]; then
+    source <(fzf --zsh)
+  fi
+fi
+
+# kubectl - Kubernetes CLI completion
+if command -v kubectl >/dev/null; then
+  source <(kubectl completion $CURRENT_SHELL)
+fi
+
+# flux - GitOps toolkit completion
+if command -v flux >/dev/null; then
+  source <(flux completion $CURRENT_SHELL)
+fi
+
+# zoxide - smarter cd command
+if command -v zoxide >/dev/null; then
+  eval "$(zoxide init $CURRENT_SHELL)"
+fi
+

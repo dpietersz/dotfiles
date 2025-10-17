@@ -1,0 +1,27 @@
+# 10-path.sh - PATH Management (shared between bash and zsh)
+
+prepend_path() { [[ ":$PATH:" != *":$1:"* ]] && export PATH="$1:$PATH"; }
+
+if [[ -d $HOME/.local/bin ]]; then
+  prepend_path "$HOME/.local/bin"
+fi
+
+if [[ -d $HOME/.local/bin/scripts ]]; then
+  prepend_path "$HOME/.local/bin/scripts"
+fi
+
+# Krew (kubectl plugin manager)
+if [[ -d $HOME/.krew ]]; then
+  prepend_path "$HOME/.krew/bin"
+fi
+
+# Bazzite/Fedora Atomic - Flatpak exports
+{{ if eq .chezmoi.osRelease.id "bazzite" -}}
+if [[ -d $HOME/.local/share/flatpak/exports/share ]]; then
+  prepend_path "$HOME/.local/share/flatpak/exports/share"
+fi
+if [[ -d /var/lib/flatpak/exports/share ]]; then
+  prepend_path "/var/lib/flatpak/exports/share"
+fi
+{{- end}}
+
