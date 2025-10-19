@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ if not .remote -}}
+
+echo "🔐 Dotfiles encryption setup"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check if keys already exist (already bootstrapped)
+if [ -f "$HOME/.ssh/id_ed25519" ] && gpg --list-secret-keys 207F38BA91AB8330DBF08766B4320995C8E1D17D &>/dev/null; then
+    echo "✅ Keys already installed. Skipping decryption."
+    exit 0
+fi
+
+# Prompt for passphrase
+echo ""
+echo "Enter your dotfiles passphrase to decrypt your keys:"
+read -s DOTFILES_PASSPHRASE
+echo ""
+
+# Decrypt SSH keys
+echo "🔓 Decrypting SSH keys..."
+mkdir -p "$HOME/.ssh"
+
+echo "$DOTFILES_PASSPHRASE" | age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" > "$HOME/.ssh/id_ed25519"
+echo "$DOTFILES_PASSPHRASE" | age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" > "$HOME/.ssh/id_ed25519.pub"
+
+chmod 600 "$HOME/.ssh/id_ed25519"
+chmod 644 "$HOME/.ssh/id_ed25519.pub"
+
+echo "✅ SSH keys installed"
+
+# Decrypt and import GPG key
+echo "🔓 Decrypting GPG key..."
+GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
+
+echo "$GPG_KEY" | gpg --import --batch
+
+# Trust the key
+echo "207F38BA91AB8330DBF08766B4320995C8E1D17D:6:" | gpg --import-ownertrust
+
+echo "✅ GPG key imported and trusted"
+
+# Configure GPG agent cache (12 hours = 43200 seconds)
+echo "⚙️  Configuring GPG agent cache..."
+mkdir -p "$HOME/.gnupg"
+cat > "$HOME/.gnupg/gpg-agent.conf" <<EOF
+# Cache passphrases for 12 hours
+default-cache-ttl 43200
+max-cache-ttl 43200
+EOF
+
+# Reload gpg-agent to apply new settings
+gpg-connect-agent reloadagent /bye &>/dev/null || true
+
+echo "✅ GPG agent cache set to 12 hours"
+
+# Clear passphrase from memory
+unset DOTFILES_PASSPHRASE
+unset GPG_KEY
+
+echo ""
+echo "✅ All keys decrypted and installed successfully!"
+echo ""
+
+{{ end -}}
