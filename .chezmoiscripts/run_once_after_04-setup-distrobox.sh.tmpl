@@ -60,34 +60,14 @@ if distrobox assemble create --file "$DISTROBOX_INI"; then
     fi
 
     echo ""
-    echo "📤 Exporting applications to host..."
-    echo "   This will make applications available in your host's application menu..."
-    echo ""
-
-    # Export all installed applications to the host
-    # Using || true to handle cases where app might not be installed
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app beekeeper-studio" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app storageexplorer" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app teams-for-linux" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app zen-browser" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app legcord" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app obs" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app bruno" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app polypane" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app anytype" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app vivaldi-snapshot" || true
-    distrobox enter base-applications-toolbox -- bash -c "distrobox-export --app cursor" || true
-
-    echo ""
-    echo "✅ Applications exported to host!"
-    echo ""
     echo "📝 Available containers:"
     distrobox list
     echo ""
     echo "💡 To enter the container, run:"
     echo "   distrobox enter base-applications-toolbox"
     echo ""
-    echo "💡 Exported applications are now available in your application menu!"
+    echo "💡 Applications are automatically exported to your host's application menu!"
+    echo "   To manually re-export, run: export-base-applications-toolbox.sh"
 else
     echo ""
     echo "❌ Failed to create distrobox containers"
