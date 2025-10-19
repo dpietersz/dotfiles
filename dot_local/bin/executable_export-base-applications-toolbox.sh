@@ -27,6 +27,7 @@ APPS=(
     "anytype"
     "vivaldi-snapshot"
     "cursor"
+    "zed"
 )
 
 # Export each application
