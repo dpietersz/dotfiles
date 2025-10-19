@@ -1,17 +1,9 @@
 #!/usr/bin/env bash
+# User-level setup for base-applications-toolbox (runs as container user)
+# Package installation happens in pre_init_hooks as root
 set -e
 
-echo "🚀 Setting up base-applications-toolbox (Fedora 41)..."
-
-# Install applications from repositories
-echo "📦 Installing applications from DNF/COPR repositories..."
-sudo dnf install -y beekeeper-studio || echo "⚠️  Failed to install beekeeper-studio"
-sudo dnf install -y obs-studio || echo "⚠️  Failed to install obs-studio"
-sudo dnf install -y vivaldi-stable || echo "⚠️  Failed to install vivaldi-stable"
-sudo dnf install -y zen-browser || echo "⚠️  Failed to install zen-browser"
-sudo dnf install -y zed || echo "⚠️  Failed to install zed"
-sudo dnf install -y bruno || echo "⚠️  Failed to install bruno"
-sudo dnf install -y obsidian || echo "⚠️  Failed to install obsidian"
+echo "🚀 Setting up base-applications-toolbox user environment..."
 
 # Create directory for AppImages
 echo "📁 Creating AppImage directory..."
