@@ -24,6 +24,15 @@ else
     exit 1
 fi
 {{- else if eq .chezmoi.osRelease.id "bluefin" }}
+# Check if browserpass is already staged for installation
+if rpm-ostree status | grep -q "browserpass"; then
+    echo "✅ Browserpass already staged for installation (reboot required)"
+    echo "   After reboot, manually install browser extensions from:"
+    echo "   - Firefox: https://addons.mozilla.org/firefox/addon/browserpass-ce/"
+    echo "   - Chrome: https://chrome.google.com/webstore/detail/browserpass/naepdomgkenhinolocfifgehidddafch"
+    exit 0
+fi
+
 echo "Installing browserpass via rpm-ostree..."
 rpm-ostree install browserpass
 echo "⚠️  Reboot required to complete browserpass installation"
