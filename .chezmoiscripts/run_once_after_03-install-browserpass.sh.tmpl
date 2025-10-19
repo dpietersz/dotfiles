@@ -61,9 +61,10 @@ if [ -d "/Applications/Google Chrome.app" ]; then
     echo "✅ Chrome configured"
 fi
 
-# Zen browser (uses Chrome native messaging on macOS)
+# Zen browser (Firefox-based, uses Firefox native messaging)
 if [ -d "/Applications/Zen Browser.app" ]; then
-    echo "✅ Zen browser will use Chrome configuration"
+    $BROWSERPASS_CMD configure firefox
+    echo "✅ Zen browser configured"
 fi
 
 {{- else }}
@@ -82,8 +83,30 @@ if command -v google-chrome >/dev/null || command -v chromium >/dev/null; then
     echo "✅ Chrome configured"
 fi
 
-# Zen browser (uses Chrome/Chromium native messaging)
-echo "✅ Zen browser will use Chrome configuration"
+# Zen browser (Firefox-based, uses Firefox native messaging)
+# Check for regular or Flatpak installation
+ZEN_INSTALLED=false
+if command -v zen-browser >/dev/null 2>&1; then
+    ZEN_INSTALLED=true
+elif flatpak list 2>/dev/null | grep -q "zen"; then
+    ZEN_INSTALLED=true
+fi
+
+if [ "$ZEN_INSTALLED" = true ]; then
+    # Configure Firefox native messaging (Zen uses Mozilla paths)
+    $BROWSERPASS_CMD configure firefox
+
+    # For Flatpak, also copy to Flatpak-specific location
+    if flatpak list 2>/dev/null | grep -q "io.github.zen_browser.zen"; then
+        FLATPAK_ZEN_DIR="$HOME/.var/app/io.github.zen_browser.zen/.zen/native-messaging-hosts"
+        mkdir -p "$FLATPAK_ZEN_DIR"
+        if [ -f "$HOME/.mozilla/native-messaging-hosts/com.github.browserpass.native.json" ]; then
+            cp "$HOME/.mozilla/native-messaging-hosts/com.github.browserpass.native.json" "$FLATPAK_ZEN_DIR/"
+        fi
+    fi
+
+    echo "✅ Zen browser configured"
+fi
 
 {{- end }}
 
