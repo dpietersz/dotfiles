@@ -25,8 +25,8 @@ echo ""
 echo "🔓 Decrypting SSH keys..."
 mkdir -p "$HOME/.ssh"
 
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" > "$HOME/.ssh/id_ed25519"
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" > "$HOME/.ssh/id_ed25519.pub"
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" > "$HOME/.ssh/id_ed25519"
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" > "$HOME/.ssh/id_ed25519.pub"
 
 chmod 600 "$HOME/.ssh/id_ed25519"
 chmod 644 "$HOME/.ssh/id_ed25519.pub"
@@ -35,7 +35,7 @@ echo "✅ SSH keys installed"
 
 # Decrypt and import GPG key
 echo "🔓 Decrypting GPG key..."
-GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d -p "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
+GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
 
 echo "$GPG_KEY" | gpg --import --batch
 
