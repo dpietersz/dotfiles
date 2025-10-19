@@ -29,6 +29,7 @@ PACKAGES=(
     "vivaldi-snapshot-ffmpeg-codecs"
     "cursor-bin"
     "zed-git"
+    "obsidian-bin"
 )
 
 # Check which packages are missing
