@@ -1,0 +1,99 @@
+#!/bin/bash
+set -euo pipefail
+
+{{ if not .remote -}}
+
+echo "🌐 Installing browserpass"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check if browserpass is already installed
+if command -v browserpass >/dev/null; then
+    echo "✅ Browserpass already installed"
+    exit 0
+fi
+
+# Install browserpass native host
+echo "📦 Installing browserpass native host..."
+
+{{- if eq .chezmoi.os "darwin" }}
+if command -v brew >/dev/null; then
+    brew tap amar1729/formulae
+    brew install browserpass
+else
+    echo "❌ Homebrew not installed. Cannot install browserpass."
+    exit 1
+fi
+{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+echo "Installing browserpass via rpm-ostree..."
+rpm-ostree install browserpass
+echo "⚠️  Reboot required to complete browserpass installation"
+echo "   After reboot, manually install browser extensions from:"
+echo "   - Firefox: https://addons.mozilla.org/firefox/addon/browserpass-ce/"
+echo "   - Chrome: https://chrome.google.com/webstore/detail/browserpass/naepdomgkenhinolocfifgehidddafch"
+exit 0
+{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+if command -v dnf >/dev/null; then
+    sudo dnf install -y browserpass
+fi
+{{- else }}
+echo "❌ No installation instructions for browserpass on your distribution."
+exit 1
+{{- end }}
+
+echo "✅ Browserpass native host installed"
+
+# Configure browserpass for browsers
+echo "⚙️  Configuring browserpass for browsers..."
+
+{{- if eq .chezmoi.os "darwin" }}
+# macOS configuration
+BROWSERPASS_CMD="browserpass"
+
+# Firefox (macOS location)
+if [ -d "$HOME/Library/Application Support/Firefox" ]; then
+    $BROWSERPASS_CMD configure firefox
+    echo "✅ Firefox configured"
+fi
+
+# Chrome (macOS)
+if [ -d "/Applications/Google Chrome.app" ]; then
+    $BROWSERPASS_CMD configure chrome
+    echo "✅ Chrome configured"
+fi
+
+# Zen browser (uses Chrome native messaging on macOS)
+if [ -d "/Applications/Zen Browser.app" ]; then
+    echo "✅ Zen browser will use Chrome configuration"
+fi
+
+{{- else }}
+# Linux configuration
+BROWSERPASS_CMD="browserpass-linux64"
+
+# Firefox (Linux location)
+if [ -d "$HOME/.mozilla/firefox" ]; then
+    $BROWSERPASS_CMD configure firefox
+    echo "✅ Firefox configured"
+fi
+
+# Chrome/Chromium (Linux)
+if command -v google-chrome >/dev/null || command -v chromium >/dev/null; then
+    $BROWSERPASS_CMD configure chrome
+    echo "✅ Chrome configured"
+fi
+
+# Zen browser (uses Chrome/Chromium native messaging)
+echo "✅ Zen browser will use Chrome configuration"
+
+{{- end }}
+
+echo ""
+echo "✅ Browserpass installation complete!"
+echo ""
+echo "📝 Next steps:"
+echo "   1. Install browser extensions:"
+echo "      - Firefox: https://addons.mozilla.org/firefox/addon/browserpass-ce/"
+echo "      - Chrome/Zen: https://chrome.google.com/webstore/detail/browserpass/naepdomgkenhinolocfifgehidddafch"
+echo ""
+
+{{ end -}}

@@ -1,0 +1,49 @@
+{{ if not .remote -}}
+# Added by Augment for remote agent SSH connections
+Include {{ .chezmoi.homeDir }}/.augment/ssh-config
+
+# GitHub
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+# GitLab
+Host gitlab.com
+    HostName gitlab.com
+    User git
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+# Personal machines
+Host Zandvoort
+    ForwardAgent yes
+    ExitOnForwardFailure no
+    LocalForward 3000 127.0.0.1:3000
+    LocalForward 3001 127.0.0.1:3001
+    LocalForward 13557 127.0.0.1:13557
+    LocalForward 4983 127.0.0.1:4983
+    LocalForward 4321 127.0.0.1:4321
+    LocalForward 4848 127.0.0.1:4848
+    LogLevel=QUIET
+
+Host T580
+    ForwardAgent yes
+    ExitOnForwardFailure no
+    LocalForward 3000 127.0.0.1:3000
+    LocalForward 3001 127.0.0.1:3001
+    LocalForward 13557 127.0.0.1:13557
+    LocalForward 4983 127.0.0.1:4983
+    LocalForward 4321 127.0.0.1:4321
+    LocalForward 4848 127.0.0.1:4848
+    LogLevel=QUIET
+
+# Azure DevOps
+Host ssh.dev.azure.com
+    HostName ssh.dev.azure.com
+    User git
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/[REDACTED_AZURE_KEY]
+    IdentitiesOnly yes
+
+{{ end -}}
