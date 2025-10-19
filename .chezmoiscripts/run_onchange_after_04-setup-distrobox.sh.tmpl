@@ -42,6 +42,24 @@ if distrobox assemble create --file "$DISTROBOX_INI"; then
     echo ""
     echo "✅ Distrobox containers created successfully!"
     echo ""
+
+    # Run the setup script inside the container to install yay and AUR packages
+    echo "🔧 Running setup script inside container..."
+    echo "   This will install yay and AUR packages (may take several minutes)..."
+    echo ""
+
+    if distrobox enter base-applications-toolbox -- bash -c "setup-base-applications-toolbox.sh"; then
+        echo ""
+        echo "✅ Container setup complete!"
+    else
+        echo ""
+        echo "⚠️  Container setup script failed"
+        echo "   You can run it manually later:"
+        echo "   distrobox enter base-applications-toolbox"
+        echo "   setup-base-applications-toolbox.sh"
+    fi
+
+    echo ""
     echo "📝 Available containers:"
     distrobox list
     echo ""
