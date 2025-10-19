@@ -15,9 +15,10 @@ if ! distrobox list | grep -q "base-applications-toolbox"; then
 fi
 
 # List of applications to export
+# Note: Run 'list-desktop-files.sh' inside container to verify correct app names
 APPS=(
     "beekeeper-studio"
-    "storageexplorer"
+    "StorageExplorer"
     "teams-for-linux"
     "zen-browser"
     "legcord"
@@ -28,6 +29,7 @@ APPS=(
     "vivaldi-snapshot"
     "cursor"
     "zed"
+    "obsidian"
 )
 
 # Export each application
