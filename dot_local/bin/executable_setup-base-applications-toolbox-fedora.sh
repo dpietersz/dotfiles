@@ -5,13 +5,13 @@ echo "🚀 Setting up base-applications-toolbox (Fedora 41)..."
 
 # Install applications from repositories
 echo "📦 Installing applications from DNF/COPR repositories..."
-dnf install -y beekeeper-studio || echo "⚠️  Failed to install beekeeper-studio"
-dnf install -y obs-studio || echo "⚠️  Failed to install obs-studio"
-dnf install -y vivaldi-snapshot || echo "⚠️  Failed to install vivaldi-snapshot"
-dnf install -y zen-browser || echo "⚠️  Failed to install zen-browser"
-dnf install -y zed || echo "⚠️  Failed to install zed"
-dnf install -y bruno || echo "⚠️  Failed to install bruno"
-dnf install -y obsidian || echo "⚠️  Failed to install obsidian"
+sudo dnf install -y beekeeper-studio || echo "⚠️  Failed to install beekeeper-studio"
+sudo dnf install -y obs-studio || echo "⚠️  Failed to install obs-studio"
+sudo dnf install -y vivaldi-stable || echo "⚠️  Failed to install vivaldi-stable"
+sudo dnf install -y zen-browser || echo "⚠️  Failed to install zen-browser"
+sudo dnf install -y zed || echo "⚠️  Failed to install zed"
+sudo dnf install -y bruno || echo "⚠️  Failed to install bruno"
+sudo dnf install -y obsidian || echo "⚠️  Failed to install obsidian"
 
 # Create directory for AppImages
 echo "📁 Creating AppImage directory..."
@@ -52,31 +52,43 @@ fi
 
 # Export applications to host
 echo "📤 Exporting applications to host..."
-distrobox-export --app beekeeper-studio 2>/dev/null || echo "⚠️  Failed to export beekeeper-studio"
-distrobox-export --app zen-browser 2>/dev/null || echo "⚠️  Failed to export zen-browser"
-distrobox-export --app com.obsproject.Studio 2>/dev/null || echo "⚠️  Failed to export OBS Studio"
-distrobox-export --app bruno 2>/dev/null || echo "⚠️  Failed to export bruno"
-distrobox-export --app vivaldi-snapshot 2>/dev/null || echo "⚠️  Failed to export vivaldi-snapshot"
-distrobox-export --app zed 2>/dev/null || echo "⚠️  Failed to export zed"
-distrobox-export --app obsidian 2>/dev/null || echo "⚠️  Failed to export obsidian"
-distrobox-export --app emacs 2>/dev/null || echo "⚠️  Failed to export emacs"
+echo "  - Exporting beekeeper-studio..."
+distrobox-export --app beekeeper-studio || echo "⚠️  Failed to export beekeeper-studio"
+echo "  - Exporting zen-browser..."
+distrobox-export --app zen-browser || echo "⚠️  Failed to export zen-browser"
+echo "  - Exporting OBS Studio..."
+distrobox-export --app com.obsproject.Studio || echo "⚠️  Failed to export OBS Studio"
+echo "  - Exporting bruno..."
+distrobox-export --app bruno || echo "⚠️  Failed to export bruno"
+echo "  - Exporting vivaldi-stable..."
+distrobox-export --app vivaldi-stable || echo "⚠️  Failed to export vivaldi-stable"
+echo "  - Exporting zed..."
+distrobox-export --app zed || echo "⚠️  Failed to export zed"
+echo "  - Exporting obsidian..."
+distrobox-export --app obsidian || echo "⚠️  Failed to export obsidian"
+echo "  - Exporting emacs..."
+distrobox-export --app emacs || echo "⚠️  Failed to export emacs"
 
 # Export AppImages
 echo "📤 Exporting AppImage applications..."
 if [ -f ~/.local/bin/appimages/cursor.AppImage ]; then
-    distrobox-export --bin ~/.local/bin/appimages/cursor.AppImage --export-path ~/.local/bin 2>/dev/null || echo "⚠️  Failed to export Cursor"
+    echo "  - Exporting Cursor..."
+    distrobox-export --bin ~/.local/bin/appimages/cursor.AppImage --export-path ~/.local/bin || echo "⚠️  Failed to export Cursor"
 fi
 
 if [ -f ~/.local/bin/appimages/legcord.AppImage ]; then
-    distrobox-export --bin ~/.local/bin/appimages/legcord.AppImage --export-path ~/.local/bin 2>/dev/null || echo "⚠️  Failed to export Legcord"
+    echo "  - Exporting Legcord..."
+    distrobox-export --bin ~/.local/bin/appimages/legcord.AppImage --export-path ~/.local/bin || echo "⚠️  Failed to export Legcord"
 fi
 
 if [ -f ~/.local/bin/appimages/polypane.AppImage ]; then
-    distrobox-export --bin ~/.local/bin/appimages/polypane.AppImage --export-path ~/.local/bin 2>/dev/null || echo "⚠️  Failed to export Polypane"
+    echo "  - Exporting Polypane..."
+    distrobox-export --bin ~/.local/bin/appimages/polypane.AppImage --export-path ~/.local/bin || echo "⚠️  Failed to export Polypane"
 fi
 
 if [ -f ~/.local/bin/appimages/anytype.AppImage ]; then
-    distrobox-export --bin ~/.local/bin/appimages/anytype.AppImage --export-path ~/.local/bin 2>/dev/null || echo "⚠️  Failed to export Anytype"
+    echo "  - Exporting Anytype..."
+    distrobox-export --bin ~/.local/bin/appimages/anytype.AppImage --export-path ~/.local/bin || echo "⚠️  Failed to export Anytype"
 fi
 
 echo "✅ Setup complete!"
