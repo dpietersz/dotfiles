@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+
+{{ if not .remote -}}
+
+echo "📦 Setting up distrobox containers"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check if distrobox is available
+if ! command -v distrobox >/dev/null 2>&1; then
+    echo "⚠️  distrobox not found. Skipping container setup."
+    echo "   Install distrobox to use this feature:"
+    echo "   https://distrobox.it"
+    exit 0
+fi
+
+# Check if the distrobox.ini file exists
+DISTROBOX_INI="$HOME/.config/distrobox/distrobox.ini"
+if [ ! -f "$DISTROBOX_INI" ]; then
+    echo "❌ distrobox.ini not found at $DISTROBOX_INI"
+    exit 1
+fi
+
+echo "📋 Using configuration: $DISTROBOX_INI"
+echo ""
+
+# Check if container already exists
+if distrobox list | grep -q "base-applications-toolbox"; then
+    echo "✅ base-applications-toolbox already exists"
+    echo ""
+    echo "To recreate the container, run:"
+    echo "  distrobox assemble create --replace"
+    exit 0
+fi
+
+# Create the container using distrobox assemble
+echo "🚀 Creating distrobox containers..."
+echo "   This may take several minutes on first run..."
+echo ""
+
+if distrobox assemble create --file "$DISTROBOX_INI"; then
+    echo ""
+    echo "✅ Distrobox containers created successfully!"
+    echo ""
+    echo "📝 Available containers:"
+    distrobox list
+    echo ""
+    echo "💡 To enter the container, run:"
+    echo "   distrobox enter base-applications-toolbox"
+    echo ""
+    echo "💡 To export applications to host, run inside the container:"
+    echo "   distrobox-export --app <application-name>"
+    echo "   Example: distrobox-export --app zen-browser"
+else
+    echo ""
+    echo "❌ Failed to create distrobox containers"
+    echo "   Check the logs above for errors"
+    exit 1
+fi
+
+{{ end -}}
+
