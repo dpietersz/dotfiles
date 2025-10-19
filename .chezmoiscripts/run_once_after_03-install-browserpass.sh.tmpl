@@ -78,26 +78,80 @@ fi
 
 {{- else }}
 # Linux configuration
-# Auto-detect the correct binary name (RPM packages use browserpass-native, manual installs use browserpass-linux64)
+# Auto-detect the correct binary name and path
+BROWSERPASS_BIN=""
+BROWSERPASS_PATH=""
+
 if command -v browserpass-native >/dev/null 2>&1; then
-    BROWSERPASS_CMD="browserpass-native"
+    BROWSERPASS_BIN="browserpass-native"
+    BROWSERPASS_PATH="$(command -v browserpass-native)"
 elif command -v browserpass-linux64 >/dev/null 2>&1; then
-    BROWSERPASS_CMD="browserpass-linux64"
+    BROWSERPASS_BIN="browserpass-linux64"
+    BROWSERPASS_PATH="$(command -v browserpass-linux64)"
 else
     echo "❌ Browserpass binary not found"
     exit 1
 fi
 
+echo "📍 Using browserpass binary: $BROWSERPASS_PATH"
+
+# Function to create Firefox/Mozilla native messaging manifest
+configure_firefox_native_messaging() {
+    local manifest_dir="$HOME/.mozilla/native-messaging-hosts"
+    local manifest_file="$manifest_dir/com.github.browserpass.native.json"
+
+    mkdir -p "$manifest_dir"
+
+    cat > "$manifest_file" << EOF
+{
+  "name": "com.github.browserpass.native",
+  "description": "Browserpass native messaging host",
+  "path": "$BROWSERPASS_PATH",
+  "type": "stdio",
+  "allowed_extensions": [
+    "browserpass@maximbaz.com"
+  ]
+}
+EOF
+
+    echo "✅ Firefox native messaging configured"
+}
+
+# Function to create Chrome/Chromium native messaging manifest
+configure_chrome_native_messaging() {
+    local manifest_dir="$HOME/.config/google-chrome/NativeMessagingHosts"
+    local manifest_file="$manifest_dir/com.github.browserpass.native.json"
+
+    mkdir -p "$manifest_dir"
+
+    cat > "$manifest_file" << EOF
+{
+  "name": "com.github.browserpass.native",
+  "description": "Browserpass native messaging host",
+  "path": "$BROWSERPASS_PATH",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://naepdomgkenhinolocfifgehidddafch/"
+  ]
+}
+EOF
+
+    # Also create for Chromium
+    local chromium_dir="$HOME/.config/chromium/NativeMessagingHosts"
+    mkdir -p "$chromium_dir"
+    cp "$manifest_file" "$chromium_dir/"
+
+    echo "✅ Chrome/Chromium native messaging configured"
+}
+
 # Firefox (Linux location)
 if [ -d "$HOME/.mozilla/firefox" ]; then
-    $BROWSERPASS_CMD configure firefox
-    echo "✅ Firefox configured"
+    configure_firefox_native_messaging
 fi
 
 # Chrome/Chromium (Linux)
 if command -v google-chrome >/dev/null || command -v chromium >/dev/null; then
-    $BROWSERPASS_CMD configure chrome
-    echo "✅ Chrome configured"
+    configure_chrome_native_messaging
 fi
 
 # Zen browser (Firefox-based, uses Firefox native messaging)
@@ -111,7 +165,7 @@ fi
 
 if [ "$ZEN_INSTALLED" = true ]; then
     # Configure Firefox native messaging (Zen uses Mozilla paths)
-    $BROWSERPASS_CMD configure firefox
+    configure_firefox_native_messaging
 
     # For Flatpak, also copy to Flatpak-specific location
     if flatpak list 2>/dev/null | grep -q "io.github.zen_browser.zen"; then
