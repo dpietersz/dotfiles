@@ -7,7 +7,7 @@ echo "🌐 Installing browserpass"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Check if browserpass is already installed
-if command -v browserpass >/dev/null; then
+if command -v browserpass >/dev/null || command -v browserpass-native >/dev/null; then
     echo "✅ Browserpass already installed"
     exit 0
 fi
@@ -78,7 +78,15 @@ fi
 
 {{- else }}
 # Linux configuration
-BROWSERPASS_CMD="browserpass-linux64"
+# Auto-detect the correct binary name (RPM packages use browserpass-native, manual installs use browserpass-linux64)
+if command -v browserpass-native >/dev/null 2>&1; then
+    BROWSERPASS_CMD="browserpass-native"
+elif command -v browserpass-linux64 >/dev/null 2>&1; then
+    BROWSERPASS_CMD="browserpass-linux64"
+else
+    echo "❌ Browserpass binary not found"
+    exit 1
+fi
 
 # Firefox (Linux location)
 if [ -d "$HOME/.mozilla/firefox" ]; then
