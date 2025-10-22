@@ -161,9 +161,8 @@ dotfiles/
 ├── dot_config/distrobox/
 │   ├── daily-driver-arch.ini.tmpl      # Arch container config (chezmoi template)
 │   └── daily-driver-fedora.ini.tmpl    # Fedora container config (chezmoi template)
-├── dot_local/bin/
-│   ├── executable_create-daily-drivers # Main setup script (becomes ~/.local/bin/create-daily-drivers)
-│   └── scripts/                        # Helper scripts directory (for future use)
+├── dot_local/bin/scripts/
+│   └── executable_create-daily-drivers # Main setup script
 └── dot_local/share/distrobox/hooks/
     ├── executable_daily-driver-arch-export-gui.sh    # Arch export hook
     └── executable_daily-driver-fedora-export-gui.sh  # Fedora export hook
@@ -176,9 +175,9 @@ dotfiles/
 ├── daily-driver-arch.ini
 └── daily-driver-fedora.ini
 
-~/.local/bin/
+~/.local/bin/scripts/
 ├── create-daily-drivers (executable)
-└── scripts/
+└── (other custom scripts)
 
 ~/.local/share/distrobox/hooks/
 ├── daily-driver-arch-export-gui.sh (executable)
@@ -245,11 +244,22 @@ The `create-daily-drivers` script automates the creation of daily-driver contain
 ### File Naming Convention
 
 - **`executable_` prefix**: Files become executable in target location
-  - `dot_local/bin/executable_create-daily-drivers` → `~/.local/bin/create-daily-drivers` (executable)
+  - `dot_local/bin/scripts/executable_create-daily-drivers` → `~/.local/bin/scripts/create-daily-drivers` (executable)
   - `dot_local/share/distrobox/hooks/executable_daily-driver-arch-export-gui.sh` → `~/.local/share/distrobox/hooks/daily-driver-arch-export-gui.sh` (executable)
 
 - **No prefix**: Files remain non-executable
   - `dot_local/bin/scripts/helper.sh` → `~/.local/bin/scripts/helper.sh` (not executable)
+
+### Directory Organization
+
+- **`dot_local/bin/scripts/`**: Custom scripts (executable with `executable_` prefix)
+  - Kept separate from other `~/.local/bin` files
+  - All scripts in this folder are in your PATH
+  - Useful for organizing personal/custom scripts
+
+- **`dot_local/share/distrobox/hooks/`**: Distrobox-specific hooks
+  - Run automatically during container setup
+  - Export applications from containers to host
 
 ## Browserpass Configuration
 
