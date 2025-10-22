@@ -100,7 +100,7 @@ distrobox enter daily-driver-arch
 distrobox enter daily-driver-fedora
 ```
 
-See [DAILY_DRIVER_SETUP.md](DAILY_DRIVER_SETUP.md) for detailed configuration.
+See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for details.
 
 ---
 
