@@ -1,0 +1,37 @@
+# Distrobox configuration for daily-driver containers
+# These containers includes GUI applications and development tools
+
+[distrobox]
+# Container name
+container_name=daily-driver-fedora
+
+# Container image
+image=ghcr.io/dpietersz/daily-driver-fedora:latest
+
+# Use podman as the container manager
+container_manager=podman
+
+# Mount home directory
+home_mount_path=$HOME
+
+# Additional mount paths (optional)
+# mount_paths=/mnt/data:/mnt/data
+
+# Privileged mode (not needed for GUI apps)
+privileged=false
+
+# Init system
+init=true
+
+# Additional packages to install on first run (optional)
+# additional_packages=
+
+# Pre-init hook - runs before container creation
+# pre_init_hook=
+
+# Post-init hook - runs after container creation and setup
+post_init_hook="${XDG_DATA_HOME:-$HOME/.local/share}/distrobox/hooks/daily-driver-fedora-export-gui.sh"
+
+# Additional environment variables
+# extra_flags=--env VAR=value
+
