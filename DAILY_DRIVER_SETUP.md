@@ -211,35 +211,31 @@ boxkit/
 
 ## Setup Script: `create-daily-drivers`
 
-The `create-daily-drivers` script automates the creation of daily-driver containers.
+Simple script to create daily-driver distrobox containers on local systems.
 
 ### Features
 
-- **Dependency Checking**: Verifies distrobox and podman are installed
-- **Configuration Validation**: Checks that INI files exist in `~/.config/distrobox/`
-- **Hook Validation**: Checks that hook scripts exist in `~/.local/share/distrobox/hooks/`
-- **User Confirmation**: Asks before creating containers
-- **Container Creation**: Creates/replaces daily-driver containers
-- **Status Listing**: Shows created containers
-- **Colored Output**: Easy-to-read status messages
+- **Remote System Check**: Uses chezmoi's `remote` variable to prevent running on remote systems
+- **Simple & Fast**: Minimal logic, just creates the containers
+- **Chezmoi Template**: Conditionally includes script content based on system type
 
 ### How It Works
 
-1. **INI Templates** (`daily-driver-*.ini.tmpl`):
+1. **Remote Detection** (via `.chezmoi.toml.tmpl`):
+   - Detects if running on remote systems (SSH, Codespaces, Docker, Kubernetes, etc.)
+   - Sets `remote = true/false` in chezmoi data
+   - Script exits with error if `remote = true`
+
+2. **INI Templates** (`daily-driver-*.ini.tmpl`):
    - Chezmoi templates that define container configurations
    - Specify container name, image, and post-init hooks
    - Deployed to `~/.config/distrobox/` after `chezmoi apply`
 
-2. **Hook Scripts** (`executable_daily-driver-*-export-gui.sh`):
+3. **Hook Scripts** (`executable_daily-driver-*-export-gui.sh`):
    - Run automatically after container creation
    - Export GUI applications from container to host
    - Deployed to `~/.local/share/distrobox/hooks/` after `chezmoi apply`
    - Made executable by the `executable_` prefix in filename
-
-3. **Helper Scripts Directory** (`dot_local/bin/scripts/`):
-   - For future helper scripts that are sourced by other scripts
-   - Not directly executable from command line
-   - Useful for organizing reusable script functions
 
 ### File Naming Convention
 
