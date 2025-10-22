@@ -65,7 +65,6 @@ Container images are built in the [boxkit](https://github.com/dpietersz/boxkit) 
 - Manual trigger
 - Pull requests to `main`
 - Pushes to `main`
-- Weekly schedule (Tuesdays at 00:00 UTC)
 
 ## Updating Packages
 
