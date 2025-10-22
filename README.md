@@ -80,6 +80,28 @@ DevPod is supported via `.chezmoiexternals/devpod.toml`, which ensures the DevPo
 
 - This repo is Codespaces-ready. Just "Open in Codespaces" on GitHub and all dotfiles, tools, and configs will be provisioned automatically.
 
+### 6. Daily-Driver Distrobox Containers (Local Only)
+
+For local systems (Bluefin, Fedora), create isolated development containers with GUI applications:
+
+```sh
+create-daily-drivers
+```
+
+This creates two containers:
+- **daily-driver-arch**: Arch Linux with AUR packages (Obsidian, AnyType, Polypane, Storage Explorer)
+- **daily-driver-fedora**: Fedora with DNF/COPR packages (Zed, Zen Browser, Vivaldi, Cursor, Bruno, Beekeeper Studio)
+
+Both containers include all CLI tools via mise and export GUI applications to your host.
+
+Enter a container:
+```sh
+distrobox enter daily-driver-arch
+distrobox enter daily-driver-fedora
+```
+
+See [DAILY_DRIVER_SETUP.md](DAILY_DRIVER_SETUP.md) for detailed configuration.
+
 ---
 
 ## Highlights
