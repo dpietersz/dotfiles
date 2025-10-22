@@ -109,19 +109,83 @@ Images are automatically built and pushed to GHCR on:
 
 ## Using the Toolboxes
 
-### Create a Fedora daily-driver container:
+### Automated Setup (Recommended)
+
+After running `chezmoi apply`, use the provided setup script:
+
 ```bash
-distrobox create -i ghcr.io/<username>/daily-driver-fedora -n daily-driver-fedora
-distrobox enter daily-driver-fedora
+create-daily-drivers
 ```
 
-### Create an Arch daily-driver container:
+This script will:
+- ✅ Check for required dependencies (distrobox, podman)
+- ✅ Verify configuration files exist
+- ✅ Validate hook files are in place
+- ✅ Create/replace both daily-driver containers
+- ✅ List created containers
+
+### Manual Setup
+
+If you prefer to create containers manually:
+
 ```bash
-distrobox create -i ghcr.io/<username>/daily-driver-arch -n daily-driver-arch
+# Create Fedora daily-driver container:
+distrobox create --config-file ~/.config/distrobox/daily-driver-fedora.ini
+distrobox enter daily-driver-fedora
+
+# Create Arch daily-driver container:
+distrobox create --config-file ~/.config/distrobox/daily-driver-arch.ini
 distrobox enter daily-driver-arch
 ```
 
+### Enter a Container
+
+```bash
+distrobox enter daily-driver-fedora
+distrobox enter daily-driver-arch
+```
+
+### Run Commands in a Container
+
+```bash
+distrobox enter daily-driver-fedora -- command
+distrobox enter daily-driver-arch -- command
+```
+
 ## File Structure
+
+### Dotfiles Repository
+
+```
+dotfiles/
+├── dot_config/distrobox/
+│   ├── daily-driver-arch.ini.tmpl      # Arch container config (chezmoi template)
+│   └── daily-driver-fedora.ini.tmpl    # Fedora container config (chezmoi template)
+├── dot_local/bin/
+│   ├── executable_create-daily-drivers # Main setup script (becomes ~/.local/bin/create-daily-drivers)
+│   └── scripts/                        # Helper scripts directory (for future use)
+└── dot_local/share/distrobox/hooks/
+    ├── executable_daily-driver-arch-export-gui.sh    # Arch export hook
+    └── executable_daily-driver-fedora-export-gui.sh  # Fedora export hook
+```
+
+### After chezmoi apply
+
+```
+~/.config/distrobox/
+├── daily-driver-arch.ini
+└── daily-driver-fedora.ini
+
+~/.local/bin/
+├── create-daily-drivers (executable)
+└── scripts/
+
+~/.local/share/distrobox/hooks/
+├── daily-driver-arch-export-gui.sh (executable)
+└── daily-driver-fedora-export-gui.sh (executable)
+```
+
+### Container Images (GitHub Container Registry)
 
 ```
 boxkit/
@@ -145,6 +209,47 @@ boxkit/
 └── .github/workflows/
     └── build-boxkit.yml
 ```
+
+## Setup Script: `create-daily-drivers`
+
+The `create-daily-drivers` script automates the creation of daily-driver containers.
+
+### Features
+
+- **Dependency Checking**: Verifies distrobox and podman are installed
+- **Configuration Validation**: Checks that INI files exist in `~/.config/distrobox/`
+- **Hook Validation**: Checks that hook scripts exist in `~/.local/share/distrobox/hooks/`
+- **User Confirmation**: Asks before creating containers
+- **Container Creation**: Creates/replaces daily-driver containers
+- **Status Listing**: Shows created containers
+- **Colored Output**: Easy-to-read status messages
+
+### How It Works
+
+1. **INI Templates** (`daily-driver-*.ini.tmpl`):
+   - Chezmoi templates that define container configurations
+   - Specify container name, image, and post-init hooks
+   - Deployed to `~/.config/distrobox/` after `chezmoi apply`
+
+2. **Hook Scripts** (`executable_daily-driver-*-export-gui.sh`):
+   - Run automatically after container creation
+   - Export GUI applications from container to host
+   - Deployed to `~/.local/share/distrobox/hooks/` after `chezmoi apply`
+   - Made executable by the `executable_` prefix in filename
+
+3. **Helper Scripts Directory** (`dot_local/bin/scripts/`):
+   - For future helper scripts that are sourced by other scripts
+   - Not directly executable from command line
+   - Useful for organizing reusable script functions
+
+### File Naming Convention
+
+- **`executable_` prefix**: Files become executable in target location
+  - `dot_local/bin/executable_create-daily-drivers` → `~/.local/bin/create-daily-drivers` (executable)
+  - `dot_local/share/distrobox/hooks/executable_daily-driver-arch-export-gui.sh` → `~/.local/share/distrobox/hooks/daily-driver-arch-export-gui.sh` (executable)
+
+- **No prefix**: Files remain non-executable
+  - `dot_local/bin/scripts/helper.sh` → `~/.local/bin/scripts/helper.sh` (not executable)
 
 ## Browserpass Configuration
 
