@@ -11,9 +11,8 @@ echo "=== Exporting GUI applications from daily-driver-fedora ==="
 APPS_TO_EXPORT=(
     "zed"
     "zen-browser"
-    "vivaldi"
-    "cursor"
-    "bruno"
+    "chromium-browser"
+    "qutebrowser"
     "beekeeper-studio"
 )
 
