@@ -1,0 +1,36 @@
+# Distrobox configuration for daily-driver containers
+# These containers includes GUI applications and development tools
+
+[browser-toolbox]
+# Container name
+container_name=browser-toolbox
+
+# Container image
+image=ghcr.io/dpietersz/browser-toolbox:latest
+
+# Use podman as the container manager
+container_manager=podman
+
+# Mount home directory
+home_mount_path=$HOME
+
+# Additional mount paths (optional)
+# mount_paths=/mnt/data:/mnt/data
+
+# Privileged mode (not needed for GUI apps)
+privileged=false
+
+# Init system
+init=true
+
+# Pull image every time (force latest image)
+pull=true
+
+# Additional packages to install on first run (optional)
+# additional_packages=
+
+# Init hooks - runs inside the container after setup
+# init_hooks="${HOME}/.local/bin/scripts/daily-driver-arch-export-gui.sh"
+
+# Additional environment variables
+# extra_flags=--env VAR=value
