@@ -1,13 +1,6 @@
 // Auto-start waybar
 spawn-at-startup "waybar"
 
-input {
-    // Change Mod key to Alt instead of Super
-    keyboard {
-        mod-key "alt"
-    }
-}
-
 // Define keybindings
 binds {
     // Terminal (Ghostty instead of Alacritty)
