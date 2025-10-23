@@ -1,0 +1,24 @@
+#!/bin/bash
+# jrnl installation hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+
+set -euo pipefail
+
+# Check if jrnl is already installed
+if command -v jrnl >/dev/null 2>&1; then
+  echo "jrnl is already installed"
+  exit 0
+fi
+
+# Install jrnl via uv (managed by mise on all platforms)
+# Reference: https://jrnl.sh/en/stable/installation/#installation
+MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+
+if [ -x "$MISE_BIN_PATH" ]; then
+  echo "Installing jrnl via uv..."
+  $MISE_BIN_PATH exec -- uv tool install jrnl
+  echo "jrnl installed successfully"
+else
+  echo "Error: mise not found. Cannot install jrnl."
+  exit 1
+fi
+
