@@ -1,0 +1,37 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+
+set -euo pipefail
+
+# Install Terra repository if not already installed
+if ! dnf repolist | grep -q terra; then
+  echo "Installing Terra repository..."
+  sudo dnf install -y https://repos.fyralabs.com/terra-release-latest.noarch.rpm
+fi
+
+# Install espanso-wayland for Wayland support
+echo "Installing espanso (Wayland)..."
+sudo dnf install -y espanso-wayland
+
+# Add required capabilities for Wayland
+echo "Adding required capabilities..."
+sudo setcap "cap_dac_override+p" $(which espanso)
+
+# Register espanso as a systemd service
+echo "Registering espanso as systemd service..."
+espanso service register
+
+# Start espanso
+echo "Starting espanso..."
+espanso start
+
+echo "✓ Espanso installed and started successfully"
+
+{{- else }}
+echo "Espanso installation is only supported on Bluefin and Fedora"
+
+{{- end }}
+{{- end }}
+
