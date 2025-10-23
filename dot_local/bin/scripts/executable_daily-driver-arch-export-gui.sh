@@ -13,6 +13,9 @@ APPS_TO_EXPORT=(
     "anytype"
     "polypane"
     "storageexplorer"
+    "bruno"
+    "cursor"
+    "teams"
 )
 
 # Export each application
