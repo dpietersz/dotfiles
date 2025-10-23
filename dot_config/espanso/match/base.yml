@@ -1,0 +1,652 @@
+# espanso match file
+
+# For a complete introduction, visit the official docs at: https://espanso.org/docs/
+
+# You can use this file to define the base matches (aka snippets)
+# that will be available in every application when using espanso.
+
+# Matches are substitution rules: when you type the "trigger" string
+# it gets replaced by the "replace" string.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  # Simple text replacement
+  - trigger: ":?"
+    replace: "Hi there!"
+
+  - trigger: "!s"
+    replace: "Do a deep-dive on the code and understand how [insert feature] works. Once you understand it, let me know, and i will provide the task I have for you."
+
+  # NOTE: espanso uses YAML to define matches, so pay attention to the indentation!
+
+  # But matches can also be dynamic:
+
+  # Print the current date
+  - trigger: ":date"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%Y%m%d"
+
+  # Print the output of a shell command
+  - trigger: ":shell"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "echo 'Hello from your shell'"
+
+  - trigger: ";em"
+    replace: "pietersz@gmail.com"
+
+  - trigger: ";sp"
+    replace: "d.pietersz@surpassion.nl"
+
+  - trigger: "#dimitri"
+    replace: "0634646487"
+
+  - trigger: "mvg,"
+    replace: |
+      Met vriendelijke groet,
+      Dimitri Pietersz
+
+  - trigger: "!hsh"
+    replace: "holisticskincarehaarlem.nl"
+
+  - trigger: "!b1"
+    replace: |
+      You are an expert **Incident Response Engineer** tasked with incident diagnosis & resolution. Isolate the root cause of failures and record details, perform root cause analysis, and recommend preventative measures.
+
+      We must get to the bottom of this issue as soon as possible, through thorough Run a root cause analysis on:
+      [the problem you are facing, provide as much context as possible including snippets and docs. Provide the maximum relevant observations using voice, typing will never give enough detail.]
+
+      Trace the exact sequence of events that cause the issue, and iterate until the issue is found. Capture your understanding of the issue in a sequence diagram using markdown.
+
+      Make sure to open and check every part of the code that could be related to our problem, then deliver a report on possible causes looking at it from multiple angles.
+
+      Finally, draft a thorough Root Cause analysis that outlines what went wrong and why.
+
+  - trigger: "!b2"
+    replace: |
+      You are an expert incident solutions architect. Your task is to analyze the provided root-cause analysis and sequence diagram, then craft a comprehensive solutions architecture document in markdown outlining the solution.
+
+      <Root_cause_analysis>
+
+      </Root_cause_analysis>
+
+      <Sequence_diagram>
+      </Sequence_diagram>
+
+      **Key Responsibilities**
+      * **Analyze Incident Reports:**
+      Review incident data, root cause analyses, and recommendations to understand system weaknesses.
+      * **Design Architectural Solutions:**
+      Create technical designs that address the identified issues, ensuring compatibility with existing systems.
+      * **Develop Technical Specifications:**
+      Translate incident findings into detailed specifications, including system diagrams and integration points.
+      * **Plan Integration:**
+      Define how the new solution will integrate into the current environment, outlining dependencies and potential risks.
+      * **Collaborate & Communicate:**
+      Act as the liaison between the response and remediation teams, ensuring the solution is clearly understood and actionable.
+
+      **Key Deliverables**
+      * **Solution Architecture Document:**
+      A comprehensive document detailing the technical design, including diagrams and system flows.
+      * **Technical Design Specifications:**
+      Detailed requirements and implementation steps for the proposed solution.
+      * **Integration & Deployment Plan:**
+      A step-by-step guide on integrating the solution, including risk mitigation and rollback strategies.
+
+  - trigger: "!b3"
+    replace: |
+      You are an expert incident remediation engineer. Your task is to take a solutions architecture document and implement the necessary code changes to complete the project. Document the steps required to complete it in a markdown file called todo-tasks.md. Complete them one by one and check them off as you go. 
+
+      Key Responsibilities:
+      * **Implementation of Fixes:**
+      Review incident reports and recommendations, then apply code changes, configuration adjustments, or infrastructure updates.
+      * **Testing & Validation:**
+      Test fixes in staging environments and validate in production to ensure the issue is fully resolved.
+      * **Automation:**
+      Develop automated processes to detect and remediate similar issues in the future.
+      * **Documentation:**
+      Update runbooks, system documentation, and incident records to reflect new measures and best practices.
+      **Key Deliverables**
+      * **Action Plan:**
+      A detailed plan outlining the steps to implement each fix, including timelines and dependencies.
+      * **Implemented Changes:**
+      The actual code, configuration changes, or infrastructure updates deployed to address the issue.
+
+      Your task is to implement the code step-by-step for the following solutions architect document:
+      <solutions_architecht_document>
+
+      </solutions_architecht_document>
+
+  - trigger: "!f1"
+    replace: |
+      You are an expert technical product manager for feature development.
+
+      **Key Responsibilities**
+      • **Documentation & Specification:**
+
+      Create clear, detailed product requirement documents, including user stories, acceptance criteria, and use cases.
+      You are a senior product manager and an expert in creating product requirements documents (PRDs) for software development teams.
+      Your task is to create a comprehensive product requirements document (PRD) for the following project: 
+
+      <prd_instructions>
+      [WRITE YOUR STUFF IN HERE]
+      </prd_instructions>
+
+      Follow these steps to create the PRD:
+
+      ‹steps>
+      1. Begin with a brief overview explaining the project and the purpose of the document
+      2. Use sentence case for all headings except for the title of the document, which can be title case, including any you create that are not included in the pra_outline below.
+      3. Under each main heading include relevant subheadings and fill them with details derived from the prd_instructions
+      4. Organize your PRD into the sections as shown in the prd_outline below
+      5. For each section of pro_outline, provide detailed and relevant information based on the PRD instructions. Ensure that you:
+        • Use clear and concise language
+        • Provide specific details and metrics where required
+        • Maintain consistency throughout the document
+        • Address all points mentioned in each section
+
+      6. When creating user stories and acceptance criteria:
+        - List ALL necessary user stories including primary, alternative, and edge-case scenarios.
+        - Assign a unique requirement ID (e.g., US-001) to each user story for direct traceability
+        - Include at least one user story specifically for secure access or authentication if the application requires user identification or access restrictions
+        - Ensure no potential user interaction is omitted
+        - Make sure each user story is testable
+      </steps>
+
+  - trigger: "!f2"
+    replace: |
+      You are an expert solutions architect. Your task is to carefully review the technical product requirements document to understand the desired features and functionality. Systematically scan the existing codebase to identify relevant sections, modules, and components that will be affected. 
+      <Technical_Product_Requirements_Doc>
+      [this is where your PRD from the previous step goes]
+      </Technical_Product_Requirements_Doc>
+
+      Follow the flow of code across the files to understand how current implementations work and where modifications are needed. 
+      Pinpoint gaps, redundancies, or areas needing refactoring to align with the new product requirements.
+      Prepare clear technical documentation that details the identified changes, including diagrams, file references, and potential impact on the overall system.
+      Then create a detailed step-by-step plan that outlines what code changes, integrations, or enhancements are required, including a step-by-step implementation roadmap broken down into atomic todos a mid-level engineer can read to complete their tasks.
+
+  - trigger: "!f3"
+    replace: |
+      You are an expert implementation engineer responsible for executing a detailed technical plan to modify, enhance, and integrate new features into an existing codebase. This role focuses on delivering thoughtful and thoroughly tested changes that meet the product requirements outlined in our step-by-step roadmap.
+
+      <Step_By_Step_Roadmap>
+      [PUT YOUR STEP 2 OUTPUT HERE]!
+      </Step_By_Step_Roadmap>
+
+      Follow a clear, step-by-step plan to implement code changes and feature updates.
+      Write, modify, and refactor code to align with the step-by-step roadmap specifications provided. Seamlessly integrate changes with existing systems and perform thorough testing to validate functionality using PlayWright for front-end changes, and Vitest for backend changes. 
+
+      Maintain high coding standards through best practices.
+
+      **Key Deliverables**:
+        * **Implemented Code Changes:**
+
+      Complete, reviewed, and tested code that aligns with the technical plan.
+
+      * **Testing Reports:**Documentation of testing procedures and results demonstrating the stability and functionality of the changes.
+      * **Updated Documentation:** Revised technical documentation and updated runbooks reflecting the new implementations.
+
+      - **Implementation Reports:**
+      Regular progress updates and post-implementation feedback highlighting successes and areas for improvement.
+
+  - trigger: "!t"
+    replace: |
+      My tech stack features TypeScript 5 as the primary language, paired with SvelteKit 5 for building modern, scalable web applications. For data fetching and UI enhancements, I rely on libraries such as Convex, Shadcn UI, Superforms for validation, Svelte Email for email functionality, Svelte runes for state management, phosphor-icons-svelte for icon design elements, and AutoAnimate for animations. On the backend, I use Convex together with PostgreSql for database and authentication, Railway for deployment, Nginx for reverse proxying, while GitHub Actions handles CI/CD workflows and Biome ensures consistent code formatting and linting. Tailwind CSS v4 is also part of the stack to quickly style the application with a utility-first approach.
+
+  - trigger: "!compact"
+    replace: |
+      Edit my writing. I'll share an excerpt with you to edit as follows:
+        - Make it more precise and more concise
+        - Use simple words.
+        - Give me 3 variations.
+      Here's the excerpt:
+
+  - trigger: ";tree"
+    replace: "tree -L 4 -I 'node_modules|.git'"
+
+  - trigger: "!cp"
+    replace: "| wl-copy"
+
+  - trigger: "!eli5"
+    replace: |
+      Explain this file (or these files) as if I’m chatting with my engineer buddy on the phone. Break it down casually but clearly—like you’d explain it to someone who knows their way around code. Cover the following:
+
+      1. Context: What does the file do, and how is it currently used within the project? If it interacts with other parts of the system, highlight that.
+      2. Potential Use Cases: How could this file or its functionality be expanded or repurposed in the future? Any creative ways it might add more value?
+      3. Improvements: If you spot any weaknesses, optimizations, or cleaner ways to implement the logic, call them out. Is there any refactoring or restructuring worth doing?
+      4. Responsibilities: What’s the primary job of this file in the larger codebase? Does it serve a single purpose, or is it multitasking?
+
+      Keep it concise and technical, but throw in analogies or references if it helps to clarify things.
+
+  - trigger: "!copy"
+    replace: |
+      Use the following rules for editing the copy:
+
+      1. Make every word fight for itself.
+      2. Try to eliminate unnecessary words.
+
+      Ask yourself, is there any way I can write this to use fewer words?
+
+  - trigger: "!tsdoc"
+    replace: |
+      You are an AI assistant tasked with adding TSdocs (@tsDocs ) comments to a piece of code to make it more understandable for AI systems or human developers. Your goal is to analyze the code and add appropriate comments that explain its functionality, structure, and important considerations.    
+      Here is the code you need to comment:
+
+      <code>
+      {put your code files here}
+      </code>
+
+      To complete this task, follow these steps:
+
+      1. Carefully analyze the code to understand its structure and functionality.
+      2. Identify key components such as functions, classes, loops, conditionals, and any complex logic.
+      3. Add comments that explain:
+
+        - The purpose of functions, classes, or code blocks
+        - How complex algorithms or logic work
+        - Any assumptions or limitations in the code
+        - The meaning of important variables or data structures
+        - Any potential edge cases or error handling
+
+      When adding comments, adhere to these guidelines:
+
+  - trigger: "!explain"
+    replace: |
+      You are an experienced software engineer tasked with explaining a code file to a fellow engineer over the phone. Your goal is to provide a clear, casual, yet technically accurate breakdown of the file's purpose, functionality, and potential improvements.
+      Here's the content of the code file you need to analyze:
+
+      <code_file>
+      {{CODE_FILE}}
+      </code_file>
+
+      Carefully examine the code above and prepare an explanation that covers the following aspects:
+
+      1. Context: Describe what the file does and how it's currently used within the project. If it interacts with other parts of the system, make sure to highlight that.
+      2. Potential Use Cases: Discuss how this file or its functionality could be expanded or repurposed in the future. Think creatively about ways it might add more value to the project.
+      3. Improvements: Identify any weaknesses, potential optimizations, or cleaner ways to implement the logic. Suggest any refactoring or restructuring that might be worth considering.
+      4. Responsibilities: Explain the primary job of this file in the larger codebase. Determine if it serves a single purpose or if it's handling multiple tasks.
+
+      When crafting your explanation, follow these guidelines:
+        - Keep the tone casual and conversational, as if you're chatting with a friend who's also a skilled engineer.
+        - Use technical language appropriate for an experienced developer, but don't hesitate to include analogies or references if they help clarify complex concepts.
+        - Be concise while ensuring all important points are covered.
+        - Feel free to use humor or informal expressions where appropriate, but maintain a professional undertone.
+
+      Structure your response using the following XML tags:
+
+      <context>Explain the file's purpose and current usage</context>
+      <use_cases>Discuss potential future applications or expansions</use_cases>
+      <improvements>Suggest optimizations or refactoring opportunities</improvements>
+      <responsibilities>Clarify the file's primary role in the codebase</responsibilities>
+
+      Begin your explanation with a brief introduction, then proceed with the structured breakdown. Remember to maintain a conversational tone throughout, as if you're speaking to your engineer buddy over the phone.
+
+  - trigger: "!fixlint"
+    replace: |
+      You are tasked with documenting a folder of files and identifying necessary changes based on linting errors. Your goal is to create comprehensive documentation that explains what each type/function does, provides examples where helpful, explains the "why" behind design decisions, and makes it easier for new team members to understand the code. You should follow Google's jsdoc documentation style for consistency.
+      First, you will be provided with the content of the code folder:
+
+      <code_folder>
+      {{CODE_FOLDER}}
+      </code_folder>
+
+      Next, you will be given the linting errors:
+
+      <linting_errors>
+      {{LINTING_ERRORS}}
+      </linting_errors>
+
+      Please follow these steps to complete the task:
+
+      1. Analyze the code and linting errors:
+        - Read through all the files in the code folder.
+        - Review the linting errors and understand which parts of the code they refer to.
+      2. Document each file:
+        - For each file, create a documentation section.
+        - Explain the purpose of the file and its role in the overall project.
+        - Document each type, class, and function within the file.
+        - Use clear and concise language to describe what each element does.
+      3. Explain design decisions:
+        - For important or complex parts of the code, explain the reasoning behind the design choices.
+        - Discuss any patterns or architectural decisions that are crucial for understanding the codebase.
+      4. Provide examples:
+        - Where appropriate, include code examples to illustrate how to use specific functions or classes.
+        - Ensure that the examples are clear, concise, and demonstrate typical use cases.
+      5. Follow Google's jsdoc documentation style:
+        - Use appropriate jsdoc tags for documenting parameters, return values, types, etc.
+        - Maintain consistency in formatting and style throughout the documentation.
+      6. Identify necessary changes:
+        - Based on the linting errors, identify the changes that need to be made to improve the code.
+        - Explain why each change is necessary and how it will improve the code quality or functionality.
+      7. Format your output:
+        - Present your documentation and suggested changes in a clear, organized manner.
+        - Use appropriate headings and subheadings to structure the information.
+
+      Please provide your complete documentation and analysis within <documentation> tags. Include a separate section for suggested changes based on linting errors within <suggested_changes> tags.
+      Remember to focus on making the documentation helpful for new team members to understand the code quickly and easily. Your goal is to create clear, comprehensive, and consistent documentation that follows best practices and improves the overall quality of the codebase.
+
+  - trigger: "!p0"
+    replace: |
+      You are an expert technical product owner for feature development.
+
+      **Key Responsibilities**
+      • **Documentation & Specification:**
+
+      Create clear, detailed Epic & Feature Catalog documents, including epics, features, problem statements, acceptance criteria and Technical notes.
+
+      You are a senior product owner and an expert in creating Epic & Feature Catalog document for software development teams.
+      Your task is to create a comprehensive Epic & Features Catalog document for the following draftlist of features and epics mixed together:
+
+      <document_instructions>
+      {epic_and_features_draft_goes_here}
+      </document_instructions>
+
+      It is you task to use your expertise to structure and order the draftlist to a mature Epic & Feature Catalog document which can be used to create PRDs for.
+
+      Use the document structure outlined in <document_structure> tags and also use the example below surrounded by <document_example> tags.
+
+      <document_structure>
+      # Epic & Feature Documentation Structure
+
+      ## 1. Coding System Overview
+
+      ### Epic Groupings (First-Level Codes)
+      | Code Range | Epic Type                  |
+      |------------|----------------------------|
+      | EP100      | Core Task Management       |
+      | EP200      | Team Collaboration         |
+      | EP300      | Platform Integrations      |
+      | EP400      | Automation & AI            |
+      | EP500      | Security & Compliance      |
+
+      ### Feature Groupings (Second-Level Codes)
+      | Code Range | Feature Type               |
+      |------------|----------------------------|
+      | .100       | Task Creation/Editing      |
+      | .200       | Task Visualization         |
+      | .300       | Access Controls            |
+      | .400       | API & Webhooks             |
+      | .500       | AI/ML Capabilities         |
+
+      **Feature Code Format:**
+      - `F[EPIC_NUMBER].[FEATURE_NUMBER]`
+        - Example: `F200.300` means Feature 300 under Epic 200.
+
+      ---
+
+      ## 2. Epic Specification
+
+      - **Code:** [EP###]
+      - **Type:** [Epic Type Name]
+      - **Title:** [Epic Title]
+      - **Objective:** [High-level business or user goal]
+
+      #### Features in this Epic
+      - [F###.###]: [Feature Title]
+      - [F###.###]: [Feature Title]
+
+      ---
+
+      ## 3. Feature Specification
+
+      - **Code:** [F###.###] *(Must belong to one Epic)*
+      - **Epic Type:** [Epic Type Name]
+      - **Feature Type:** [Feature Type Name]
+      - **Title:** [Feature Title]
+
+      ### Key Components
+      1. **Problem Statement:**
+        [Briefly describe the user/business problem this feature solves.]
+      2. **Scope:**
+        - [List main functions or components covered by this feature.]
+      3. **Acceptance Criteria:**
+        - [ ] [Condition 1]
+        - [ ] [Condition 2]
+      4. **Technical Notes:**
+        - [List any important technical considerations, integrations, or dependencies.]
+      </document_structure>
+
+      <document_example>
+      ## Epic Specification
+
+      - **Code:** EP200
+      - **Type:** Team Collaboration
+      - **Title:** Team Collaboration Enhancements
+      - **Objective:** Enable seamless teamwork through shared task management and improved communication tools.
+
+      #### Features in this Epic
+      - F200.300: Role-Based Task Permissions
+      - F200.100: Multi-User Task Editing
+
+      ---
+
+      ## Feature Specification
+
+      - **Code:** F200.300
+      - **Epic Type:** Team Collaboration
+      - **Feature Type:** Access Controls
+      - **Title:** Role-Based Task Permissions
+
+      ### Key Components
+      1. **Problem Statement:**
+        Teams need to control who can view or edit sensitive tasks to maintain data privacy and workflow integrity.
+      2. **Scope:**
+        - User roles (Viewer, Editor, Admin)
+        - Permission inheritance rules for sub-tasks
+      3. **Acceptance Criteria:**
+        - [ ] Admins can assign roles per task
+        - [ ] Permissions are enforced across web and mobile clients
+        - [ ] Role changes are logged for audit purposes
+      4. **Technical Notes:**
+        - Requires new `permissions` table in the database
+        - Integrates with the current authentication system
+      </document_example>
+
+  - trigger: "!p1"
+    replace: |
+      You are a technical product manager tasked with creating a 1-page pitch for a new feature idea. Your input will be either a screenshot or a brief description provided by the user. Use simple and clear language throughout the document.
+      The purpose of the pitch is to enable the team to understand the problem at hand, propose practical solutions based on different constraints, define clear boundaries, and set realistic metrics for success. The pitch should follow a consistent and constructive structure.
+
+      The elements of the pitch should include:
+
+      ## Narrowing the Problem
+      Story exposing the problem we or the customers are facing
+
+      ## Solution
+      Proposed solution with mockups, diagrams, views, affordances, inspiration
+
+      ## Rabbit Holes
+      Potential technical, design, etc. challenges and solutions.
+
+      ## Out of Bounds
+      What won’t be a part of the scope
+
+  - trigger: "!p2"
+    replace: |
+      You are an expert technical product manager for feature development.
+
+      **Key Responsibilities**
+      • **Documentation & Specification:**
+
+      Create clear, detailed product requirement documents, including user stories, acceptance criteria, and use cases.
+      You are a senior product manager and an expert in creating product requirements documents (PRDs) for software development teams.
+      Your task is to create a comprehensive product requirements document (PRD) for the following project:
+
+      <prd_instructions>
+      {pitch draft goes here}
+      </prd_instructions>
+
+      Follow these steps to create the PRD:
+
+      ‹steps>
+      1. Begin with a brief overview explaining the project and the purpose of the document
+      2. Use sentence case for all headings except for the title of the document, which can be title case, including any you create that are not included in the pra_outline below.
+      3. Under each main heading include relevant subheadings and fill them with details derived from the prd_instructions
+      4. Organize your PRD into the sections as shown in the prd_outline below
+      5. For each section of pro_outline, provide detailed and relevant information based on the PRD instructions. Ensure that you:
+        • Use clear and concise language
+        • Provide specific details and metrics where required
+        • Maintain consistency throughout the document
+        • Address all points mentioned in each section
+      6. When creating user stories and acceptance criteria:
+        - List ALL necessary user stories including primary, alternative, and edge-case scenarios.
+        - Assign a unique requirement ID (e.g., US-001) to each user story for direct traceability
+        - Include at least one user story specifically for secure access or authentication if the application requires user identification or access restrictions
+        - Ensure no potential user interaction is omitted
+        - Make sure each user story is testable
+
+  - trigger: "!learn"
+    replace: |
+      I'm a <your level> <profession> and I want to learn <topic> so I can <objective>. Follow the RULES below to generate a comprehensive yet concise mini-course for rapid learning. The course should contain chapters that teach me about these SUB_TOPICS.
+      Make sure the chapters fit my level, profession and topic. Ask for clarification if you need more information about my knowledge.
+
+      SUB_TOPICS
+      - <topic 1>
+      - <topic 2>
+      - <topic 3>
+
+      RULES
+      - Use concrete examples to explain every concept
+      - Use emojis to add expression
+      - Generate one chapter at a time
+      - Ask for feedback at the end of each chapter
+      - Ask if I need clarification at the end of each chapter
+      - With each concept, explain real-world use cases
+      - After we complete every sub-topic, present a list of additional topics we can explore that align with my level, profession, topic, and objective.
+
+  - trigger: "!u1"
+    replace: |
+      You are an expert Package Management Analyst tasked with comprehensive package upgrade assessment and risk analysis. Your mission is to evaluate the current package ecosystem, identify upgrade opportunities, and assess potential risks before proceeding with any updates.
+
+      Current Package Environment:
+      [Provide your current package.json, requirements.txt, Gemfile, or equivalent dependency files. Include lock files if available. Describe your project type, architecture, and any known constraints or critical dependencies.]
+
+      References:
+      - Reference your Augment memory about frontend service
+      - Reference Your Eugment memory about "Docker & Deployment"
+      - Reference Your Augment Memory about "AI Features & Data Management"
+      - Reference your Augment Memory About "Development Process & Documentation"
+      - Reference Your Augement Memory about "Testing"
+      - Reference your Augement Memory about: "Grontend & Authentication"
+      - Reference Your Augment Memory about: "Project Architecture"
+      - Tailwind v4 Guide for shadcn-ui: https://shadcn-svelte.com/docs/migration/tailwind-v4
+      - Tailwind upgrade Guide v3 to v4: https://tailwindcss.com/docs/upgrade-guide
+      - shadcn-ui v1 Guide latest version: https://www.shadcn-svelte.com/docs/installation/sveltekit
+      - Monorepo info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/README.md 
+      - Frontend service info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/services/frontend/README.md 
+      - Documentation Info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/README.md 
+      - Development workflow: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/reference/development-workflow.md 
+      -Naming conventions: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/reference/naming-conventions.md
+
+      Key Responsibilities:
+
+      Inventory Analysis: Catalog all current packages, their versions, and dependency relationships
+      Vulnerability Assessment: Identify security vulnerabilities in current packages
+      Compatibility Matrix: Map out potential conflicts between package upgrades
+      Risk Classification: Categorize packages by upgrade risk level (low, medium, high, critical)
+      Impact Assessment: Analyze potential breaking changes and their scope
+
+      Deliverables Required:
+
+      Complete Package Inventory with current versions and last update dates
+      Vulnerability Report highlighting security issues that need addressing
+      Dependency Tree Analysis showing package relationships and potential conflict points
+      Risk Assessment Matrix categorizing each package upgrade by risk level
+      Breaking Changes Forecast predicting what might break with proposed upgrades
+      Upgrade Priority Ranking ordering packages by importance and safety of upgrade
+
+      Analyze the package ecosystem thoroughly and provide a comprehensive assessment that will guide the upgrade strategy planning phase.
+
+  - trigger: "!u2"
+    replace: |
+      You are an expert Package Upgrade Strategist. Your task is to analyze the provided package assessment and risk analysis, then craft a comprehensive upgrade strategy document in markdown outlining the safest and most effective approach to upgrading packages.
+
+      Package Assessment Input:
+      <package_assessment>
+      [Insert output from upgrade_prompt1 here]
+      </package_assessment>
+
+      Key Responsibilities:
+
+      Strategy Design: Create a phased upgrade approach that minimizes risk and downtime
+      Compatibility Planning: Design upgrade sequences that respect dependency relationships
+      Testing Framework: Define comprehensive testing strategies for each upgrade phase
+      Rollback Architecture: Plan contingency measures and rollback procedures
+      Environment Strategy: Design staging and production deployment approach
+      Timeline Planning: Create realistic timelines with appropriate buffer periods
+
+      Key Deliverables:
+
+      Upgrade Strategy Document: A comprehensive document detailing the phased upgrade approach
+      Compatibility Roadmap: Sequence of upgrades that maintains system stability
+      Testing Protocol: Detailed testing procedures for each upgrade phase
+      Risk Mitigation Plan: Strategies to handle potential issues during upgrades
+      Rollback Procedures: Step-by-step recovery plans if upgrades fail
+      Deployment Timeline: Realistic schedule with milestones and checkpoints
+
+      Strategy Framework:
+
+      Phase 1: Low-Risk Upgrades (patch versions, security fixes)
+      Phase 2: Medium-Risk Upgrades (minor versions, feature additions)
+      Phase 3: High-Risk Upgrades (major versions, breaking changes)
+      Phase 4: Critical System Upgrades (core dependencies, framework upgrades)
+
+      Create a battle-tested upgrade strategy that ensures system reliability throughout the upgrade process.
+
+  - trigger: "!u3"
+    replace: |
+      You are an expert Package Upgrade Implementation Engineer. Your task is to take the upgrade strategy document and execute the necessary package upgrades systematically. Document all steps in a markdown file called upgrade-tasks.md and complete them methodically, checking them off as you progress.
+
+      Upgrade Strategy Input:
+      <upgrade_strategy_document>
+      [Insert output from upgrade_prompt2 here]
+      </upgrade_strategy_document>
+
+      Key Responsibilities:
+
+      Systematic Implementation: Execute upgrades following the defined strategy phases
+      Testing & Validation: Run comprehensive tests after each upgrade phase
+      Conflict Resolution: Handle dependency conflicts and compatibility issues as they arise
+      Documentation: Maintain detailed logs of all changes and their outcomes
+      Monitoring: Track system performance and stability throughout the process
+      Rollback Execution: Implement rollback procedures if critical issues arise
+
+      Key Deliverables:
+
+      Upgrade Execution Plan: Detailed task breakdown for each upgrade phase
+      Implementation Logs: Record of all package changes, versions, and outcomes
+      Test Results Documentation: Comprehensive testing reports for each phase
+      Conflict Resolution Records: Documentation of issues encountered and solutions applied
+      Performance Metrics: Before/after comparisons of system performance
+      Updated Documentation: Revised dependency documentation and upgrade procedures
+
+      Implementation Process:
+
+      Environment Preparation: Set up staging environments and backup procedures
+      Phase Execution: Implement upgrades according to the strategy phases
+      Testing Validation: Run full test suites after each significant upgrade
+      Issue Resolution: Address conflicts and problems as they arise
+      Production Deployment: Carefully roll out tested upgrades to production
+      Post-Upgrade Monitoring: Monitor system stability and performance
+
+      Task Template for upgrade-tasks.md:
+      ```markdown
+      # Package Upgrade Implementation Tasks
+
+      ## Phase 1: Low-Risk Upgrades
+      - [ ] Task 1: Description and completion criteria
+      - [ ] Task 2: Description and completion criteria
+
+      ## Phase 2: Medium-Risk Upgrades
+      - [ ] Task 1: Description and completion criteria
+
+      [Continue for all phases...]
+      ```
