@@ -11,9 +11,9 @@ set -euo pipefail
 
 DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
 
-# Create containers
-distrobox create --config-file "$DISTROBOX_CONFIG_DIR/daily-driver-arch.ini" --replace
-distrobox create --config-file "$DISTROBOX_CONFIG_DIR/daily-driver-fedora.ini" --replace
+# Create containers using distrobox-assemble
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/daily-driver-arch.ini" --replace
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/daily-driver-fedora.ini" --replace
 
 echo "✓ Daily-driver containers created successfully"
 distrobox list | grep -E "daily-driver-(arch|fedora)" || true
