@@ -1,0 +1,18 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "modules-left": ["clock"],
+  "modules-right": ["battery", "network"],
+  "clock": {
+    "format": "{:%H:%M}"
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-icons": ["", "", "", "", ""]
+  },
+  "network": {
+    "format-wifi": "{essid}",
+    "format-disconnected": "Disconnected"
+  }
+}
