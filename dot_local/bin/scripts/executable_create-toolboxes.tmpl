@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create daily-driver distrobox containers
+# Create my custom toolbox distrobox containers
 # Only runs on local systems (Bluefin, Fedora)
 
 {{- if .remote }}
@@ -12,10 +12,11 @@ set -euo pipefail
 DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
 
 # Create containers using distrobox-assemble
-distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/daily-driver-arch.ini" --replace
-distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/daily-driver-fedora.ini" --replace
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/browser-toolbox.ini" --replace
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/data-toolbox.ini" --replace
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/notetaking-toolbox.ini" --replace
 
-echo "✓ Daily-driver containers created successfully"
+echo "✓ Toolbox containers created successfully"
 distrobox list | grep -E "daily-driver-(arch|fedora)" || true
 
 {{- end }}

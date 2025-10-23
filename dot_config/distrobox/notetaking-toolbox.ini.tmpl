@@ -1,12 +1,12 @@
 # Distrobox configuration for daily-driver containers
 # These containers includes GUI applications and development tools
 
-[daily-driver-arch]
+[notetaking-toolbox]
 # Container name
-container_name=daily-driver-arch
+container_name=notetaking-toolbox
 
 # Container image
-image=ghcr.io/dpietersz/daily-driver-arch:latest
+image=ghcr.io/dpietersz/notetaking-toolbox:latest
 
 # Use podman as the container manager
 container_manager=podman
@@ -30,7 +30,7 @@ pull=true
 # additional_packages=
 
 # Init hooks - runs inside the container after setup
-init_hooks="${HOME}/.local/bin/scripts/daily-driver-arch-export-gui.sh"
+# init_hooks="${HOME}/.local/bin/scripts/daily-driver-arch-export-gui.sh"
 
 # Additional environment variables
 # extra_flags=--env VAR=value
