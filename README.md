@@ -54,7 +54,7 @@ This will:
 - Install chezmoi (if not present)
 - Create custom dev directory structure (`~/dev/Projects`, `~/dev/Repos`, etc.)
 - Install Homebrew (macOS/Linux, local only)
-- Install GUI applications (Ghostty, Zed, Zen browser - local only)
+- Install GUI applications (Ghostty - local only)
 - Download external resources (mise, fonts, LazyVim config)
 - Apply all dotfiles to your home directory
 - Install all tools via mise (neovim, starship, zellij, etc.)
@@ -63,6 +63,8 @@ This will:
 ### 2. chezmoi
 
 chezmoi manages all dotfiles, templates, and external resources. It detects if you are running in a remote/container/Codespaces environment and adapts accordingly (see `.chezmoi.toml.tmpl`).
+
+**Note**: This repository includes encrypted private keys (GPG, SSH). If cloning for personal use, remove or replace the `private_dot_gnupg/` directory and update `.chezmoi.toml.tmpl` to match your setup.
 
 - **chezmoi apply**: Apply dotfiles to your home directory
 - **chezmoi update**: Pull and apply latest changes
@@ -108,15 +110,15 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 
 - **Shells**: bash (default, modular config with vi-mode), zsh (with vi-mode)
 - **Prompt**: [starship](https://starship.rs/) with Gruvbox theme
-- **Editors**: [Neovim](https://neovim.io/) (LazyVim-based), [Zed](https://zed.dev/), [opencode](https://github.com/jdx/opencode)
+- **Editors**: [Neovim](https://neovim.io/) (LazyVim-based), [opencode](https://github.com/jdx/opencode)
 - **Terminals**: [Ghostty](https://ghostty.org/), [Alacritty](https://alacritty.org/)
-- **Browser**: [Zen Browser](https://zen-browser.app/)
 - **Multiplexers**: tmux, [zellij](https://zellij.dev/) (default shell: bash)
 - **Tools**: Managed with [mise](https://mise.jdx.dev/) - bat, btop, eza, fd, fzf, lazygit, lazydocker, ripgrep, yazi, zoxide, and more
 - **AI Tools**: [llm](https://llm.datasette.io/) CLI (via uv)
 - **Kubernetes**: k9s with custom skin
 - **Fonts**: DepartureMono, Monaspace Nerd Fonts (auto-installed)
 - **Security**: GPG/SSH integration (local only)
+- **GUI Apps**: [Zed](https://zed.dev/), [Zen Browser](https://zen-browser.app/), and more available in daily-driver containers
 
 ---
 
