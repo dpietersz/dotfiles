@@ -74,6 +74,21 @@ chmod 644 "$HOME/.ssh/cosign.pub"
 
 echo "✅ Cosign keys installed"
 
+# Decrypt Azure HVS keys
+echo "🔓 Decrypting Azure HVS Keys..."
+mkdir -p "$HOME/.target/location"
+
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].age" > "$HOME/.ssh/[REDACTED_AZURE_KEY]"
+
+# If public key exists
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].pub.age" > "$HOME/.ssh/[REDACTED_AZURE_KEY].pub"
+
+# Set proper permissions
+chmod 600 "$HOME/.ssh/[REDACTED_AZURE_KEY]"
+chmod 644 "$HOME/.ssh/[REDACTED_AZURE_KEY].pub"  # if applicable
+
+echo "✅ YOUR_KEY_NAME installed"
+
 # Clear passphrase from memory
 unset DOTFILES_PASSPHRASE
 unset GPG_KEY
