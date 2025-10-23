@@ -16,6 +16,11 @@ APPS_TO_EXPORT=(
     "bruno"
     "cursor"
     "teams"
+    "zed"
+    "zen-browser"
+    "chromium-browser"
+    "qutebrowser"
+    "beekeeper-studio"
 )
 
 # Export each application
