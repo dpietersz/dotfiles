@@ -94,7 +94,7 @@ This creates two containers:
 - **daily-driver-arch**: Arch Linux with AUR packages (Obsidian, AnyType, Polypane, Storage Explorer)
 - **daily-driver-fedora**: Fedora with DNF/COPR packages (Zed, Zen Browser, Vivaldi, Cursor, Bruno, Beekeeper Studio)
 
-Both containers include all CLI tools via mise and export GUI applications to your host.
+Both containers include all CLI tools via mise. GUI applications are automatically exported to your host for seamless integration with your desktop environment.
 
 Enter a container:
 ```sh
@@ -111,14 +111,14 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 - **Shells**: bash (default, modular config with vi-mode), zsh (with vi-mode)
 - **Prompt**: [starship](https://starship.rs/) with Gruvbox theme
 - **Editors**: [Neovim](https://neovim.io/) (LazyVim-based), [opencode](https://github.com/jdx/opencode)
-- **Terminals**: [Ghostty](https://ghostty.org/), [Alacritty](https://alacritty.org/)
+- **Terminals**: [Ghostty](https://ghostty.org/)
 - **Multiplexers**: tmux, [zellij](https://zellij.dev/) (default shell: bash)
 - **Tools**: Managed with [mise](https://mise.jdx.dev/) - bat, btop, eza, fd, fzf, lazygit, lazydocker, ripgrep, yazi, zoxide, and more
-- **AI Tools**: [llm](https://llm.datasette.io/) CLI (via uv)
+- **AI Integration**: [llm](https://llm.datasette.io/) CLI (via uv), [aichat](https://github.com/sigoden/aichat) (via mise), AI-powered git commit messages (`git ai`)
 - **Kubernetes**: k9s with custom skin
 - **Fonts**: DepartureMono, Monaspace Nerd Fonts (auto-installed)
 - **Security**: GPG/SSH integration (local only)
-- **GUI Apps**: [Zed](https://zed.dev/), [Zen Browser](https://zen-browser.app/), and more available in daily-driver containers
+- **GUI Apps**: [Zed](https://zed.dev/), [Zen Browser](https://zen-browser.app/), and more available in daily-driver containers (exported to host)
 
 ---
 
