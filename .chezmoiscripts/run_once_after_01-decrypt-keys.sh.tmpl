@@ -58,6 +58,22 @@ gpg-connect-agent reloadagent /bye &>/dev/null || true
 
 echo "✅ GPG agent cache set to 12 hours"
 
+# Decrypt Cosign keys
+echo "🔓 Decrypting Cosign keys..."
+mkdir -p "$HOME/.ssh"
+
+# Private Cosign key
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.key.age" > "$HOME/.ssh/cosign.key"
+
+# Public Cosign key
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.pub.age" > "$HOME/.ssh/cosign.pub"
+
+# Set proper permissions
+chmod 600 "$HOME/.ssh/cosign.key"
+chmod 644 "$HOME/.ssh/cosign.pub"
+
+echo "✅ Cosign keys installed"
+
 # Clear passphrase from memory
 unset DOTFILES_PASSPHRASE
 unset GPG_KEY
