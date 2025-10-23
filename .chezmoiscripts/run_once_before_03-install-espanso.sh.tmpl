@@ -17,20 +17,18 @@ fi
 
 set -euo pipefail
 
-# Install Terra repository if not already installed
-if ! dnf repolist | grep -q terra; then
-  echo "Installing Terra repository..."
-  sudo dnf install -y https://repos.fyralabs.com/terra-release-latest.noarch.rpm
-fi
+# Enable Copr repository for espanso
+# Reference: https://copr.fedorainfracloud.org/coprs/eclipseo/espanso/
+echo "Enabling Copr repository for espanso..."
+sudo dnf copr enable -y eclipseo/espanso
 
 # Install espanso-wayland for Wayland support
-# Reference: https://espanso.org/docs/install/linux/#terra-wayland
 echo "Installing espanso (Wayland)..."
 sudo dnf install -y espanso-wayland
 
 # Add required capabilities for Wayland
 echo "Adding required capabilities..."
-sudo setcap "cap_dac_override+p" $(which espanso)
+sudo setcap "cap_dac_override+p" $(which espanso-wayland)
 
 # Register espanso as a systemd service
 echo "Registering espanso as systemd service..."
