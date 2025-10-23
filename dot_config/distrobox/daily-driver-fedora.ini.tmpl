@@ -26,11 +26,8 @@ init=true
 # Additional packages to install on first run (optional)
 # additional_packages=
 
-# Pre-init hook - runs before container creation
-# pre_init_hook=
-
-# Post-init hook - runs after container creation and setup
-post_init_hook="${XDG_DATA_HOME:-$HOME/.local/share}/distrobox/hooks/daily-driver-fedora-export-gui.sh"
+# Init hooks - runs inside the container after setup
+init_hooks="${XDG_DATA_HOME:-$HOME/.local/share}/distrobox/hooks/daily-driver-fedora-export-gui.sh"
 
 # Additional environment variables
 # extra_flags=--env VAR=value
