@@ -11,7 +11,10 @@ binds {
     
     // Exit niri
     Mod+Shift+E { quit; }
-    
+
+    // Overview
+    Mod+O { show-hotkey-overlay; }
+
     // === Window Management ===
     Mod+Q repeat=false { close-window; }
     Mod+Shift+F { maximize-column; }
@@ -70,7 +73,7 @@ binds {
     //Mod+Page_Down      { focus-workspace-down; }
     //Mod+Page_Up        { focus-workspace-up; }
     Mod+U                { focus-workspace-down; }
-    Mod+D                { focus-workspace-up; }
+    Mod+I                { focus-workspace-up; }
     Mod+Ctrl+Down        { focus-workspace-down; }
     Mod+Ctrl+Up          { focus-workspace-up; }
     Mod+Ctrl+Alt+Down    { move-column-to-workspace-down; }
@@ -82,7 +85,7 @@ binds {
     Mod+Shift+Page_Down { move-workspace-down; }
     Mod+Shift+Page_Up   { move-workspace-up; }
     Mod+Shift+U         { move-workspace-down; }
-    Mod+Shift+D         { move-workspace-up; }
+    Mod+Shift+I         { move-workspace-up; }
 
     // === Mouse Wheel Navigation ===
     Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
@@ -234,6 +237,10 @@ environment {
 hotkey-overlay {
     skip-at-startup
 }
+
+// Screenshot configuration
+// Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Miscellaneous
+screenshot-path "~/dev/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
 window-rule {
     geometry-corner-radius 9
