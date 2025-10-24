@@ -10,13 +10,10 @@ set -euo pipefail
 
 echo "Installing niri and wayland..."
 
-# Source /etc/os-release to get VERSION_ID
-. /etc/os-release
-
 # Download the COPR repo file
 echo "Adding niri COPR repository..."
 sudo curl --output-dir "/etc/yum.repos.d/" --remote-name \
-  "https://copr.fedorainfracloud.org/coprs/yalter/niri/repo/fedora-${VERSION_ID}/yalter-niri-fedora-${VERSION_ID}.repo" 2>/dev/null || {
+  "https://copr.fedorainfracloud.org/coprs/yalter/niri/repo/fedora-42/yalter-niri-fedora-42.repo" 2>/dev/null || {
   echo "Warning: Could not download COPR repo file. Trying alternative method..."
   sudo dnf copr enable -y yalter/niri
 }
