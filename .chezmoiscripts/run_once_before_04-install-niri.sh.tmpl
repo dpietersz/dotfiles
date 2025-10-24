@@ -10,6 +10,9 @@ set -euo pipefail
 
 echo "Installing niri and wayland..."
 
+# Source /etc/os-release to get VERSION_ID
+. /etc/os-release
+
 # Download the COPR repo file
 echo "Adding niri COPR repository..."
 sudo curl --output-dir "/etc/yum.repos.d/" --remote-name \
