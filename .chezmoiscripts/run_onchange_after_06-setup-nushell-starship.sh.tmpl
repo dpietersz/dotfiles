@@ -1,0 +1,30 @@
+#!/bin/bash
+# Setup nushell starship integration
+# starship config hash: {{ include "dot_config/starship.toml" | sha256sum }}
+
+set -euo pipefail
+
+# Check if nushell is installed
+if ! command -v nu >/dev/null 2>&1; then
+  echo "nushell is not installed, skipping starship setup"
+  exit 0
+fi
+
+# Check if starship is installed
+if ! command -v starship >/dev/null 2>&1; then
+  echo "starship is not installed, skipping starship setup"
+  exit 0
+fi
+
+# Create vendor/autoload directory if it doesn't exist
+NUSHELL_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nushell"
+VENDOR_AUTOLOAD_DIR="$NUSHELL_DATA_DIR/vendor/autoload"
+
+mkdir -p "$VENDOR_AUTOLOAD_DIR"
+
+# Generate starship integration file
+echo "Generating nushell starship integration..."
+starship init nu | tee "$VENDOR_AUTOLOAD_DIR/starship.nu" > /dev/null
+
+echo "✓ Nushell starship integration setup complete"
+
