@@ -12,33 +12,33 @@ if (which nvim | is-not-empty) {
   $env.VISUAL = "vim"
 }
 
-$env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
+$env.XDG_CONFIG_HOME = [$env.HOME ".config"] | path join
 $env.CONFIG = $env.XDG_CONFIG_HOME
-$env.HISTFILE = ($env.HOME | path join ".histfile")
+$env.HISTFILE = [$env.HOME ".histfile"] | path join
 $env.HISTSIZE = 25000
 $env.SAVEHIST = 25000
 $env.HISTCONTROL = "ignorespace"
 
-$env.DOTFILES = ($env.HOME | path join "dotfiles")
-$env.SCRIPTS = ($env.HOME | path join ".local/bin/scripts")
+$env.DOTFILES = [$env.HOME "dotfiles"] | path join
+$env.SCRIPTS = [$env.HOME ".local/bin/scripts"] | path join
 
-$env.DEV = ($env.HOME | path join "dev")
-$env.PROJECTS = ($env.DEV | path join "Projects")
-$env.NOTES = ($env.DEV | path join "Notes")
-$env.DESKTOP = ($env.DEV | path join "Desktop")
-$env.DOWNLOADS = ($env.DEV | path join "Downloads")
-$env.TEMPLATES = ($env.DEV | path join "Templates")
-$env.PUBLIC = ($env.DEV | path join "Public")
-$env.MUSIC = ($env.DEV | path join "Music")
-$env.PICTURES = ($env.DEV | path join "Pictures")
-$env.VIDEOS = ($env.DEV | path join "Videos")
-$env.DOCUMENTS = ($env.DEV | path join "Documents")
+$env.DEV = [$env.HOME "dev"] | path join
+$env.PROJECTS = [$env.DEV "Projects"] | path join
+$env.NOTES = [$env.DEV "Notes"] | path join
+$env.DESKTOP = [$env.DEV "Desktop"] | path join
+$env.DOWNLOADS = [$env.DEV "Downloads"] | path join
+$env.TEMPLATES = [$env.DEV "Templates"] | path join
+$env.PUBLIC = [$env.DEV "Public"] | path join
+$env.MUSIC = [$env.DEV "Music"] | path join
+$env.PICTURES = [$env.DEV "Pictures"] | path join
+$env.VIDEOS = [$env.DEV "Videos"] | path join
+$env.DOCUMENTS = [$env.DEV "Documents"] | path join
 
 $env.GITUSER = "dpietersz"
-$env.REPOS = ($env.DEV | path join "Repos")
-$env.GHREPOS = ($env.REPOS | path join "github.com")
-$env.GLREPOS = ($env.REPOS | path join "gitlab.com")
-$env.AZREPOS = ($env.REPOS | path join "dev.azure.com")
+$env.REPOS = [$env.DEV "Repos"] | path join
+$env.GHREPOS = [$env.REPOS "github.com"] | path join
+$env.GLREPOS = [$env.REPOS "gitlab.com"] | path join
+$env.AZREPOS = [$env.REPOS "dev.azure.com"] | path join
 
 $env.BROWSER = "zen"
 
