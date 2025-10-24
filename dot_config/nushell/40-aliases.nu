@@ -52,7 +52,8 @@ alias nuconf = v $"($env.XDG_CONFIG_HOME)/nushell/config.nu"
 
 # ------------------ Better ls commands ------------------
 
-alias ls = ls --color=auto
+# Note: nushell's built-in ls automatically colors output based on LS_COLORS env var
+# No --color flag needed
 alias la = eza -laghm --all --icons --git --color=always --group-directories-first
 alias ll = eza -l --color=always --group-directories-first --icons
 alias lt = eza -aT --color=always --group-directories-first --icons -I '.git|.vscode|node_modules'
