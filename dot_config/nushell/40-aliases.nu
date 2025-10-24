@@ -53,13 +53,11 @@ alias nuconf = v $"($env.XDG_CONFIG_HOME)/nushell/config.nu"
 # ------------------ Better ls commands ------------------
 
 # Note: nushell's built-in ls automatically colors output based on LS_COLORS env var
-# These aliases use eza if available (installed via mise)
-if (which eza | is-not-empty) {
-  alias la = eza -laghm --all --icons --git --color=always --group-directories-first
-  alias ll = eza -l --color=always --group-directories-first --icons
-  alias lt = eza -aT --color=always --group-directories-first --icons -I '.git|.vscode|node_modules'
-  alias l = eza -lah --color=always --group-directories-first --icons
-}
+# These aliases use eza (installed via mise and activated in 20-tools.nu.tmpl)
+alias la = eza -laghm --all --icons --git --color=always --group-directories-first
+alias ll = eza -l --color=always --group-directories-first --icons
+alias lt = eza -aT --color=always --group-directories-first --icons -I '.git|.vscode|node_modules'
+alias l = eza -lah --color=always --group-directories-first --icons
 
 # ------------------ passwordstore ------------------
 
