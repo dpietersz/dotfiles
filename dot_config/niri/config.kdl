@@ -7,14 +7,14 @@ binds {
     Mod+T { spawn "ghostty"; }
     
     // App launcher
-    Mod+D { spawn "fuzzel"; }
+    Mod+Space { spawn "fuzzel"; }
     
     // Exit niri
     Mod+Shift+E { quit; }
     
     // === Window Management ===
     Mod+Q repeat=false { close-window; }
-    Mod+Alt+F { maximize-column; }
+    Mod+Shift+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
     Mod+W { toggle-window-floating; }
     Mod+Ctrl+W { switch-focus-between-floating-and-tiling; }
@@ -70,7 +70,7 @@ binds {
     //Mod+Page_Down      { focus-workspace-down; }
     //Mod+Page_Up        { focus-workspace-up; }
     Mod+U                { focus-workspace-down; }
-    Mod+I                { focus-workspace-up; }
+    Mod+D                { focus-workspace-up; }
     Mod+Ctrl+Down        { focus-workspace-down; }
     Mod+Ctrl+Up          { focus-workspace-up; }
     Mod+Ctrl+Alt+Down    { move-column-to-workspace-down; }
@@ -82,7 +82,7 @@ binds {
     Mod+Shift+Page_Down { move-workspace-down; }
     Mod+Shift+Page_Up   { move-workspace-up; }
     Mod+Shift+U         { move-workspace-down; }
-    Mod+Shift+I         { move-workspace-up; }
+    Mod+Shift+D         { move-workspace-up; }
 
     // === Mouse Wheel Navigation ===
     Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
@@ -112,15 +112,15 @@ binds {
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Ctrl+1 { move-column-to-workspace 1; }
-    Mod+Ctrl+2 { move-column-to-workspace 2; }
-    Mod+Ctrl+3 { move-column-to-workspace 3; }
-    Mod+Ctrl+4 { move-column-to-workspace 4; }
-    Mod+Ctrl+5 { move-column-to-workspace 5; }
-    Mod+Ctrl+6 { move-column-to-workspace 6; }
-    Mod+Ctrl+7 { move-column-to-workspace 7; }
-    Mod+Ctrl+8 { move-column-to-workspace 8; }
-    Mod+Ctrl+9 { move-column-to-workspace 9; }
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
 
     // === Column Management ===
     Mod+BracketLeft  { consume-or-expel-window-left; }
@@ -141,6 +141,16 @@ binds {
     Mod+Equal { set-column-width "+10%"; }
     Mod+Shift+Minus { set-window-height "-10%"; }
     Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // === Screenshots ===
+    Mod+Shift+S { screenshot; }
+    XF86Launch1 { screenshot; }
+    Ctrl+XF86Launch1 { screenshot-screen; }
+    Alt+XF86Launch1 { screenshot-window; }
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+
 
 }
 
