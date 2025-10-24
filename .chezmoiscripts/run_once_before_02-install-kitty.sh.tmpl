@@ -17,6 +17,12 @@ if command -v kitty >/dev/null 2>&1; then
   exit 0
 fi
 
+# Clean up old ghostty COPR repository if it exists
+if [ -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo ]; then
+  echo "Removing old Ghostty COPR repository..."
+  sudo rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
+fi
+
 echo "Installing Kitty terminal..."
 echo "Refreshing package metadata..."
 sudo rpm-ostree refresh-md
