@@ -8,10 +8,10 @@ $env.config.edit_mode = 'vi'
 source ~/.config/nushell/00-env.nu
 
 # Load PATH management
-source ~/.config/nushell/10-path.nu.tmpl
+source ~/.config/nushell/10-path.nu
 
 # Load tools management
-source ~/.config/nushell/20-tools.nu.tmpl
+source ~/.config/nushell/20-tools.nu
 
 # Load aliases
 source ~/.config/nushell/40-aliases.nu
