@@ -8,6 +8,12 @@ set -euo pipefail
 # Install niri and wayland on Fedora/Bluefin
 # Reference: https://github.com/YaLTeR/niri/wiki
 
+# Check if niri is already installed
+if command -v niri >/dev/null 2>&1; then
+  echo "niri is already installed"
+  exit 0
+fi
+
 echo "Installing niri and wayland..."
 
 # Download the COPR repo file
