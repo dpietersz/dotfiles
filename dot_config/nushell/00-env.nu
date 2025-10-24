@@ -12,33 +12,33 @@ if (which nvim | is-not-empty) {
   $env.VISUAL = "vim"
 }
 
-$env.XDG_CONFIG_HOME = [$env.HOME ".config"] | path join
-$env.CONFIG = $env.XDG_CONFIG_HOME
-$env.HISTFILE = [$env.HOME ".histfile"] | path join
+$env.XDG_CONFIG_HOME = ~/.config
+$env.CONFIG = ~/.config
+$env.HISTFILE = ~/.histfile
 $env.HISTSIZE = 25000
 $env.SAVEHIST = 25000
 $env.HISTCONTROL = "ignorespace"
 
-$env.DOTFILES = [$env.HOME "dotfiles"] | path join
-$env.SCRIPTS = [$env.HOME ".local/bin/scripts"] | path join
+$env.DOTFILES = ~/dotfiles
+$env.SCRIPTS = ~/.local/bin/scripts
 
-$env.DEV = [$env.HOME "dev"] | path join
-$env.PROJECTS = [$env.DEV "Projects"] | path join
-$env.NOTES = [$env.DEV "Notes"] | path join
-$env.DESKTOP = [$env.DEV "Desktop"] | path join
-$env.DOWNLOADS = [$env.DEV "Downloads"] | path join
-$env.TEMPLATES = [$env.DEV "Templates"] | path join
-$env.PUBLIC = [$env.DEV "Public"] | path join
-$env.MUSIC = [$env.DEV "Music"] | path join
-$env.PICTURES = [$env.DEV "Pictures"] | path join
-$env.VIDEOS = [$env.DEV "Videos"] | path join
-$env.DOCUMENTS = [$env.DEV "Documents"] | path join
+$env.DEV = ~/dev
+$env.PROJECTS = ~/dev/Projects
+$env.NOTES = ~/dev/Notes
+$env.DESKTOP = ~/dev/Desktop
+$env.DOWNLOADS = ~/dev/Downloads
+$env.TEMPLATES = ~/dev/Templates
+$env.PUBLIC = ~/dev/Public
+$env.MUSIC = ~/dev/Music
+$env.PICTURES = ~/dev/Pictures
+$env.VIDEOS = ~/dev/Videos
+$env.DOCUMENTS = ~/dev/Documents
 
 $env.GITUSER = "dpietersz"
-$env.REPOS = [$env.DEV "Repos"] | path join
-$env.GHREPOS = [$env.REPOS "github.com"] | path join
-$env.GLREPOS = [$env.REPOS "gitlab.com"] | path join
-$env.AZREPOS = [$env.REPOS "dev.azure.com"] | path join
+$env.REPOS = ~/dev/Repos
+$env.GHREPOS = ~/dev/Repos/github.com
+$env.GLREPOS = ~/dev/Repos/gitlab.com
+$env.AZREPOS = ~/dev/Repos/dev.azure.com
 
 $env.BROWSER = "zen"
 
