@@ -3,21 +3,28 @@ spawn-at-startup "waybar"
 
 // Define keybindings
 binds {
-    // Terminal (Ghostty instead of Alacritty)
-    Mod+T { spawn "ghostty"; }
-    
     // App launcher
-    Mod+Space { spawn "fuzzel"; }
+    // Mod+Space { spawn "fuzzel"; }
     
-    // Exit niri
-    Mod+Shift+E { quit; }
+    // Exit nri
+    Ctrl+Alt+Delete { quit; }
 
     // Overview
     Mod+O { show-hotkey-overlay; }
 
+    // Suggested binds for running programs: terminal, app launcher, screen locker.
+    Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
+    Mod+Space hotkey-overlay-title="Run an Application: fuzzel" { spawn "bash" "-c" "pgrep fuzzel && pkill fuzzel || fuzzel"; }
+    Ctrl+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    Mod+Backspace hotkey-overlay-title="Logout: wlogout" { spawn "bash" "-c" "pgrep wlogout && pkill wlogout || wlogout -c 15 -b 6 -m 400"; }
+    Mod+Ctrl+Space hotkey-overlay-title="Toggle bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/toggle-waybar.sh"; }
+    Mod+N hotkey-overlay-title="Toggle Notification: swaync" { spawn "swaync-client" "-t"; }
+    Mod+Shift+Space hotkey-overlay-title="Lock bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/lock-waybar.sh"; }
+    XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
+
     // === Window Management ===
     Mod+Q repeat=false { close-window; }
-    Mod+Shift+F { maximize-column; }
+    Mod+Alt+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
     Mod+W { toggle-window-floating; }
     Mod+Ctrl+W { switch-focus-between-floating-and-tiling; }
