@@ -30,7 +30,19 @@ sudo rpm-ostree refresh-md --force
 
 # Install niri and waybar
 echo "Installing niri and waybar..."
-sudo rpm-ostree install niri waybar
+sudo rpm-ostree install niri waybar || {
+  # If installation fails due to package already requested, that's OK
+  # It means a previous attempt is still pending
+  if sudo rpm-ostree status | grep -q "niri"; then
+    echo "niri is already pending installation"
+    echo "⚠️  A reboot is required to apply changes"
+    echo "Run: systemctl reboot"
+    exit 0
+  else
+    # Real error, propagate it
+    exit 1
+  fi
+}
 
 echo "✓ Niri and waybar installed successfully"
 echo "⚠️  A reboot is required to apply changes"
