@@ -9,10 +9,35 @@ else
 fi
 
 {{- else if eq .chezmoi.osRelease.id "bluefin" }}
+set -euo pipefail
+
+# Check if ghostty is already installed
+if command -v ghostty >/dev/null 2>&1; then
+  echo "Ghostty is already installed"
+  exit 0
+fi
+
 . /etc/os-release
+echo "Adding Ghostty COPR repository..."
 curl -fsSL "https://copr.fedorainfracloud.org/coprs/scottames/ghostty/repo/fedora-${VERSION_ID}/scottames-ghostty-fedora-${VERSION_ID}.repo" | sudo tee /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo > /dev/null
-rpm-ostree refresh-md && rpm-ostree install ghostty
-echo "Reboot required to complete Ghostty installation"
+
+echo "Refreshing package metadata..."
+sudo rpm-ostree refresh-md
+
+echo "Installing Ghostty..."
+sudo rpm-ostree install ghostty || {
+  echo "Installation failed. Attempting to resolve conflicts..."
+  echo "Uninstalling conflicting packages..."
+  sudo rpm-ostree uninstall ghostty ghostty-zsh-completion 2>/dev/null || true
+  echo "Updating system..."
+  sudo rpm-ostree update
+  echo "Retrying Ghostty installation..."
+  sudo rpm-ostree install ghostty
+}
+
+echo "✓ Ghostty installed successfully"
+echo "⚠️  A reboot is required to apply changes"
+echo "Run: systemctl reboot"
 
 {{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
 if command -v dnf >/dev/null; then
