@@ -27,8 +27,8 @@
 [alias]
     change-commits = "!f() { VAR=$1; OLD=$2; NEW=$3; shift 3; git filter-branch --env-filter \"if [[ \\\"$`echo $VAR`\\\" = '$OLD' ]]; then export $VAR='$NEW'; fi\" $@; }; f"
     pull-verbose = !git fetch && git log HEAD..origin/$(git rev-parse --abbrev-ref HEAD) --oneline && echo && git merge --ff-only
-    ai = !git add . && git-llm.sh
-    hvs = !git add . && git-llm-hvs.sh
+    ai = !git add . && git-llm
+    hvs = !git add . && git-llm-hvs
     a = commit --amend
     cm = commit -m
     co = checkout
