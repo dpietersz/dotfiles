@@ -8,10 +8,10 @@ $env.config.edit_mode = 'vi'
 source ~/.config/nushell/00-env.nu
 
 # Load PATH management
-source ~/.config/nushell/10-path.nu.tmpl
+source ~/.config/nushell/10-path.nu
 
 # Load tools management (mise activation, etc.)
-source ~/.config/nushell/20-tools.nu.tmpl
+source ~/.config/nushell/20-tools.nu
 
 # Initialize starship prompt
 # The starship.nu file is auto-loaded from vendor/autoload/
