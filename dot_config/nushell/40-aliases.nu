@@ -45,7 +45,7 @@ alias cl = clear
 # ------------------ Shell / Config ------------------
 
 alias espansoconf = v $"($env.DOTFILES)/dot_config/espanso/match/base.yml"
-alias nvimconf = cd $"($env.DOTFILES)/dot_config/nvim" && nvim init.lua
+alias nvimconf = cd $"($env.DOTFILES)/dot_config/nvim"; nvim init.lua
 
 # Nushell-specific config alias
 alias nuconf = v $"($env.XDG_CONFIG_HOME)/nushell/config.nu"
