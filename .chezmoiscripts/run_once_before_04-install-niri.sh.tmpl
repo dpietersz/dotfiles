@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-# Install niri and wayland on Fedora/Bluefin
+# Install niri and waybar on Fedora/Bluefin
 # Reference: https://github.com/YaLTeR/niri/wiki
 
 # Check if niri is already installed
@@ -14,15 +14,15 @@ if command -v niri >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "Installing niri and wayland..."
+echo "Installing niri and waybar..."
 
-# Download the COPR repo file
+# Get Fedora version
+. /etc/os-release
+FEDORA_VERSION="${VERSION_ID:-42}"
+
+# Enable COPR repository for niri
 echo "Adding niri COPR repository..."
-sudo curl --output-dir "/etc/yum.repos.d/" --remote-name \
-  "https://copr.fedorainfracloud.org/coprs/yalter/niri/repo/fedora-42/yalter-niri-fedora-42.repo" 2>/dev/null || {
-  echo "Warning: Could not download COPR repo file. Trying alternative method..."
-  sudo dnf copr enable -y yalter/niri
-}
+sudo dnf copr enable -y yalter/niri
 
 # Refresh metadata
 echo "Refreshing package metadata..."
