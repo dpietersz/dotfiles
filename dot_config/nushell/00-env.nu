@@ -9,15 +9,15 @@ if (which nvim | is-not-empty) {
   $env.EDITOR = "vim"
   $env.VISUAL = "vim"
 }
-$env.XDG_CONFIG_HOME = ~/.config
+$env.XDG_CONFIG_HOME = (~/.config | path expand)
 $env.CONFIG = $env.XDG_CONFIG_HOME
-$env.HISTFILE = ~/.histfile
+$env.HISTFILE = (~/.histfile | path expand)
 $env.HISTSIZE = 25000
 $env.SAVEHIST = 25000
 $env.HISTCONTROL = "ignorespace"
-$env.DOTFILES = ~/dotfiles
-$env.SCRIPTS = ~/.local/bin/scripts
-$env.DEV = ~/dev
+$env.DOTFILES = (~/dotfiles | path expand)
+$env.SCRIPTS = (~/.local/bin/scripts | path expand)
+$env.DEV = (~/dev | path expand)
 $env.PROJECTS = $"($env.DEV)/Projects"
 $env.NOTES = $"($env.DEV)/Notes"
 $env.DESKTOP = $"($env.DEV)/Desktop"
