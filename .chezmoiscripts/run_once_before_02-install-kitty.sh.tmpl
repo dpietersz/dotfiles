@@ -1,0 +1,41 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if eq .chezmoi.os "darwin" }}
+if command -v brew >/dev/null; then
+  brew install kitty
+else
+  echo "Homebrew not installed. Download from: https://sw.kovidgoyal.net/kitty/binary/"
+fi
+
+{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+set -euo pipefail
+
+# Check if kitty is already installed
+if command -v kitty >/dev/null 2>&1; then
+  echo "Kitty is already installed"
+  exit 0
+fi
+
+echo "Installing Kitty terminal..."
+echo "Refreshing package metadata..."
+sudo rpm-ostree refresh-md
+
+echo "Installing Kitty..."
+sudo rpm-ostree install kitty
+
+echo "✓ Kitty installed successfully"
+echo "⚠️  A reboot is required to apply changes"
+echo "Run: systemctl reboot"
+
+{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+if command -v dnf >/dev/null; then
+  sudo dnf install -y kitty
+fi
+
+{{- else }}
+echo "No installation instructions present for Kitty in your distribution."
+echo "Update the template using source: https://sw.kovidgoyal.net/kitty/binary/"
+
+{{- end }}
+{{- end }}
