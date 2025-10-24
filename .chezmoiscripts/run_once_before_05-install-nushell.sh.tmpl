@@ -1,0 +1,40 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+
+set -euo pipefail
+
+# Install nushell on Fedora/Bluefin
+# Reference: https://www.nushell.sh/book/installation.html
+
+# Check if nushell is already installed
+if command -v nu >/dev/null 2>&1; then
+  echo "nushell is already installed"
+  exit 0
+fi
+
+echo "Installing nushell..."
+
+# Enable COPR repository for nushell
+echo "Adding nushell COPR repository..."
+sudo dnf copr enable -y atim/nushell
+
+# Refresh metadata
+echo "Refreshing package metadata..."
+sudo rpm-ostree refresh-md --force
+
+# Install nushell
+echo "Installing nushell..."
+sudo rpm-ostree install nushell
+
+echo "✓ Nushell installed successfully"
+echo "⚠️  A reboot is required to apply changes"
+echo "Run: systemctl reboot"
+
+{{- else }}
+echo "Nushell installation is only supported on Bluefin and Fedora"
+
+{{- end }}
+{{- end }}
+
