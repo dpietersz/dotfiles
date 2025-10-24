@@ -1,0 +1,38 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+
+set -euo pipefail
+
+# Install niri and wayland on Fedora/Bluefin
+# Reference: https://github.com/YaLTeR/niri/wiki
+
+echo "Installing niri and wayland..."
+
+# Download the COPR repo file
+echo "Adding niri COPR repository..."
+sudo curl --output-dir "/etc/yum.repos.d/" --remote-name \
+  "https://copr.fedorainfracloud.org/coprs/yalter/niri/repo/fedora-${VERSION_ID}/yalter-niri-fedora-${VERSION_ID}.repo" 2>/dev/null || {
+  echo "Warning: Could not download COPR repo file. Trying alternative method..."
+  sudo dnf copr enable -y yalter/niri
+}
+
+# Refresh metadata
+echo "Refreshing package metadata..."
+sudo rpm-ostree refresh-md --force
+
+# Install niri and waybar
+echo "Installing niri and waybar..."
+sudo rpm-ostree install niri waybar
+
+echo "✓ Niri and waybar installed successfully"
+echo "⚠️  A reboot is required to apply changes"
+echo "Run: systemctl reboot"
+
+{{- else }}
+echo "Niri installation is only supported on Bluefin and Fedora"
+
+{{- end }}
+{{- end }}
+
