@@ -1,11 +1,9 @@
 #!/bin/bash
 {{- if not .remote }}
 
-{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
-
 set -euo pipefail
 
-# Install nushell on Fedora/Bluefin
+# Install nushell
 # Reference: https://www.nushell.sh/book/installation.html
 
 # Check if nushell is already installed
@@ -14,27 +12,48 @@ if command -v nu >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "Installing nushell..."
+{{- if eq .chezmoi.os "darwin" }}
 
-# Enable COPR repository for nushell
-echo "Adding nushell COPR repository..."
-sudo dnf copr enable -y atim/nushell
+# macOS - use Homebrew
+if command -v brew >/dev/null 2>&1; then
+  echo "Installing nushell via Homebrew..."
+  brew install nushell
+  echo "✓ Nushell installed successfully"
+else
+  echo "Error: Homebrew not installed"
+  exit 1
+fi
 
-# Refresh metadata
-echo "Refreshing package metadata..."
-sudo rpm-ostree refresh-md --force
+{{- else if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
 
-# Install nushell
-echo "Installing nushell..."
-sudo rpm-ostree install nushell
+# Bluefin/Fedora - use Homebrew if available, otherwise use rpm-ostree
+if command -v brew >/dev/null 2>&1; then
+  echo "Installing nushell via Homebrew..."
+  brew install nushell
+  echo "✓ Nushell installed successfully"
+else
+  echo "Installing nushell via rpm-ostree..."
 
-echo "✓ Nushell installed successfully"
-echo "⚠️  A reboot is required to apply changes"
-echo "Run: systemctl reboot"
+  # Enable COPR repository for nushell
+  echo "Adding nushell COPR repository..."
+  sudo dnf copr enable -y atim/nushell
+
+  # Refresh metadata
+  echo "Refreshing package metadata..."
+  sudo rpm-ostree refresh-md --force
+
+  # Install nushell
+  echo "Installing nushell..."
+  sudo rpm-ostree install nushell
+
+  echo "✓ Nushell installed successfully"
+  echo "⚠️  A reboot is required to apply changes"
+  echo "Run: systemctl reboot"
+fi
 
 {{- else }}
-echo "Nushell installation is only supported on Bluefin and Fedora"
-exit 0
+echo "Nushell installation is not supported on this distribution"
+exit 1
 
 {{- end }}
 {{- end }}
