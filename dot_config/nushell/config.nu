@@ -8,11 +8,17 @@ $env.config.edit_mode = 'vi'
 source ~/.config/nushell/00-env.nu
 
 # Load PATH management
-source ~/.config/nushell/10-path.nu
+source ~/.config/nushell/10-path.nu.tmpl
 
 # Load tools management (mise activation, etc.)
 # This MUST come before aliases so that tools like eza are in PATH
-source ~/.config/nushell/20-tools.nu
+source ~/.config/nushell/20-tools.nu.tmpl
+
+# Load functions
+source ~/.config/nushell/30-functions.nu
+
+# Load aliases (after tools are activated)
+source ~/.config/nushell/40-aliases.nu
 
 # Initialize starship prompt
 # The starship.nu file is auto-loaded from vendor/autoload/
