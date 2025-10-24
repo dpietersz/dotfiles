@@ -51,4 +51,13 @@ if (which pass | is-not-empty) {
     $env.GOOGLE_API_KEY = $env.GEMINI_API_KEY
     $env.DATABRICKS_HOST = (pass show Logins/gemeente-hilversum/databricks/host | str trim)
     $env.DATABRICKS_SECRET = (pass show Logins/gemeente-hilversum/databricks/service-principal | lines | first)
-    $env.DATABRICKS_CLIENT_ID = (pass show Logins/gemeente-hilversum/databricks/service-principal | lines | where {|line| $line
+    $env.DATABRICKS_CLIENT_ID = (pass show Logins/gemeente-hilversum/databricks/service-principal | lines | where {|line| $line | str contains "client-id:" } | first | str replace "client-id: " "")
+    $env.OPENROUTER_API_KEY = (pass show Sites/openrouter.ai/api-keys/aider | str trim)
+    $env.DEEPSEEK_API_KEY = (pass show Sites/deepseek.com/api-key/aider | str trim)
+    $env.DOCSFETCHER_API_KEY = (pass show Sites/surpassion.xyz/api-key/fetchdoc | str trim)
+  } catch {
+    print "Warning: Could not load all API keys from pass"
+  }
+} else {
+  print "Install pass to load API keys securely."
+}
