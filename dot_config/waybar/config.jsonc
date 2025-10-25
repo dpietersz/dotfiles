@@ -9,7 +9,7 @@
 
     "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "custom/arrow2", "backlight", "idle_inhibitor", "custom/arrow3",  "mpris"],
     "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
-    "modules-right": ["custom/arrow6", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "battery", "bluetooth", "pulseaudio", "power-profiles-daemon", "tray"],
+    "modules-right": ["battery", "custom/arrow6", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio", "custom/power-profiles", "tray"],
     
     // Modules configuration
     "niri/workspaces": {
@@ -245,4 +245,14 @@
         "format": "",
         "tooltip": false
     } 
-}
+    },
+    "custom/power-profiles": {
+        "format": "{}",
+        "return-type": "json",
+        "exec": "$HOME/.config/waybar/custom_modules/executable_power-profiles.sh",
+        "exec-on-event": true,
+        "on-click": "$HOME/.config/waybar/custom_modules/executable_power-profiles.sh cycle",
+        "interval": 5,
+        "tooltip": true,
+        "tooltip-format": "Click to cycle power profile"
+    }
