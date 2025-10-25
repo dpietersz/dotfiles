@@ -4,3 +4,5 @@ setup
 README.md
 .chezmoiscripts/create-arch-toolbox.sh
 .encrypted/
+lazy
+lazy-lock.json

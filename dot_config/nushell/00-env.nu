@@ -1,6 +1,8 @@
 # 00-env.nu - Basic Environment variables (nushell)
+
 # Locale settings
 $env.LANG = "en_US.UTF-8"
+
 # (neo)vim
 if (which nvim | is-not-empty) {
   $env.EDITOR = "nvim"
@@ -9,15 +11,15 @@ if (which nvim | is-not-empty) {
   $env.EDITOR = "vim"
   $env.VISUAL = "vim"
 }
-$env.XDG_CONFIG_HOME = (~/.config | path expand)
-$env.CONFIG = $env.XDG_CONFIG_HOME
-$env.HISTFILE = (~/.histfile | path expand)
+
+# Use $nu.config-path to get config directory
+$env.HISTFILE = $"($nu.home-path)/.histfile"
 $env.HISTSIZE = 25000
 $env.SAVEHIST = 25000
 $env.HISTCONTROL = "ignorespace"
-$env.DOTFILES = (~/dotfiles | path expand)
-$env.SCRIPTS = (~/.local/bin/scripts | path expand)
-$env.DEV = (~/dev | path expand)
+$env.DOTFILES = $"($nu.home-path)/dotfiles"
+$env.SCRIPTS = $"($nu.home-path)/.local/bin/scripts"
+$env.DEV = $"($nu.home-path)/dev"
 $env.PROJECTS = $"($env.DEV)/Projects"
 $env.NOTES = $"($env.DEV)/Notes"
 $env.DESKTOP = $"($env.DEV)/Desktop"
@@ -34,10 +36,12 @@ $env.GHREPOS = $"($env.REPOS)/github.com"
 $env.GLREPOS = $"($env.REPOS)/gitlab.com"
 $env.AZREPOS = $"($env.REPOS)/dev.azure.com"
 $env.BROWSER = "zen"
+
 # Dagger - disable nag messages
 if (which dagger | is-not-empty) {
   $env.DAGGER_NO_NAG = 1
 }
+
 # Load API keys from pass if available
 if (which pass | is-not-empty) {
   try {
@@ -61,3 +65,4 @@ if (which pass | is-not-empty) {
 } else {
   print "Install pass to load API keys securely."
 }
+
