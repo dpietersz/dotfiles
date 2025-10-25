@@ -30,7 +30,7 @@ return {
       concealcursor = "nvic",
     },
     delete_to_trash = false,
-    skip_confirm_for_simple_edits = false,
+    skip_confirm_for_simple_edits = true,
     prompt_save_on_select_new_entry = true,
     cleanup_delay_ms = 2000,
     lsp_file_methods = {
@@ -60,7 +60,7 @@ return {
     },
     use_default_keymaps = true,
     view_options = {
-      show_hidden = false,
+      show_hidden = true,
       is_hidden_file = function(name, bufnr)
         return name:match("^%.") ~= nil
       end,

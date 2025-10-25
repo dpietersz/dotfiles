@@ -6,3 +6,4 @@ README.md
 .encrypted/
 lazy
 lazy-lock.json
+.config/nvim/lazy-lock.json
