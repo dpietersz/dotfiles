@@ -27,7 +27,7 @@ set_profile() {
 get_icon() {
     case "$1" in
         power-saver)
-            echo ""
+            echo "🍃"
             ;;
         balanced)
             echo ""
