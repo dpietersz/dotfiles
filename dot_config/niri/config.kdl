@@ -1,6 +1,11 @@
 // Auto-start waybar
 spawn-at-startup "waybar"
 
+workspace "Home"
+workspace "Work"
+workspace "Coding"
+workspace "Music"
+
 // Define keybindings
 binds {
     // App launcher
@@ -19,9 +24,23 @@ binds {
     Ctrl+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+Backspace hotkey-overlay-title="Logout: wlogout" { spawn "bash" "-c" "pgrep wlogout && pkill wlogout || wlogout -c 15 -b 6 -m 400"; }
     Mod+Ctrl+Space hotkey-overlay-title="Toggle bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/toggle-waybar.sh"; }
+    Mod+Ctrl+I hotkey-overlay-title="Relaunch bar: waybar" { spawn "bash" "-c" "$HOME/.config/waybar/custom_modules/launch.sh"; }
     Mod+N hotkey-overlay-title="Toggle Notification: swaync" { spawn "swaync-client" "-t"; }
     Mod+Shift+Space hotkey-overlay-title="Lock bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/lock-waybar.sh"; }
     XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
+
+    // === Volume & Media Controls ===
+    // Volume keys work even when the session is locked
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_up.sh"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_down.sh"; }
+    XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+
+    // Media player controls
+    XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPrev  allow-when-locked=true { spawn "playerctl" "previous"; }
 
     // === Window Management ===
     Mod+Q repeat=false { close-window; }
@@ -112,10 +131,10 @@ binds {
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
     // === Numbered Workspaces ===
-    Mod+1 { focus-workspace 1; }
-    Mod+2 { focus-workspace 2; }
-    Mod+3 { focus-workspace 3; }
-    Mod+4 { focus-workspace 4; }
+    Mod+1 { focus-workspace "Home"; }
+    Mod+2 { focus-workspace "Work"; }
+    Mod+3 { focus-workspace "Music"; }
+    Mod+4 { focus-workspace "Coding"; }
     Mod+5 { focus-workspace 5; }
     Mod+6 { focus-workspace 6; }
     Mod+7 { focus-workspace 7; }
@@ -123,10 +142,10 @@ binds {
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 { move-column-to-workspace 1; }
-    Mod+Shift+2 { move-column-to-workspace 2; }
-    Mod+Shift+3 { move-column-to-workspace 3; }
-    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+1 { move-column-to-workspace "Home"; }
+    Mod+Shift+2 { move-column-to-workspace "Work"; }
+    Mod+Shift+3 { move-column-to-workspace "Music"; }
+    Mod+Shift+4 { move-column-to-workspace "Coding"; }
     Mod+Shift+5 { move-column-to-workspace 5; }
     Mod+Shift+6 { move-column-to-workspace 6; }
     Mod+Shift+7 { move-column-to-workspace 7; }

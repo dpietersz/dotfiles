@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-# Install niri and waybar on Fedora/Bluefin
+# Install niri, waybar, and related tools on Fedora/Bluefin
 # Reference: https://github.com/YaLTeR/niri/wiki
 
 # Check if niri is already installed
@@ -14,7 +14,7 @@ if command -v niri >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "Installing niri and waybar..."
+echo "Installing niri, waybar, and related tools..."
 
 # Get Fedora version
 . /etc/os-release
@@ -28,9 +28,13 @@ sudo dnf copr enable -y yalter/niri
 echo "Refreshing package metadata..."
 sudo rpm-ostree refresh-md --force
 
-# Install niri and waybar
-echo "Installing niri and waybar..."
-sudo rpm-ostree install niri waybar || {
+# Install niri, waybar, and supporting tools
+# - niri: Wayland compositor
+# - waybar: Status bar
+# - pavucontrol: PulseAudio volume control GUI
+# - NetworkManager-tui: Network management TUI
+echo "Installing packages..."
+sudo rpm-ostree install niri waybar pavucontrol NetworkManager-tui || {
   # If installation fails due to package already requested, that's OK
   # It means a previous attempt is still pending
   if sudo rpm-ostree status | grep -q "niri"; then
@@ -44,7 +48,7 @@ sudo rpm-ostree install niri waybar || {
   fi
 }
 
-echo "✓ Niri and waybar installed successfully"
+echo "✓ Niri, waybar, and tools installed successfully"
 echo "⚠️  A reboot is required to apply changes"
 echo "Run: systemctl reboot"
 

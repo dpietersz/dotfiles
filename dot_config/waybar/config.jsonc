@@ -1,130 +1,248 @@
 {
-  "layer": "top",
-  "position": "top",
-  "height": 30,
-  "modules-left": [
-    "niri/workspaces"
-  ],
-  "modules-center": [
-    "clock"
-  ],
-  "modules-right": [
-    "pulseaudio",
-    "backlight",
-    "battery",
-    "cpu",
-    "memory",
-    "temperature",
-    "network"
-  ],
-  "clock": {
-    "format": "󰥔 {:%R  󰃭 %A %d}",
-    "tooltip-format": "<tt><small>{calendar}</small></tt>",
-    "interval": 60
-  },
-  "network": {
-    // "interface": "wlp2*", // (Optional) To force the use of this interface
-    "format-wifi": "",
-    "format-ethernet": "{ipaddr}/{cidr} ",
-    "tooltip-format": "    {essid}({signalStrength}%)",
-    "format-linked": "{ifname} (No IP) ",
-    "format-disconnected": "⚠",
-    "on-click": "nmcli radio wifi on",
-    "on-click-right": "nmcli radio wifi off"
-  },
-  "cpu": {
-    "format": "{usage}% ",
-    "tooltip": false,
-    "interval": 60
-  },
-  "memory": {
-    "format": "{}% "
-  },
-  "temperature": {
-    // "thermal-zone": 2,
-    // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
-    "critical-threshold": 80,
-    // "format-critical": "{temperatureC}°C {icon}",
-    "format": "{temperatureC}°C {icon}",
-    "format-icons": [
-      "",
-      "",
-      ""
-    ]
-  },
-  "backlight": {
-    // "device": "acpi_video1",
-    "tooltip": false,
-    "format": "☀ {percent}%",
-    "format-icons": [
-      "░░░░░░░░░░",
-      "█░░░░░░░░░",
-      "██░░░░░░░░",
-      "███░░░░░░░",
-      "████░░░░░░",
-      "█████░░░░░",
-      "██████░░░░",
-      "███████░░░",
-      "████████░░",
-      "█████████░",
-      "██████████"
-    ],
-    "on-scroll-up": "brightnessctl set 2%+",
-    "on-scroll-down": "brightnessctl set 2%-"
-  },
-  "battery": {
-    "states": {
-      "good": 80,
-      "warning": 40,
-      "critical": 20
+    "layer": "top", // Waybar at top layer
+    "position": "top", // Waybar position (top|bottom|left|right)
+    
+    // "height": 36, // Waybar height (to be removed for auto height)
+    // Archived modules
+    // "custom/gpu",  "custom/weather","sway/window", "custom/gpu",  "custom/media",  
+    // Choose the order of the modules
+
+    "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "custom/arrow2", "backlight", "idle_inhibitor", "custom/arrow3",  "mpris"],
+    "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
+    "modules-right": ["custom/arrow6", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "battery", "bluetooth", "pulseaudio", "power-profiles-daemon", "tray"],
+    
+    // Modules configuration
+    "niri/workspaces": {
+        "format": "{value}"
     },
-    "format-charging": "<b>↯ {capacity}%</b>",
-    "format": "{icon}  {capacity}%",
-    // good": "",
-    // "format-full": "",
-    "format-icons": [
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "interval": 1
-  },
-  "battery#bat2": {
-    "bat": "BAT2"
-  },
-  "pulseaudio": {
-    // "scroll-step": 1, // %, can be a float
-    "tooltip": false,
-    "format": "  {volume}%",
-    "format-bluetooth": " {volume}%",
-    "format-bluetooth-muted": " {volume}%",
-    "format-muted": "X {volume}%",
-    "format-source": "{volume}% ",
-    "format-source-muted": " ",
-    "format-icons": {
-      "headphone": "",
-      "phone": "",
-      "portable": "",
-      "car": "",
-      "default": [
-        "░░░░░░░░░░",
-        "█░░░░░░░░░",
-        "██░░░░░░░░",
-        "███░░░░░░░",
-        "████░░░░░░",
-        "█████░░░░░",
-        "██████░░░░",
-        "███████░░░",
-        "████████░░",
-        "█████████░",
-        "██████████"
-      ],
+    "sway/mode": {
+        "format": "<span style=\"italic\">{}</span>"
     },
-    "interval": 60,
-    "on-click": "pamixer --toggle-mute",
-    "on-scroll-up": "pamixer --allow-boost --set-limit 150 --increase 2",
-    "on-scroll-down": "pamixer --allow-boost --set-limit 150 --decrease 2"
-  },
+    "sway/window": {
+        "format": "{}",
+        "max-length": 50, 
+        "tooltip": false
+    },
+    "bluetooth": {
+        "interval": 30,
+        "format": "{icon}",
+        // "format-alt": "{status}",
+        "format-icons": {
+            "enabled": "",
+            "disabled": "ss"
+        },
+        "on-click": "blueberry"
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        },
+        "tooltip": "true"
+    },
+    "tray": {
+        //"icon-size": 14,
+        "spacing": 4
+    },
+    "clock#time": {
+        "interval": 1,
+        "format": "  {:%A %d %b %H:%M}",
+        "tooltip": false
+    },
+    "systemd-failed-units": {
+        "format": " {nr_failed}",
+        "format-ok": "",
+        "interval": 10,
+        "tooltip": true,
+        "tooltip-format": "{failed_units}"
+    },
+    "mpris": {
+        "format": "{player_icon} {dynamic}",
+        "format-paused": "{status_icon} {dynamic}",
+        "player-icons": {
+            "default": "▶",
+            "mpv": "🎬"
+        },
+        "status-icons": {
+            "paused": "⏸"
+        },
+        "dynamic-order": ["title", "artist"],
+        "dynamic-separator": " - ",
+        "max-length": 30
+    },
+    "temperature": {
+        //"thermal-zone": 1,
+        "interval": "1",
+        "hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
+        "critical-threshold": 75,
+        "format-critical": "  {temperatureC}°C",
+        "format": "{icon}  {temperatureC}°C",
+        "format-icons": ["", "", ""],
+        "max-length": 8,
+        "min-length": 7,
+        "tooltip": false
+    },
+    "cpu": {
+        "interval": 5,      
+        "format": "  {max_frequency:1}GHz  {usage:2}%",
+        "on-click": "kitty -e btop",
+        "tooltip": false
+    },
+    "custom/gpu": {
+      "exec": "$HOME/.config/waybar/custom_modules/custom-gpu-lite.sh",
+      "return-type": "json",
+      "format": " {}",
+      "interval": 5,
+      "tooltip": "{tooltip}",
+      "on-click": "powerupp"
+    },     
+    "network": {
+        // "interface": "wlan0", // (Optional) To force the use of this interface,
+        "format-wifi": "<span color=\"#ebdbb2\"></span>  {essid}",
+        "format-ethernet": "{ifname}: {ipaddr}/{cidr} ",
+        "format-linked": "{ifname} (No IP) ",
+        "format-disconnected": "",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "family": "ipv4",
+        "tooltip-format-wifi": "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\n {bandwidthUpBits}  {bandwidthDownBits}",
+        "tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n {bandwidthUpBits}  {bandwidthDownBits}"
+    },
+    "battery": {
+        "states": {
+            "good": 80,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity:2}%",
+        "format-charging": " {capacity:2}%",
+        "format-plugged": " {capacity:2}%",
+        "format-alt": "{time} {icon}",
+        "format-icons": ["", "", "", "", ""],
+        "tooltip": true,
+        "tooltip-format": "{timeTo}"
+    },
+    "pulseaudio": {
+        "scroll-step": 3, // %, can be a float
+        "format": "{icon} {volume:2}% {format_source}",
+        "format-bluetooth": "{volume}% {icon} {format_source}",
+        "format-bluetooth-muted": " {icon} {format_source}",
+        "format-muted": " {format_source}",
+        "format-source": "",
+        "format-source-muted": "<span color=\"#fb4833\"></span>",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol",
+        "on-click-right": "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
+    },
+    "power-profiles-daemon": {
+        "format": "{icon}",
+        "tooltip-format": "Power Profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "",
+            "balanced": "",
+            "power-saver": ""
+        }
+    },
+    "custom/weather": {
+        "exec": "curl 'https://wttr.in/?format=1'",
+        "interval": 3600
+    },
+    "custom/cpugovernor": {
+      "format": "{icon}",
+      "interval": "once",
+      "return-type": "json",
+      "exec": "$HOME/.config/waybar/custom_modules/cpugovernor.sh",
+      "min-length": 2,
+      "max-length": 3,
+      "signal": 8,
+        "format-icons": {
+            "perf": "",
+            "ondemand": ""
+        },
+        "on-click": "$HOME/.config/waybar/custom_modules/cpugovernor.sh switch"
+        // Requires cpupower to switch governors
+    },
+    "custom/playerctl": {
+        "exec": "$HOME/.config/waybar/custom_modules/media-player-status.py",
+        "return-type": "json",
+        "on-click": "playerctl play-pause",
+    },
+    "custom/media": {
+        "format": "{icon} {}",
+        "return-type": "json",
+        "max-length": 40,
+        "format-icons": {
+            "spotify": "",
+            "default": "🎜"
+        },
+        "escape": false,
+        "exec": "$HOME/.config/waybar/custom_modules/mediaplayer.py 2> /dev/null" // Script in resources folder
+        // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on 
+    },
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "{icon} {percent:2}%",
+        "format-icons": ["", "", "", "", "", "", "", "", ""],
+        "on-scroll-up": "brightnessctl -c intel_backlight set +5%",
+        "on-scroll-down": "brightnessctl -c intel_backlight set 5%-",
+        "tooltip": true
+    },
+    "custom/arrow1": {
+        "format": "",
+        "tooltip": false
+    },
+    "custom/arrow2": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow3": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow4": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow5": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow6": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow7": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow8": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow9": {
+        "format": "",
+        "tooltip": false
+    },
+
+    "custom/arrow10": {
+        "format": "",
+        "tooltip": false
+    } 
 }

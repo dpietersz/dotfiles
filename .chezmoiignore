@@ -7,3 +7,5 @@ README.md
 lazy
 lazy-lock.json
 .config/nvim/lazy-lock.json
+niri-dotfiles-example/
+dotfiles_gruvbox-example/
