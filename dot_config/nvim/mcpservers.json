@@ -1,0 +1,66 @@
+{
+  "mcpServers": {
+    "perplexity-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@arjunkmrm/perplexity-search",
+        "--key",
+        "2c0931f8-8580-4518-8069-665d93de9292",
+        "--profile",
+        "linguistic-mosquito-amXSsz"
+      ]
+    },
+    "context7-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@upstash/context7-mcp",
+        "--key",
+        "2c0931f8-8580-4518-8069-665d93de9292"
+      ]
+    },
+    "server-sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery-ai/server-sequential-thinking",
+        "--key",
+        "2c0931f8-8580-4518-8069-665d93de9292",
+        "--profile",
+        "linguistic-mosquito-amXSsz"
+      ]
+    },
+    "playwright-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@microsoft/playwright-mcp",
+        "--key",
+        "2c0931f8-8580-4518-8069-665d93de9292"
+      ]
+    },
+    "mem0-memory-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@mem0ai/mem0-memory-mcp",
+        "--key",
+        "2c0931f8-8580-4518-8069-665d93de9292",
+        "--profile",
+        "linguistic-mosquito-amXSsz"
+      ]
+    }
+  }
+}
+
