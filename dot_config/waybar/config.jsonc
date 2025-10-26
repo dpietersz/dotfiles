@@ -7,9 +7,9 @@
     // "custom/gpu",  "custom/weather","sway/window", "custom/gpu",  "custom/media",  
     // Choose the order of the modules
 
-    "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "custom/arrow2", "backlight", "idle_inhibitor", "custom/arrow3",  "mpris"],
+    "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "backlight", "custom/arrow2", "idle_inhibitor", "custom/arrow3",  "mpris"],
     "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
-    "modules-right": ["battery", "custom/arrow6", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio", "custom/arrow9", "custom/power-profiles", "tray"],
+    "modules-right": ["battery", "custom/arrow6", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio","tray"],
     
     // Modules configuration
     "niri/workspaces": {

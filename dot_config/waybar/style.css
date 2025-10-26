@@ -363,7 +363,7 @@
     padding-left: 0em;    
 }
 #backlight {
-    background: @font_dark_alternative;
+    background: @bluetint;
     color: @font_gruv_normal;
     padding-left: 0.2em;
     padding-right: 0.2em;
