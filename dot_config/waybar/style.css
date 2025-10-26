@@ -346,7 +346,7 @@
 }
 #cpu.critical {
     color: @critical;
-    background: transparent;
+    background: @bluetint;
 }
 #temperature {
     background-color: @bluetint;
@@ -392,13 +392,13 @@
 }
 #systemd-failed-units {
     background: @bluetint;
-    color: @font_gruv_normal;
+    color: @critical;
     font-weight: bolder;
     padding-left: 0.2em;
     padding-right: 0.2em;
 }
 #battery {
-    background: @bg;
+    background: @font_dark_alternative;
     color: @font_gruv_normal;
 }
 #custom-power-profiles {

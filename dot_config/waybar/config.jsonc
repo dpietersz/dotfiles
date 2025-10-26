@@ -9,8 +9,10 @@
 
     "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "backlight", "custom/arrow2", "idle_inhibitor", "custom/arrow3",  "mpris"],
     "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
-    "modules-right": ["battery", "custom/arrow6", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio","tray"],
-    
+    "modules-right": ["custom/arrow6", "battery", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio","tray"],
+
+    // TODO: Add more gruvbox arrows in other colors (orange, yellow) with matching background colors for modules
+
     // Modules configuration
     "niri/workspaces": {
         "format": "{value}"
@@ -121,6 +123,7 @@
         "format-icons": ["", "", "", "", ""],
         "tooltip": true,
         "tooltip-format": "{timeTo}"
+        // TODO: Update battery to use only icon format like cpugovernor and power-profiles
     },
     "pulseaudio": {
         "scroll-step": 3, // %, can be a float
@@ -171,6 +174,7 @@
         },
         "on-click": "$HOME/.config/waybar/custom_modules/cpugovernor.sh switch"
         // Requires cpupower to switch governors
+        // TODO: Fix powersave icon - currently showing generic icon, should use leaf or better icon
     },
     "custom/playerctl": {
         "exec": "$HOME/.config/waybar/custom_modules/media-player-status.py",
@@ -257,4 +261,5 @@
             "balanced": "",
             "performance": ""
         }
+        // TODO: Fix power-profiles module visibility - icon not showing in waybar
     }
