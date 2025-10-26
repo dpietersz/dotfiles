@@ -67,5 +67,5 @@ if [[ "${1:-}" == "cycle" ]]; then
 fi
 
 # Output for waybar (JSON format)
-echo "{\"text\": \"$icon $current_profile\", \"class\": \"$current_profile\"}"
+echo "{\"text\": \"$current_profile\", \"alt\": \"$current_profile\", \"class\": \"$current_profile\", \"tooltip\": \"<b>Power Profile</b> $current_profile\"}"
 

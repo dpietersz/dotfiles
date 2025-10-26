@@ -247,12 +247,14 @@
     } 
     },
     "custom/power-profiles": {
-        "format": "{}",
+        "format": "{icon}",
+        "interval": 5,
         "return-type": "json",
         "exec": "$HOME/.config/waybar/custom_modules/executable_power-profiles.sh",
-        "exec-on-event": true,
         "on-click": "$HOME/.config/waybar/custom_modules/executable_power-profiles.sh cycle",
-        "interval": 5,
-        "tooltip": true,
-        "tooltip-format": "Click to cycle power profile"
+        "format-icons": {
+            "power-saver": "🍃",
+            "balanced": "",
+            "performance": ""
+        }
     }
