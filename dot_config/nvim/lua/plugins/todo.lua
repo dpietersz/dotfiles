@@ -49,39 +49,11 @@ return {
   },
 
   keys = {
-    -- View all TODOs in Snacks picker
+    -- View all TODOs using built-in command
     {
       "<leader>ft",
-      function()
-        local todo = require("todo-comments")
-        local snacks = require("snacks.picker")
-
-        local results =
-          vim.fn.systemlist('rg --no-heading --with-filename --line-number --column "(TODO|FIX|HACK|WARN|NOTE):"')
-        if vim.v.shell_error ~= 0 or #results == 0 then
-          vim.notify("No TODO comments found in workspace", vim.log.levels.INFO)
-          return
-        end
-
-        snacks.pick({
-          title = "TODO Comments",
-          items = results,
-          format_item = function(line)
-            return line
-          end,
-          action = function(selected)
-            if not selected then
-              return
-            end
-            local file, lnum, col = selected:match("([^:]+):(%d+):(%d+):")
-            if file and lnum then
-              vim.cmd("edit " .. file)
-              vim.api.nvim_win_set_cursor(0, { tonumber(lnum), tonumber(col or 1) - 1 })
-            end
-          end,
-        })
-      end,
-      desc = "Search TODOs (Snacks Picker)",
+      "<cmd>TodoLocList<cr>",
+      desc = "TODO Comments (Location List)",
     },
 
     -- Jump between TODOs quickly
