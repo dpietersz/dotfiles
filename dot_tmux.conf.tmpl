@@ -45,12 +45,11 @@ set -g @resurrect-processes 'ssh psql'
 set -g @resurrect-strategy-nvim 'session'
 set -g @resurrect-save on
 
-
 set -g @plugin 'egel/tmux-gruvbox'
 set -g @tmux-gruvbox 'dark'
+
 set -g @plugin 'omerxx/tmux-sessionx'
 set -g @sessionx-bind 'o'
 
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
 run '~/.tmux/plugins/tpm/tpm'
-set -g focus-events on
