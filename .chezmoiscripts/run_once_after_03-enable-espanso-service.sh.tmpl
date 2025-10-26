@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# ------------------ Enable espanso systemd service ------------------
+# This script enables the espanso systemd user service after the service file
+# has been deployed by chezmoi. It only runs if espanso is installed.
+
+{{- if .remote }}
+echo "[espanso-service] Skipping: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+# Only proceed if espanso is installed
+if ! command -v espanso >/dev/null 2>&1; then
+  echo "[espanso-service] espanso not installed, skipping service enablement."
+  exit 0
+fi
+
+# Check if service file exists
+SERVICE_FILE="$HOME/.config/systemd/user/espanso.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+  echo "[espanso-service] Service file not found at $SERVICE_FILE"
+  exit 0
+fi
+
+echo "[espanso-service] Enabling and starting espanso systemd service..."
+
+# Reload systemd user daemon to pick up the new service file
+systemctl --user daemon-reload
+
+# Enable the service (creates the symlink in default.target.wants/)
+systemctl --user enable espanso.service
+
+# Start the service if not already running
+if ! systemctl --user is-active --quiet espanso.service; then
+  systemctl --user start espanso.service
+  echo "[espanso-service] Service started."
+else
+  echo "[espanso-service] Service already running."
+fi
+
+echo "[espanso-service] Done. Status:"
+systemctl --user status espanso.service --no-pager || true
+

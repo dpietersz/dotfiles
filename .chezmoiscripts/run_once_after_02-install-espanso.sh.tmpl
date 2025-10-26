@@ -1,0 +1,99 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# ------------------ espanso install (Terra) ------------------
+# Installs espanso using Terra on Fedora/Bluefin (Wayland), and Homebrew on macOS.
+# - Skips on remote environments (per .chezmoi.toml.tmpl data.remote)
+# - On Atomic (rpm-ostree) systems, layers espanso-wayland and prompts for reboot
+# - On regular Fedora, installs espanso-wayland via dnf
+# - On macOS, installs via Homebrew
+#
+# Notes:
+# - Wayland build of espanso requires setting CAP_DAC_OVERRIDE capability.
+# - On Bluefin, package layering might be locked by default. If so, set LockLayering=false in /etc/rpm-ostreed.conf and reboot.
+
+{{- if .remote }}
+echo "[espanso] Skipping install: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+if command -v espanso >/dev/null 2>&1; then
+  echo "[espanso] Already installed: $(espanso --version | head -n1)"
+  exit 0
+fi
+
+OS="{{ .chezmoi.os }}"
+ID="{{ .chezmoi.osRelease.id }}"
+SESSION_TYPE="${XDG_SESSION_TYPE:-}"
+
+case "$OS" in
+  darwin)
+    echo "[espanso] macOS detected"
+    if command -v brew >/dev/null 2>&1; then
+      if ! brew list --formula espanso >/dev/null 2>&1; then
+        echo "[espanso] Installing via Homebrew..."
+        brew install espanso
+      else
+        echo "[espanso] espanso already present in Homebrew"
+      fi
+      echo "[espanso] Installation complete. Service will be enabled by run_once_after_03-enable-espanso-service.sh"
+    else
+      echo "[espanso] Homebrew not found. Install Homebrew first to proceed: https://brew.sh"
+    fi
+    ;;
+
+  linux)
+    if command -v rpm-ostree >/dev/null 2>&1; then
+      echo "[espanso] Fedora Atomic detected (rpm-ostree present). Distro ID: $ID"
+
+      # Add Terra repo for Atomic systems
+      if [ ! -f /etc/yum.repos.d/terra.repo ]; then
+        echo "[espanso] Adding Terra repo to /etc/yum.repos.d/terra.repo ..."
+        curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo | sudo tee /etc/yum.repos.d/terra.repo >/dev/null
+      fi
+
+      # Install terra-release (may already be present)
+      if ! rpm -q terra-release >/dev/null 2>&1; then
+        echo "[espanso] Layering terra-release (this schedules a reboot)..."
+        if ! sudo rpm-ostree install -y terra-release; then
+          echo "[espanso] NOTE: rpm-ostree install failed. If on Bluefin, enable layering by setting 'LockLayering=false' in /etc/rpm-ostreed.conf, then reboot and re-run 'chezmoi apply'."
+          exit 0
+        fi
+      fi
+
+      echo "[espanso] Layering espanso-wayland (Wayland build)..."
+      if ! sudo rpm-ostree install -y espanso-wayland; then
+        echo "[espanso] NOTE: rpm-ostree install failed. If on Bluefin, enable layering by setting 'LockLayering=false' in /etc/rpm-ostreed.conf, then reboot and re-run 'chezmoi apply'."
+        exit 0
+      fi
+
+      echo "[espanso] espanso-wayland install staged. Please reboot to finalize."
+      echo ""
+      echo "NOTE: The Terra RPM package includes cap_dac_override capability by default."
+      echo "      No manual setcap is needed on rpm-ostree systems."
+      echo "      After reboot, the systemd service will be enabled automatically."
+      ;;
+
+    else
+      echo "[espanso] Regular Fedora detected (DNF). Distro ID: $ID"
+      echo "[espanso] Adding Terra repo and installing espanso-wayland..."
+      sudo dnf install -y --nogpgcheck --repofrompath "terra,https://repos.fyralabs.com/terra$releasever" terra-release || true
+      sudo dnf install -y espanso-wayland
+
+      echo "[espanso] Setting required capabilities for Wayland build..."
+      sudo setcap "cap_dac_override+p" "$(command -v espanso)" || true
+
+      echo "[espanso] Installation complete. Service will be enabled by run_once_after_03-enable-espanso-service.sh"
+      ;;
+    fi
+    ;;
+
+  *)
+    echo "[espanso] Unsupported OS: $OS (auto-install not implemented)"
+    ;;
+
+esac
+
+echo "[espanso] Done."
+

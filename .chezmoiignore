@@ -9,3 +9,4 @@ lazy-lock.json
 .config/nvim/lazy-lock.json
 niri-dotfiles-example/
 dotfiles_gruvbox-example/
+.config/systemd/user/default.target.wants/
