@@ -143,6 +143,13 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 - TODO: Add better screenshot tool
 - TODO: Add better Login manager
 - TODO: Check if niri script installation has all the needed applications
+- TODO: Make bash the default shell
+- TODO: Convert bash functions to scripts
+- TODO: Add animated groups in waybar for hardware monitor, wifi (name), volume (percentage), backlight (percentage), Battery (percentage and estimation)
+- TODO: Add active workspace styling for better visibility
+- TODO: Add (optionally visible) LAN module that works similar to wifi version
+- TODO: Add public ip to wifi and LAN modules in hover mode
+- TODO: Add wifi dropdown for managing wifi connections (just like old hyprland setup)
 
 ---
 
