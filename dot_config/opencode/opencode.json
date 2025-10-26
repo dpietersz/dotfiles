@@ -20,19 +20,6 @@
       ],
       "enabled": true
     },
-    "context7-mcp": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@upstash/context7-mcp",
-        "--key",
-        "2c0931f8-8580-4518-8069-665d93de9292"
-      ],
-      "enabled": true
-    },
     "perplexity-search": {
       "type": "local",
       "command": [
@@ -45,34 +32,6 @@
         "2c0931f8-8580-4518-8069-665d93de9292",
         "--profile",
         "linguistic-mosquito-amXSsz"
-      ],
-      "enabled": true
-    },
-    "mem0-memory-mcp": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@mem0ai/mem0-memory-mcp",
-        "--key",
-        "2c0931f8-8580-4518-8069-665d93de9292",
-        "--profile",
-        "linguistic-mosquito-amXSsz"
-      ],
-      "enabled": true
-    },
-    "playwright-mcp": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "@microsoft/playwright-mcp",
-        "--key",
-        "2c0931f8-8580-4518-8069-665d93de9292"
       ],
       "enabled": true
     },
