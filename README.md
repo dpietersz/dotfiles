@@ -131,6 +131,21 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 
 ---
 
+## TODO / Future Improvements
+
+- [ ] Add wallpaper application
+- [ ] Add Monitor settings application (NW something)
+- [ ] Add OSD (On-Screen Display) application
+- [ ] Add better lockscreen application
+- [ ] Add power button module in waybar
+- [ ] Add and configure Tmux including gruvbox styling
+- [ ] Add Rofi including Gruvbox styling
+- [ ] Add better screenshot tool
+- [ ] Add better Login manager
+- [ ] Check if niri script installation has all the needed applications
+
+---
+
 ## License
 
 These dotfiles are provided as-is for personal use and inspiration. Use at your own risk.
