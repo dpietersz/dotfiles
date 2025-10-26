@@ -1,0 +1,79 @@
+#!/bin/bash
+{{- if not .remote }}
+
+set -euo pipefail
+
+# Install tmux
+# Reference: https://github.com/tmux/tmux/wiki
+
+# Check if tmux is already installed
+if command -v tmux >/dev/null 2>&1; then
+  echo "tmux is already installed: $(tmux -V)"
+  exit 0
+fi
+
+{{- if eq .chezmoi.os "darwin" }}
+
+# macOS - use Homebrew
+if command -v brew >/dev/null 2>&1; then
+  echo "Installing tmux via Homebrew..."
+  brew install tmux
+  echo "✓ tmux installed successfully"
+else
+  echo "Error: Homebrew not installed"
+  exit 1
+fi
+
+{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+
+# Bluefin - tmux is usually pre-installed, but install if missing
+echo "Installing tmux via rpm-ostree..."
+echo "Refreshing package metadata..."
+sudo rpm-ostree refresh-md
+
+echo "Installing tmux..."
+sudo rpm-ostree install tmux || {
+  # If installation fails due to package already requested, that's OK
+  if sudo rpm-ostree status | grep -q "tmux"; then
+    echo "tmux is already pending installation"
+    echo "⚠️  A reboot is required to apply changes"
+    echo "Run: systemctl reboot"
+    exit 0
+  else
+    # Real error, propagate it
+    exit 1
+  fi
+}
+
+echo "✓ tmux installed successfully"
+echo "⚠️  A reboot is required to apply changes"
+echo "Run: systemctl reboot"
+
+{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+
+# Regular Fedora - use dnf
+if command -v dnf >/dev/null 2>&1; then
+  echo "Installing tmux via dnf..."
+  sudo dnf install -y tmux
+  echo "✓ tmux installed successfully"
+fi
+
+{{- else if or (eq .chezmoi.osRelease.id "ubuntu") (eq .chezmoi.osRelease.id "debian") }}
+
+# Ubuntu/Debian - use apt
+if command -v apt >/dev/null 2>&1; then
+  echo "Installing tmux via apt..."
+  sudo apt update
+  sudo apt install -y tmux
+  echo "✓ tmux installed successfully"
+fi
+
+{{- else }}
+
+echo "tmux installation is not configured for this distribution"
+echo "Please install tmux manually: https://github.com/tmux/tmux/wiki"
+exit 1
+
+{{- end }}
+{{- end }}
+
