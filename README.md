@@ -133,16 +133,16 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 
 ## TODO / Future Improvements
 
-- [ ] Add wallpaper application
-- [ ] Add Monitor settings application (NW something)
-- [ ] Add OSD (On-Screen Display) application
-- [ ] Add better lockscreen application
-- [ ] Add power button module in waybar
-- [ ] Add and configure Tmux including gruvbox styling
-- [ ] Add Rofi including Gruvbox styling
-- [ ] Add better screenshot tool
-- [ ] Add better Login manager
-- [ ] Check if niri script installation has all the needed applications
+- TODO: Add wallpaper application
+- TODO: Add Monitor settings application (NW something)
+- TODO: Add OSD (On-Screen Display) application
+- TODO: Add better lockscreen application
+- TODO: Add power button module in waybar
+- TODO: Add and configure Tmux including gruvbox styling
+- TODO: Add Rofi including Gruvbox styling
+- TODO: Add better screenshot tool
+- TODO: Add better Login manager
+- TODO: Check if niri script installation has all the needed applications
 
 ---
 
