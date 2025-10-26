@@ -404,6 +404,7 @@
 #custom-power-profiles {
     background: @bg;
     color: @font_gruv_normal;
+    padding: 0 0.5em;
 }
 
 #custom-alsa {
