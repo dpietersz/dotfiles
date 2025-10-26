@@ -12,6 +12,8 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Half page down (centred)" })
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Half page up (centred)" })
 
 -- Buffer navigation
+vim.keymap.set("n", "<S-l>", ":bnext<CR>", { desc = "Next buffer" })
+vim.keymap.set("n", "<S-h>", ":bprevious<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "bl", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "bh", ":bprevious<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "bdd", ":bdelete!<enter>", { desc = "Delete buffer" })
@@ -27,21 +29,16 @@ vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease wi
 vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>", { desc = "Increase window width" })
 
 -- Better window navigation
--- Ctrl+hjkl for within-Neovim navigation (always available)
-vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
-vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })
-vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Move to top window" })
-vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Move to right window" })
+-- Ctrl+hjkl for seamless Tmux/Neovim navigation (handled by vim-tmux-navigator)
+-- These are defined in the tmux-navigator.lua plugin file
 
--- Alt+hjkl for seamless Zellij/Neovim navigation (handled by zellij-nav.nvim when in Zellij)
-
--- Move lines up/down (Alt+Up/Down to avoid conflict with Alt+hjkl navigation)
-vim.keymap.set("n", "<A-Down>", ":m .+1<CR>==", { desc = "Move line down" })
-vim.keymap.set("n", "<A-Up>", ":m .-2<CR>==", { desc = "Move line up" })
-vim.keymap.set("v", "<A-Down>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
-vim.keymap.set("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
-vim.keymap.set("i", "<A-Down>", "<Esc>:m .+1<CR>==gi", { desc = "Move line down" })
-vim.keymap.set("i", "<A-Up>", "<Esc>:m .-2<CR>==gi", { desc = "Move line up" })
+-- Move lines up/down with Alt+j/k
+vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
+vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", { desc = "Move line up" })
+vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
+vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
+vim.keymap.set("i", "<A-j>", "<Esc>:m .+1<CR>==gi", { desc = "Move line down" })
+vim.keymap.set("i", "<A-k>", "<Esc>:m .-2<CR>==gi", { desc = "Move line up" })
 
 -- Better indenting in visual mode
 vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
