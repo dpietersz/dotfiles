@@ -89,13 +89,9 @@ fi
 # Note: yazi doesn't have built-in completion generation
 # Completions are typically installed via package manager or manually
 
-# zellij - terminal multiplexer
-if command -v zellij >/dev/null; then
-  if [ "$CURRENT_SHELL" = "bash" ]; then
-    eval "$(zellij setup --generate-completion bash)"
-  fi
-  # zsh: zellij completion is typically installed via package manager
-fi
+# tmux - terminal multiplexer
+# Note: tmux doesn't have built-in completion generation
+# Completions are typically installed via package manager or manually
 
 # uv - Python package installer
 if command -v uv >/dev/null; then
