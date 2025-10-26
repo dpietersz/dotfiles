@@ -5,7 +5,7 @@ return {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
     "ravitemer/mcphub.nvim", -- MCPHub integration
-    "echasnovski/mini.diff",
+    "nvim-mini/mini.diff",
     "HakonHarnes/img-clip.nvim",
     "j-hui/fidget.nvim",
   },
