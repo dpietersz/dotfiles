@@ -8,6 +8,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Check if keys exist
 if [ -f "$HOME/.ssh/id_ed25519" ] && gpg --list-secret-keys 207F38BA91AB8330DBF08766B4320995C8E1D17D &>/dev/null; then
+    eval "$(ssh-agent -s)"
     ssh-add ~/.ssh/id_ed25519
     echo "✅ SSH key added to agent"
 fi
