@@ -8,5 +8,7 @@ export KEYSEQTIMEOUT=1
 
 eval "$(direnv hook bash)"
 
-eval "$ssh-agent -s)"
+{{ if not .remote -}}
+eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
+{{ end -}}
