@@ -97,4 +97,8 @@ echo ""
 echo "✅ All keys decrypted and installed successfully!"
 echo ""
 
+echo "Adding SSH key to agent..."
+ssh-add ~/.ssh/id_ed25519
+echo "SSH key added to agent"
+
 {{ end -}}
