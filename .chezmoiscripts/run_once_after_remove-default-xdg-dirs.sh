@@ -1,4 +1,5 @@
 #!/bin/bash
+{{- if not .remote }}
 
 # Only run if custom user-dirs.dirs is configured
 if ! grep -q "dev/Desktop" "$HOME/.config/user-dirs.dirs" 2>/dev/null; then
@@ -18,3 +19,4 @@ for dir in Desktop Documents Downloads Music Pictures Videos Public Templates; d
     fi
   fi
 done
+{{- end }}

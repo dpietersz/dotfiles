@@ -1,4 +1,5 @@
 #!/bin/bash
+{{- if not .remote }}
 # llm installation hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
 
 set -euo pipefail
@@ -21,3 +22,4 @@ else
   exit 1
 fi
 
+{{- end }}

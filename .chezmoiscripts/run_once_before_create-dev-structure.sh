@@ -1,4 +1,5 @@
 #!/bin/bash
+{{- if not .remote }}
 
 mkdir -p "$HOME/dev/Desktop"
 mkdir -p "$HOME/dev/Documents"
@@ -14,3 +15,4 @@ mkdir -p "$HOME/dev/Repos/github.com"
 mkdir -p "$HOME/dev/Repos/gitlab.com"
 mkdir -p "$HOME/dev/Repos/dev.azure.com"
 mkdir -p "$HOME/dev/Projects"
+{{- end }}
