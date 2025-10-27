@@ -1,7 +1,6 @@
 # Regular tools for all environments
 [tools]
 age = "latest"
-atuin = "latest"
 bat = "latest"
 btop = "latest"
 chezmoi = "latest"
