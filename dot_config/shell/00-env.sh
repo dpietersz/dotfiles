@@ -62,7 +62,8 @@ if command -v pass &>/dev/null; then
   export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
   export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
   export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
-  export GH_TOKEN="$(pass show Sites/github.com/pat/opencode)"
+  export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+  export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
 else
   echo "Install pass to load API keys securely."
 fi
