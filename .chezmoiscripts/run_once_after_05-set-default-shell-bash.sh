@@ -1,5 +1,5 @@
 #!/bin/bash
-{{- if not .remote }}
+#{{- if not .remote }}
 
 set -euo pipefail
 
@@ -17,7 +17,7 @@ BASH_PATH=$(which bash)
 # Check if bash is already in /etc/shells
 if ! grep -q "^${BASH_PATH}$" /etc/shells 2>/dev/null; then
   echo "Adding bash to /etc/shells..."
-  echo "$BASH_PATH" | sudo tee -a /etc/shells > /dev/null
+  echo "$BASH_PATH" | sudo tee -a /etc/shells >/dev/null
 fi
 
 # Check if bash is already the default shell
@@ -34,5 +34,4 @@ sudo usermod -s "$BASH_PATH" "$USER"
 echo "✓ bash set as default shell"
 echo "⚠️  You need to log out and log back in for the change to take effect"
 
-{{- end }}
-
+#{{- end }}
