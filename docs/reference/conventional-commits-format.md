@@ -1,4 +1,4 @@
-# Conventional Commits Guide
+# Conventional Commits Format Reference
 
 This repository uses **Conventional Commits** for all git commits. This enables automated changelog generation and semantic versioning.
 
@@ -12,7 +12,7 @@ This repository uses **Conventional Commits** for all git commits. This enables 
 <footer>
 ```
 
-### Type
+## Type
 
 **Required.** Must be one of:
 
@@ -29,7 +29,7 @@ This repository uses **Conventional Commits** for all git commits. This enables 
 | `ci` | CI/CD configuration | ❌ Hidden | `ci: add github actions workflow` |
 | `revert` | Revert previous commit | ✅ Reverts | `revert: undo nvim config change` |
 
-### Scope
+## Scope
 
 **Optional but recommended.** Indicates what part of the repo is affected:
 
@@ -57,7 +57,7 @@ This repository uses **Conventional Commits** for all git commits. This enables 
 - `ci` - CI/CD
 - `repo` - Repository-wide changes
 
-### Subject
+## Subject
 
 **Required.** Concise description (50 chars max):
 
@@ -77,7 +77,7 @@ This repository uses **Conventional Commits** for all git commits. This enables 
 - No period at the end
 - Be specific and descriptive
 
-### Body
+## Body
 
 **Optional.** Detailed explanation of the change:
 
@@ -86,18 +86,7 @@ This repository uses **Conventional Commits** for all git commits. This enables 
 - Separate from subject with blank line
 - Use bullet points for multiple changes
 
-**Example:**
-```
-feat(nvim): add telescope keybindings
-
-- Add <leader>ff for find files
-- Add <leader>fg for find grep
-- Add <leader>fb for find buffers
-
-This improves navigation speed and consistency with other editors.
-```
-
-### Footer
+## Footer
 
 **Optional.** Reference issues or breaking changes:
 
@@ -112,62 +101,6 @@ Closes #123
 Fixes #456
 Related-to #789
 ```
-
-**Example:**
-```
-feat(nvim): add telescope keybindings
-
-Add telescope keybindings for improved navigation.
-
-Closes #42
-```
-
----
-
-## Examples by Category
-
-### Configuration Changes
-
-```
-feat(nvim): add telescope keybindings
-fix(shell): correct alias syntax
-refactor(waybar): simplify module configuration
-style(niri): format configuration file
-```
-
-### Installation & Tools
-
-```
-feat(mise): add lazydocker to tool versions
-chore(deps): update neovim to 0.10.0
-fix(bootstrap): handle missing mise installation
-```
-
-### Documentation
-
-```
-docs: add conventional commits guide
-docs(nvim): document keybindings
-docs: update installation instructions
-```
-
-### Scripts & Automation
-
-```
-feat(scripts): create backup utility script
-fix(scripts): improve error handling in git-llm
-refactor(scripts): simplify file extraction logic
-```
-
-### Encryption & Security
-
-```
-feat(encryption): add SSH key to dotfiles
-fix(encryption): correct key permissions
-docs(encryption): update key management guide
-```
-
----
 
 ## Changelog Generation
 
@@ -187,51 +120,8 @@ Commits are automatically categorized for changelog generation:
 - `chore` - Maintenance
 - `ci` - CI/CD
 
----
-
-## Tips for Good Commits
-
-1. **Atomic commits**: One logical change per commit
-2. **Descriptive scopes**: Use specific scopes for clarity
-3. **Clear subjects**: Future you will thank you
-4. **Explain why**: Use body for context and reasoning
-5. **Reference issues**: Link to related issues/PRs
-6. **Test before committing**: Ensure changes work
-
----
-
-## Tools
-
-### Generate Commit Message
-
-Use the `git-llm` script to generate conventional commits:
-
-```bash
-git add .
-git-llm
-```
-
-This uses AI to analyze staged changes and generate a proper conventional commit message.
-
-### View Commit History
-
-```bash
-# View recent commits
-git log --oneline -10
-
-# View commits by type
-git log --grep="^feat" --oneline
-git log --grep="^fix" --oneline
-
-# View commits with scope
-git log --grep="(nvim)" --oneline
-```
-
----
-
 ## References
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
 - [Angular Commit Guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit)
-
