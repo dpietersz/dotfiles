@@ -1,7 +1,13 @@
 ---
+name: key-validator
 description: Validates encrypted keys, verifies decryption, and tests key functionality.
 mode: subagent
 temperature: 0.2
+tools:
+  read: true
+  bash: true
+permissions:
+  bash: allow
 ---
 
 # Role & Responsibility

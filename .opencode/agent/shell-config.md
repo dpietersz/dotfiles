@@ -1,7 +1,15 @@
 ---
+name: shell-config
 description: Modifies shell configurations in dot_config/shell/, dot_config/bash/, and dot_config/zsh/.
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

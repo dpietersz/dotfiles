@@ -1,7 +1,15 @@
 ---
+name: ui-config
 description: Modifies UI and desktop environment configurations in dot_config/ (niri, waybar, alacritty, kitty, etc.).
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

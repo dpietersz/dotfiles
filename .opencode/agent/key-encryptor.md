@@ -1,7 +1,15 @@
 ---
+name: key-encryptor
 description: Encrypts private keys using age and manages encrypted key files in .encrypted/ directory.
 mode: subagent
 temperature: 0.2
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

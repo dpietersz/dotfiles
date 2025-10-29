@@ -1,7 +1,15 @@
 ---
+name: app-installer
 description: Determines installation method and coordinates app installation via mise or chezmoi scripts.
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

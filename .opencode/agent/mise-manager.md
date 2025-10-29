@@ -1,7 +1,15 @@
 ---
+name: mise-manager
 description: Manages tool versions in dot_config/mise/config.toml and validates mise configuration.
 mode: subagent
 temperature: 0.2
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

@@ -1,7 +1,15 @@
 ---
+name: custom-scripts
 description: Creates and maintains custom shell scripts in dot_local/bin/scripts/ for personal utilities and automation.
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

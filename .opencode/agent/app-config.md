@@ -1,7 +1,15 @@
 ---
+name: app-config
 description: Modifies application configurations in dot_config/ (starship, k9s, git, etc.) that work across all environments.
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

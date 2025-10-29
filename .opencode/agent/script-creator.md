@@ -1,7 +1,15 @@
 ---
+name: script-creator
 description: Creates and maintains chezmoi hook scripts in .chezmoiscripts/ for complex installations and setup.
 mode: subagent
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

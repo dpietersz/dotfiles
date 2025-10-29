@@ -1,0 +1,333 @@
+{
+  // OpenCode Configuration for Dotfiles Repository
+  // This file configures the primary agent and all subagents for managing
+  // the chezmoi-based dotfiles repository across all environments.
+  //
+  // Documentation: https://opencode.ai/docs/agents/
+  // Agent definitions: See .opencode/agent/*.md files
+  // Commands: See .opencode/command/*.md files
+  // Best practices: See .opencode/OPENCODE_AGENT_BEST_PRACTICES.md
+
+  "$schema": "https://opencode.ai/config.json",
+
+  // Workspace configuration - defines where agents can read/write files
+  "workspace": {
+    "paths": [
+      // Dotfiles repository root
+      "."
+    ]
+  },
+
+  // Agent definitions - primary agent and specialized subagents
+  "agent": {
+    // PRIMARY AGENT: Orchestrates the entire dotfiles system
+    // See: .opencode/agent/dotfiles-manager.md for full system prompt
+    "dotfiles-manager": {
+      "description": "Orchestrates dotfiles repository maintenance across all environments (Fedora, Bluefin-dx, macOS, containers).",
+      "mode": "primary",
+      // Temperature: 0.3 = focused on consistency and accuracy
+      "temperature": 0.3,
+      // Tools: Full access for orchestration and coordination
+      "tools": {
+        "read": true,      // Read configuration and system files
+        "edit": true,      // Create and update configurations
+        "bash": true       // Execute commands for file operations
+      },
+      // Permissions: Allow all operations without prompts for smooth workflow
+      "permission": {
+        "edit": "allow",   // Create/update files without asking
+        "bash": "allow"    // Execute bash commands without asking
+      }
+    },
+
+    // SUBAGENT 1: Neovim configuration specialist
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/nvim-config.md
+    "nvim-config": {
+      "description": "Modifies and maintains Neovim configuration in dot_config/nvim/ following LazyVim conventions.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 2: Shell configuration specialist
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/shell-config.md
+    "shell-config": {
+      "description": "Modifies shell configurations in dot_config/shell/, dot_config/bash/, and dot_config/zsh/.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 3: UI configuration specialist
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/ui-config.md
+    "ui-config": {
+      "description": "Modifies UI and desktop environment configurations in dot_config/ (niri, waybar, alacritty, kitty, etc.).",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 4: Application configuration specialist
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/app-config.md
+    "app-config": {
+      "description": "Modifies application configurations in dot_config/ (starship, k9s, git, etc.) that work across all environments.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 5: Application installation coordinator
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/app-installer.md
+    "app-installer": {
+      "description": "Determines installation method and coordinates app installation via mise or chezmoi scripts.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 6: Mise tool version manager
+    // Temperature: 0.2 = very focused on standards
+    // See: .opencode/agent/mise-manager.md
+    "mise-manager": {
+      "description": "Manages tool versions in dot_config/mise/config.toml and validates mise configuration.",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 7: Chezmoi script creator
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/script-creator.md
+    "script-creator": {
+      "description": "Creates and maintains chezmoi hook scripts in .chezmoiscripts/ for complex installations and setup.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 8: Custom shell scripts creator
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/custom-scripts.md
+    "custom-scripts": {
+      "description": "Creates and maintains custom shell scripts in dot_local/bin/scripts/ for personal utilities and automation.",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 9: Key encryption specialist
+    // Temperature: 0.2 = very focused on security
+    // See: .opencode/agent/key-encryptor.md
+    "key-encryptor": {
+      "description": "Encrypts private keys using age and manages encrypted key files in .encrypted/ directory.",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 10: Key validation specialist
+    // Temperature: 0.2 = very focused on security
+    // See: .opencode/agent/key-validator.md
+    "key-validator": {
+      "description": "Validates encrypted keys, verifies decryption, and tests key functionality.",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 11: Documentation specialist
+    // Temperature: 0.2 = focused on clarity and consistency
+    // See: .opencode/agent/documentation.md
+    "documentation": {
+      "description": "Creates and maintains comprehensive documentation using Diátaxis framework for configs, scripts, and features.",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 12: Git operations manager
+    // Temperature: 0.2 = very focused on standards
+    // See: .opencode/agent/git-manager.md
+    "git-manager": {
+      "description": "Manages all git operations with conventional commits for automated changelog generation",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    }
+  },
+
+  // Quick commands for common workflows
+  // Usage: /command-name in OpenCode
+  // See: .opencode/command/*.md for full command definitions
+  "command": {
+    // CONFIGURATION WORKFLOWS
+    "modify-nvim": {
+      "description": "Modify Neovim configuration",
+      "agent": "nvim-config",
+      "template": "I want to modify my Neovim configuration. Please help me with the changes I need to make."
+    },
+    "modify-shell": {
+      "description": "Modify shell configuration",
+      "agent": "shell-config",
+      "template": "I want to modify my shell configuration. Please help me with the changes I need to make."
+    },
+    "modify-ui": {
+      "description": "Modify UI and desktop environment configuration",
+      "agent": "ui-config",
+      "template": "I want to modify my UI configuration. Please help me with the changes I need to make."
+    },
+    "modify-app": {
+      "description": "Modify application configuration",
+      "agent": "app-config",
+      "template": "I want to modify an application configuration. Please help me with the changes I need to make."
+    },
+
+    // INSTALLATION WORKFLOWS
+    "install-app": {
+      "description": "Install an application via mise or chezmoi scripts",
+      "agent": "app-installer",
+      "template": "I want to install an application. Please help me determine the best installation method and implement it."
+    },
+    "manage-tools": {
+      "description": "Manage tools in mise configuration",
+      "agent": "mise-manager",
+      "template": "I want to manage tools in my mise configuration. Please help me add, update, or remove tools."
+    },
+
+    // SCRIPT WORKFLOWS
+    "create-script": {
+      "description": "Create a chezmoi hook script",
+      "agent": "script-creator",
+      "template": "I want to create a chezmoi hook script. Please help me create it with proper error handling and environment detection."
+    },
+    "create-custom-script": {
+      "description": "Create a custom shell script",
+      "agent": "custom-scripts",
+      "template": "I want to create a custom shell script in dot_local/bin/scripts/. Please help me create it."
+    },
+
+    // SECURITY WORKFLOWS
+    "encrypt-key": {
+      "description": "Encrypt a private key",
+      "agent": "key-encryptor",
+      "template": "I want to encrypt a private key. Please help me encrypt it and add it to the repository."
+    },
+    "validate-key": {
+      "description": "Validate an encrypted key",
+      "agent": "key-validator",
+      "template": "I want to validate an encrypted key. Please verify it can be decrypted and is functional."
+    },
+
+    // DOCUMENTATION WORKFLOWS
+    "generate-docs": {
+      "description": "Generate documentation",
+      "agent": "documentation",
+      "template": "I want to generate documentation. Please create comprehensive documentation using the Diátaxis framework."
+    },
+
+    // GIT WORKFLOWS
+    "commit-changes": {
+      "description": "Commit changes with conventional commits",
+      "agent": "git-manager",
+      "template": "I want to commit my changes. Please help me create a proper conventional commit message and commit the changes."
+    }
+  }
+}
+

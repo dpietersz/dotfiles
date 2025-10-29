@@ -1,7 +1,15 @@
 ---
+name: documentation
 description: Creates and maintains comprehensive documentation using Diátaxis framework for configs, scripts, and features.
 mode: subagent
 temperature: 0.2
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

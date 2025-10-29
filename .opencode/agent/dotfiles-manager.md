@@ -1,7 +1,15 @@
 ---
+name: dotfiles-manager
 description: Orchestrates dotfiles repository maintenance across all environments (Fedora, Bluefin-dx, macOS, containers).
 mode: primary
 temperature: 0.3
+tools:
+  read: true
+  edit: true
+  bash: true
+permissions:
+  edit: allow
+  bash: allow
 ---
 
 # Role & Responsibility

@@ -1,7 +1,13 @@
 ---
+name: git-manager
 description: Manages all git operations with conventional commits for automated changelog generation
 mode: subagent
 temperature: 0.2
+tools:
+  read: true
+  bash: true
+permissions:
+  bash: allow
 ---
 
 # Role & Responsibility
