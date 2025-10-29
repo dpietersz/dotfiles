@@ -5,13 +5,13 @@ return {
     "nvim-lua/plenary.nvim",
   },
   build = function()
-    -- mcp-hub is now managed by mise, so it will be available in PATH
-    -- Check if mcp-hub is available (either via mise or system PATH)
+    -- mcp-hub is installed via chezmoi script for persistence on immutable systems (Bluefin, etc.)
+    -- Check if mcp-hub is available in PATH
     local mcp_check = vim.fn.system("command -v mcp-hub 2>/dev/null")
     if vim.v.shell_error ~= 0 then
       vim.notify(
-        "mcp-hub not found in PATH. Please ensure mise is installed and run:\n  mise install mcp-hub\n\n"
-          .. "mcp-hub is now managed via mise for persistence on immutable systems (Bluefin, etc.)",
+        "mcp-hub not found in PATH. Please run:\n  chezmoi apply\n\n"
+          .. "This will install mcp-hub via the setup script for persistence on immutable systems.",
         vim.log.levels.WARN
       )
     end

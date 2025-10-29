@@ -10,6 +10,11 @@ if [[ -d $HOME/.local/bin/scripts ]]; then
   prepend_path "$HOME/.local/bin/scripts"
 fi
 
+# npm global packages (persistent on Bluefin/atomic systems)
+if [[ -d $HOME/.local/share/npm/bin ]]; then
+  prepend_path "$HOME/.local/share/npm/bin"
+fi
+
 # Krew (kubectl plugin manager)
 if [[ -d $HOME/.krew ]]; then
   prepend_path "$HOME/.krew/bin"
