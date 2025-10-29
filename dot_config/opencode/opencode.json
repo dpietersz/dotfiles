@@ -1,5 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "workspace": {
+    "paths": [
+      "{env:HOME}/dev/Notes"
+    ]
+  },
   "agent": {
     "second-brain": {
       "description": "Orchestrates atomic note-taking, linking, and knowledge graph management for your personal knowledge system",

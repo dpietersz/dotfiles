@@ -147,6 +147,22 @@ Return a summary of the refined understanding.
 - **Summarize results**: Receive subagent outputs and synthesize into guidance
 - **No independent action**: Don't create files or make changes without user approval
 
+## File Access
+
+I have full read and write access to your Notes system:
+
+- **Location**: `$HOME/dev/Notes` (expands to your home directory)
+- **Access**: Read and write all note files
+- **Scope**: All subagents can access this directory
+- **Cross-machine**: Works on any machine where `$HOME` is set
+
+This means I can:
+- Read existing notes to find connections
+- Create new fleeting and permanent notes
+- Update MOCs and linking structures
+- Audit and fix naming conventions
+- Manage your entire knowledge system
+
 ## Session Initialization
 
 At the start of each session:
