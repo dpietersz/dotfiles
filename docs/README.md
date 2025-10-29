@@ -21,6 +21,11 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **Information-oriented documentation** for looking up facts and specifications. Neutral, factual descriptions of the machinery.
 
+- [Reference Documentation Hub](./reference/README.md) - Overview of all reference materials
+- [Neovim Keybindings](./reference/nvim-keybindings.md) - Complete Neovim keybindings reference
+- [Niri Window Manager Keybindings](./reference/niri-keybindings.md) - Complete Niri WM keybindings reference
+- [Shell Aliases & Functions](./reference/shell-aliases.md) - Complete shell aliases and functions reference
+- [All Keybindings](./reference/keybindings.md) - Comprehensive keybindings reference
 - [Conventional Commits Format](./reference/conventional-commits-format.md) - Commit message specification
 
 ### 💡 [Explanation](./explanation/)
@@ -35,6 +40,10 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 **I want to...**
 
 - **Learn the basics** → [Getting Started Guide](./getting-started/README.md)
+- **Look up a keybinding** → [Reference Documentation Hub](./reference/README.md)
+- **Find Neovim keybindings** → [Neovim Keybindings](./reference/nvim-keybindings.md)
+- **Find Niri keybindings** → [Niri Window Manager Keybindings](./reference/niri-keybindings.md)
+- **Find shell aliases** → [Shell Aliases & Functions](./reference/shell-aliases.md)
 - **Add a private key** → [Add Encrypted Keys](./how-to/add-encrypted-keys.md)
 - **Write a proper commit message** → [Write Git Commits](./how-to/git-commits.md)
 - **Understand the documentation structure** → [Diátaxis Framework](./explanation/diataxis-framework.md)
