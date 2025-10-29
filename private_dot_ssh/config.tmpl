@@ -2,6 +2,37 @@
 # Added by Augment for remote agent SSH connections
 Include {{ .chezmoi.homeDir }}/.augment/ssh-config
 
+# DevPod Start si-contracts.devpod
+Host si-contracts.devpod
+  ForwardAgent yes
+  LogLevel error
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  HostKeyAlgorithms rsa-sha2-256,rsa-sha2-512,ssh-rsa
+  ProxyCommand "{{ .chezmoi.homeDir }}/.local/bin/devpod" ssh --stdio --context default --user vscode si-contracts --workdir "/workspaces/contracts"
+  User vscode
+# DevPod End si-contracts.devpod
+# DevPod Start si-platform.devpod
+Host si-platform.devpod
+  ForwardAgent yes
+  LogLevel error
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  HostKeyAlgorithms rsa-sha2-256,rsa-sha2-512,ssh-rsa
+  ProxyCommand "{{ .chezmoi.homeDir }}/.local/bin/devpod" ssh --stdio --context default --user vscode si-platform
+  User vscode
+# DevPod End si-platform.devpod
+# DevPod Start sandbox.devpod
+Host sandbox.devpod
+  ForwardAgent yes
+  LogLevel error
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  HostKeyAlgorithms rsa-sha2-256,rsa-sha2-512,ssh-rsa
+  ProxyCommand "{{ .chezmoi.homeDir }}/.local/bin/devpod" ssh --stdio --context default --user vscode sandbox
+  User vscode
+# DevPod End sandbox.devpod
+
 # GitHub
 Host github.com
     HostName github.com
