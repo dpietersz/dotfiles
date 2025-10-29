@@ -5,20 +5,15 @@ return {
     "nvim-lua/plenary.nvim",
   },
   build = function()
-    -- Check if mcp-hub is installed before attempting global install
+    -- mcp-hub is now managed by mise, so it will be available in PATH
+    -- Check if mcp-hub is available (either via mise or system PATH)
     local mcp_check = vim.fn.system("command -v mcp-hub 2>/dev/null")
     if vim.v.shell_error ~= 0 then
-      vim.notify("Installing mcp-hub globally... (requires npm)", vim.log.levels.INFO)
-      local install_result = vim.fn.system("npm install -g mcp-hub@latest 2>&1")
-      if vim.v.shell_error ~= 0 then
-        vim.notify(
-          "Failed to install mcp-hub globally. Please run manually:\n  npm install -g mcp-hub@latest\n\nError: "
-            .. install_result,
-          vim.log.levels.ERROR
-        )
-      else
-        vim.notify("mcp-hub installed successfully", vim.log.levels.INFO)
-      end
+      vim.notify(
+        "mcp-hub not found in PATH. Please ensure mise is installed and run:\n  mise install mcp-hub\n\n"
+          .. "mcp-hub is now managed via mise for persistence on immutable systems (Bluefin, etc.)",
+        vim.log.levels.WARN
+      )
     end
   end,
   config = function()
