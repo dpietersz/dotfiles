@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# ------------------ mcp-hub install ------------------
+# Installs mcp-hub (npm package) to a persistent user directory.
+# - Skips on remote environments (Docker, Distrobox, etc.)
+# - Uses npm --prefix to install to ~/.local/share/npm (survives system updates on Bluefin)
+# - Ensures ~/.local/share/npm/bin is in PATH (handled by dot_config/shell/10-path.sh.tmpl)
+# - Idempotent: safe to run multiple times
+#
+# Notes:
+# - mcp-hub is not available in mise registry, so must be installed via npm
+# - ~/.local/share/npm/bin must be added to PATH (already configured in shell config)
+# - On Bluefin (immutable), /usr/local is lost on updates, so ~/.local is used instead
+
+{{- if .remote }}
+echo "[mcp-hub] Skipping install: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+# Source shell configuration to get mise-installed tools in PATH
+if [[ -f "$HOME/.bashrc" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.bashrc"
+fi
+
+# Check if mcp-hub is already installed
+if command -v mcp-hub >/dev/null 2>&1; then
+  echo "[mcp-hub] Already installed: $(mcp-hub --version 2>/dev/null || echo 'version unknown')"
+  exit 0
+fi
+
+# Ensure npm is available (from mise)
+if ! command -v npm >/dev/null 2>&1; then
+  echo "[mcp-hub] ERROR: npm not found. Ensure Node.js is installed via mise."
+  echo "[mcp-hub] Run: mise install node"
+  exit 1
+fi
+
+# Create persistent npm directory
+NPM_PREFIX="$HOME/.local/share/npm"
+mkdir -p "$NPM_PREFIX"
+
+echo "[mcp-hub] Installing mcp-hub@4.2.1 to $NPM_PREFIX..."
+
+# Install mcp-hub to persistent user directory
+npm install --prefix "$NPM_PREFIX" --no-save mcp-hub@4.2.1
+
+# Verify installation
+if command -v mcp-hub >/dev/null 2>&1; then
+  echo "[mcp-hub] Installation successful: $(mcp-hub --version)"
+else
+  echo "[mcp-hub] WARNING: mcp-hub not found in PATH after installation."
+  echo "[mcp-hub] Ensure $NPM_PREFIX/bin is in your PATH."
+  echo "[mcp-hub] This is configured in dot_config/shell/10-path.sh.tmpl"
+  exit 1
+fi
+
+echo "[mcp-hub] Done."
