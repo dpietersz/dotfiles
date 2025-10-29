@@ -1,0 +1,243 @@
+{
+  // OpenCode Configuration for Second Brain Agent System
+  // This file configures the primary agent and all subagents for managing
+  // your personal knowledge system using atomic notes and Zettelkasten method.
+  //
+  // Documentation: https://opencode.ai/docs/agents/
+  // Agent definitions: See .opencode/agent/*.md files
+  // Commands: See .opencode/command/*.md files
+
+  "$schema": "https://opencode.ai/config.json",
+
+  // Workspace configuration - defines where agents can read/write files
+  "workspace": {
+    "paths": [
+      // Your Notes directory - all agents have access to this
+      // Uses $HOME environment variable for cross-machine compatibility
+      "{env:HOME}/dev/Notes"
+    ]
+  },
+
+  // Agent definitions - primary agent and specialized subagents
+  "agent": {
+    // PRIMARY AGENT: Orchestrates the entire second brain system
+    // See: .opencode/agent/second-brain.md for full system prompt
+    "second-brain": {
+      "description": "Orchestrates atomic note-taking, linking, and knowledge graph management for your personal knowledge system",
+      "mode": "primary",
+      // Temperature: 0.4 = balanced between focused guidance and creative thinking
+      "temperature": 0.4,
+      // Tools: Full access for orchestration and coordination
+      "tools": {
+        "read": true,      // Read notes and system files
+        "edit": true,      // Create and update notes
+        "bash": true       // Execute commands for file operations
+      },
+      // Permissions: Allow all operations without prompts for smooth workflow
+      "permission": {
+        "edit": "allow",   // Create/update notes without asking
+        "bash": "allow"    // Execute bash commands without asking
+      }
+    },
+
+    // SUBAGENT 1: Clarification through Socratic questioning
+    // Temperature: 0.5 = balanced for thoughtful questions
+    // See: .opencode/agent/note-clarifier.md
+    "note-clarifier": {
+      "description": "Asks deep questions to refine and clarify fleeting notes into coherent ideas",
+      "mode": "subagent",
+      "temperature": 0.5,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 2: Note structuring and formatting
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/note-processor.md
+    "note-processor": {
+      "description": "Converts clarified fleeting notes into permanent atomic notes with proper structure",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 3: Connection discovery
+    // Temperature: 0.4 = balanced for finding meaningful links
+    // See: .opencode/agent/link-strategist.md
+    "link-strategist": {
+      "description": "Identifies meaningful connections between notes and suggests strategic linking",
+      "mode": "subagent",
+      "temperature": 0.4,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 4: Quality validation
+    // Temperature: 0.2 = very focused on standards
+    // See: .opencode/agent/quality-checker.md
+    "quality-checker": {
+      "description": "Validates notes against guidelines and suggests improvements before finalizing",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 5: Map of Content creation
+    // Temperature: 0.4 = balanced for organization
+    // See: .opencode/agent/moc-architect.md
+    "moc-architect": {
+      "description": "Creates and maintains Maps of Content that organize and reveal patterns in your knowledge graph",
+      "mode": "subagent",
+      "temperature": 0.4,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 6: Naming consistency
+    // Temperature: 0.2 = very focused on standards
+    // See: .opencode/agent/naming-specialist.md
+    "naming-specialist": {
+      "description": "Ensures proper naming conventions, IDs, and identification across your knowledge system",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 7: Review process guidance
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/review-coordinator.md
+    "review-coordinator": {
+      "description": "Guides daily, weekly, and monthly review workflows to maintain and evolve your knowledge system",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    },
+
+    // SUBAGENT 8: Pitfall prevention
+    // Temperature: 0.3 = focused on consistency
+    // See: .opencode/agent/pitfall-detector.md
+    "pitfall-detector": {
+      "description": "Identifies and helps prevent common pitfalls in atomic note-taking and knowledge management",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
+    }
+  },
+
+  // Quick commands for common workflows
+  // Usage: /command-name in OpenCode
+  // See: .opencode/command/*.md for full command definitions
+  "command": {
+    // REVIEW WORKFLOWS
+    "daily-review": {
+      "description": "Process inbox and create permanent notes from fleeting captures (5-10 minutes)",
+      "agent": "review-coordinator",
+      "template": "Guide me through a daily review. I want to process my fleeting notes from yesterday and convert 1-2 to permanent notes. Help me identify connections and clean up my inbox."
+    },
+    "weekly-review": {
+      "description": "Link recent notes, update MOCs, and identify emerging clusters (30-60 minutes)",
+      "agent": "review-coordinator",
+      "template": "Guide me through a weekly review. I want to link notes created this week, update my MOCs, identify emerging clusters, and connect any orphan notes."
+    },
+    "monthly-review": {
+      "description": "Audit system, refine structure, and archive completed projects (1-2 hours)",
+      "agent": "review-coordinator",
+      "template": "Guide me through a monthly review. I want to audit orphan notes, refine MOC structure, archive completed projects, and plan next month's focus areas."
+    },
+
+    // NOTE CREATION WORKFLOWS
+    "create-fleeting": {
+      "description": "Capture a new fleeting note with guided clarification",
+      "agent": "note-clarifier",
+      "template": "I have a new idea I want to capture as a fleeting note. Please ask me clarifying questions to help me articulate it clearly before I write it down."
+    },
+    "process-fleeting": {
+      "description": "Convert a fleeting note to a permanent atomic note",
+      "agent": "note-processor",
+      "template": "I have a fleeting note I want to convert to a permanent note. Please help me structure it properly with title, explanation, connections, and references."
+    },
+    "validate-note": {
+      "description": "Check note quality and suggest improvements",
+      "agent": "quality-checker",
+      "template": "Please validate this note against the atomic note guidelines. Check structure, content quality, naming, and linking. Propose any improvements with reasoning."
+    },
+
+    // LINKING & ORGANIZATION WORKFLOWS
+    "find-links": {
+      "description": "Identify meaningful connections for a note",
+      "agent": "link-strategist",
+      "template": "I've created a new note and want to find meaningful connections to existing notes. Please analyze my note and suggest strategic links with explanations."
+    },
+    "create-moc": {
+      "description": "Create a new Map of Content for organizing related notes",
+      "agent": "moc-architect",
+      "template": "I think I need a Map of Content for a topic. Please analyze my existing notes, identify clusters, and propose a MOC structure with organization and groupings."
+    },
+    "find-orphans": {
+      "description": "Identify unlinked notes and suggest connections",
+      "agent": "link-strategist",
+      "template": "Please find orphan notes in my system (notes with no connections) and suggest meaningful links to connect them to the rest of my knowledge graph."
+    },
+
+    // MAINTENANCE WORKFLOWS
+    "check-pitfalls": {
+      "description": "Scan for common pitfalls and suggest preventions",
+      "agent": "pitfall-detector",
+      "template": "Please analyze my notes for common pitfalls like scope creep, weak connections, or inconsistent naming. Identify issues and suggest how to fix them."
+    },
+    "fix-naming": {
+      "description": "Audit and fix naming conventions and IDs",
+      "agent": "naming-specialist",
+      "template": "Please audit my notes for naming consistency. Check IDs, titles, file names, aliases, and tags. Propose any changes needed to maintain system integrity."
+    }
+  }
+}
