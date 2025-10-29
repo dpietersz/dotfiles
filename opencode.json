@@ -1,0 +1,214 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "dotfiles-manager": {
+      "description": "Primary orchestrator for dotfiles repository maintenance across all environments",
+      "mode": "primary",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "nvim-config": {
+      "description": "Modifies and maintains Neovim configuration following LazyVim conventions",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "shell-config": {
+      "description": "Manages shell configuration for bash and zsh",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "ui-config": {
+      "description": "Manages UI configuration for niri, waybar, alacritty, and kitty",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "app-config": {
+      "description": "Manages application configuration for starship, git, k9s, and others",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "app-installer": {
+      "description": "Coordinates application installation via mise or chezmoi scripts",
+      "mode": "subagent",
+      "temperature": 0.3,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "mise-manager": {
+      "description": "Manages tool versions in mise configuration",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "script-creator": {
+      "description": "Creates chezmoi hook scripts for complex installations",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "custom-scripts": {
+      "description": "Creates and maintains custom shell scripts in dot_local/bin/scripts/",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "key-encryptor": {
+      "description": "Encrypts private keys using age encryption",
+      "mode": "subagent",
+      "temperature": 0.1,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "key-validator": {
+      "description": "Validates encrypted keys and verifies decryption",
+      "mode": "subagent",
+      "temperature": 0.1,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "ask"
+      }
+    },
+    "documentation": {
+      "description": "Creates comprehensive documentation using Diátaxis framework",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    },
+    "git-manager": {
+      "description": "Manages all git operations with conventional commits for automated changelog generation",
+      "mode": "subagent",
+      "temperature": 0.2,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "ask"
+      }
+    }
+  },
+  "command": {
+    "apply-dotfiles": {
+      "description": "Apply dotfiles changes with chezmoi",
+      "agent": "dotfiles-manager"
+    },
+    "validate-config": {
+      "description": "Validate all configuration files for syntax errors",
+      "agent": "dotfiles-manager"
+    },
+    "keybindings-summary": {
+      "description": "Generate keybindings summary from configs",
+      "agent": "documentation"
+    },
+    "check-environment": {
+      "description": "Check dotfiles compatibility with current environment",
+      "agent": "dotfiles-manager"
+    },
+    "review-changes": {
+      "description": "Review uncommitted changes in dotfiles",
+      "agent": "dotfiles-manager"
+    },
+    "check-mise": {
+      "description": "Validate and check mise tool configuration",
+      "agent": "mise-manager"
+    },
+    "generate-docs": {
+      "description": "Generate comprehensive documentation from configs",
+      "agent": "documentation"
+    }
+  }
+}
+
