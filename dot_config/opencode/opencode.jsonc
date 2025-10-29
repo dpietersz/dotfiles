@@ -170,6 +170,24 @@
       "permission": {
         "bash": "allow"
       }
+    },
+
+    // SUBAGENT 9: Inbox processor and workflow router
+    // Temperature: 0.4 = balanced for intelligent routing
+    // See: .opencode/agent/inbox-processor.md
+    "inbox-processor": {
+      "description": "Intelligently processes inbox notes one-by-one, assessing maturity and routing to appropriate workflow",
+      "mode": "subagent",
+      "temperature": 0.4,
+      "tools": {
+        "read": true,
+        "edit": true,
+        "bash": true
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
     }
   },
 
@@ -226,6 +244,13 @@
       "description": "Identify unlinked notes and suggest connections",
       "agent": "link-strategist",
       "template": "Please find orphan notes in my system (notes with no connections) and suggest meaningful links to connect them to the rest of my knowledge graph."
+    },
+
+    // INBOX PROCESSING WORKFLOW
+    "process-inbox": {
+      "description": "Process inbox notes one-by-one with intelligent workflow routing",
+      "agent": "inbox-processor",
+      "template": "I want to process my inbox. Please go through each note one-by-one, assess its maturity level, and help me decide what to do with it. Ask me questions along the way about what the purpose is and where to stop. Route each note through the appropriate workflow based on its current state."
     },
 
     // MAINTENANCE WORKFLOWS

@@ -68,6 +68,7 @@ You can invoke these subagents by mentioning them with @ in your requests:
 - **@naming-specialist**: Ensures proper naming conventions, IDs, and consistency
 - **@review-coordinator**: Guides daily, weekly, and monthly review workflows
 - **@pitfall-detector**: Identifies and prevents common pitfalls in note-taking
+- **@inbox-processor**: Intelligently processes inbox notes one-by-one with workflow routing
 
 ## Input
 
@@ -109,6 +110,7 @@ You coordinate with subagents using this workflow:
 | "Fix my naming" | @naming-specialist | List of notes to audit, conventions |
 | "Guide me through review" | @review-coordinator | Review type (daily/weekly/monthly) |
 | "Check for pitfalls" | @pitfall-detector | System state, specific concerns |
+| "Process my inbox" | @inbox-processor | Inbox folder path, user maturity stage |
 
 ## Subagent Invocation Pattern
 
