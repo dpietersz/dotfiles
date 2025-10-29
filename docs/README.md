@@ -8,8 +8,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **Learning-oriented tutorials** for beginners. Follow step-by-step instructions to complete meaningful tasks and acquire skills.
 
-- [Bootstrap Your Dotfiles](./getting-started/bootstrap.md) - Set up on a new machine
-- [Make Your First Modification](./getting-started/first-modification.md) - Learn the agent system
+- [Getting Started Guide](./getting-started/README.md) - Introduction to tutorials and learning materials
 
 ### 📋 [How-To Guides](./how-to/)
 
@@ -35,7 +34,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **I want to...**
 
-- **Get started on a new machine** → [Getting Started](./getting-started/)
+- **Learn the basics** → [Getting Started Guide](./getting-started/README.md)
 - **Add a private key** → [Add Encrypted Keys](./how-to/add-encrypted-keys.md)
 - **Write a proper commit message** → [Write Git Commits](./how-to/git-commits.md)
 - **Understand the documentation structure** → [Diátaxis Framework](./explanation/diataxis-framework.md)
@@ -43,7 +42,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 ## Using the Agent System
 
-For modifying configurations and installing applications, see the [OpenCode Agent System documentation](./../.opencode/README.md).
+For modifying configurations and installing applications, see the [OpenCode Agent System documentation](../.opencode/README.md).
 
 ## Key Concepts
 

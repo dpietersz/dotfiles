@@ -6,8 +6,10 @@ Welcome! This section contains tutorials to help you get started with your dotfi
 
 These tutorials guide you through the fundamental tasks you'll perform with your dotfiles:
 
-1. **[Bootstrap Your Dotfiles](./bootstrap.md)** - Set up your dotfiles on a new machine
-2. **[Make Your First Modification](./first-modification.md)** - Learn how to modify configurations using the agent system
+1. **Setting up your dotfiles** - Bootstrap your dotfiles on a new machine
+2. **Making your first modification** - Learn how to modify configurations using the agent system
+
+> **Note**: These tutorials are coming soon! In the meantime, check out the [How-To Guides](../how-to/) for practical step-by-step instructions.
 
 ## Prerequisites
 
@@ -24,7 +26,11 @@ Each tutorial is designed to be:
 
 ## Next Steps
 
-Start with **[Bootstrap Your Dotfiles](./bootstrap.md)** if you're setting up on a new machine, or jump to **[Make Your First Modification](./first-modification.md)** if you're already set up.
+While the full tutorials are being developed, you can:
+
+1. **Get started immediately** with the [How-To Guides](../how-to/) for practical step-by-step instructions
+2. **Understand the concepts** by reading the [Explanation](../explanation/) documents
+3. **Look up details** in the [Reference](../reference/) documentation
 
 ## Need Help?
 
