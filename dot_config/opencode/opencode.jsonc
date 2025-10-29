@@ -9,15 +9,6 @@
 
   "$schema": "https://opencode.ai/config.json",
 
-  // Workspace configuration - defines where agents can read/write files
-  "workspace": {
-    "paths": [
-      // Your Notes directory - all agents have access to this
-      // Uses $HOME environment variable for cross-machine compatibility
-      "{env:HOME}/dev/Notes"
-    ]
-  },
-
   // Agent definitions - primary agent and specialized subagents
   "agent": {
     // PRIMARY AGENT: Orchestrates the entire second brain system

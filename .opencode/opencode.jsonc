@@ -10,14 +10,6 @@
 
   "$schema": "https://opencode.ai/config.json",
 
-  // Workspace configuration - defines where agents can read/write files
-  "workspace": {
-    "paths": [
-      // Dotfiles repository root
-      "."
-    ]
-  },
-
   // Agent definitions - primary agent and specialized subagents
   "agent": {
     // PRIMARY AGENT: Orchestrates the entire dotfiles system
