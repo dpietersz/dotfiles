@@ -27,14 +27,10 @@
     },
     "bluetooth": {
         "interval": 30,
-        "format": "{icon}",
-        // "format-alt": "{status}",
-        "format-icons": {
-            "enabled": "",
-            "disabled": "ss"
-        },
-        "on-click": "blueman-manager",
-        "on-click-right": "blueman-manager",
+        "format-on": "",
+        "format-off": "",
+        "on-click": "blueberry",
+        "on-click-right": "blueberry",
         "tooltip-format": "{status}"
     },
     "idle_inhibitor": {
@@ -111,7 +107,7 @@
         "family": "ipv4",
         "tooltip-format-wifi": "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\n {bandwidthUpBits}  {bandwidthDownBits}",
         "tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n {bandwidthUpBits}  {bandwidthDownBits}",
-        "on-click": "kitty --app-id=nmtui nmtui",
+        "on-click": "nm-connection-editor",
         "on-click-right": "nmcli radio wifi toggle"
     },
       "battery": {
