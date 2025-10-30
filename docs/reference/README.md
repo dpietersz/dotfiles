@@ -10,6 +10,7 @@ Reference documentation is neutral, factual, and designed for consultation while
 
 ### By Application
 
+- **[Recent Changes Cheatsheet](./recent-changes-cheatsheet.md)** - Quick reference for recently added features and keybindings
 - **[Neovim Keybindings](./nvim-keybindings.md)** - Complete reference for Neovim keybindings
 - **[Niri Window Manager Keybindings](./niri-keybindings.md)** - Complete reference for Niri WM keybindings
 - **[Shell Aliases & Functions](./shell-aliases.md)** - Complete reference for shell aliases and functions
@@ -46,7 +47,25 @@ Reference documentation is neutral, factual, and designed for consultation while
 
 ## Reference Files
 
-### 1. Neovim Keybindings Reference
+### 1. Recent Changes Cheatsheet
+**File**: `recent-changes-cheatsheet.md`
+
+Quick reference for recently added features and keybindings that take time to remember. This document tracks new additions across the dotfiles configuration.
+
+**Contains**:
+- Recently added Neovim keybindings
+- Recently added Niri keybindings
+- Recently added shell aliases and functions
+- Recently added Waybar features
+- Recently added system scripts and tools
+- Template for adding new entries
+- Changelog of recent additions
+
+**Best for**: Keeping track of new features you've just added and want to remember while they're still fresh.
+
+---
+
+### 3. Neovim Keybindings Reference
 **File**: `nvim-keybindings.md`
 
 Complete reference for Neovim keybindings in this dotfiles configuration. Uses LazyVim with custom keybindings and plugins.
@@ -75,7 +94,7 @@ Complete reference for Neovim keybindings in this dotfiles configuration. Uses L
 
 ---
 
-### 2. Niri Window Manager Keybindings Reference
+### 4. Niri Window Manager Keybindings Reference
 **File**: `niri-keybindings.md`
 
 Complete reference for Niri window manager keybindings. Niri is a scrollable-tiling Wayland compositor with a focus on simplicity and productivity.
@@ -107,7 +126,7 @@ Complete reference for Niri window manager keybindings. Niri is a scrollable-til
 
 ---
 
-### 3. Shell Aliases & Functions Reference
+### 5. Shell Aliases & Functions Reference
 **File**: `shell-aliases.md`
 
 Quick reference for all shell aliases and functions available in bash and zsh. These are defined in `~/.config/shell/` and are shared across all shell environments.
@@ -140,7 +159,7 @@ Quick reference for all shell aliases and functions available in bash and zsh. T
 
 ---
 
-### 4. Comprehensive Keybindings Reference
+### 6. Comprehensive Keybindings Reference
 **File**: `keybindings.md`
 
 Comprehensive reference combining all keybindings across the dotfiles configuration. Organized by application and context for easy lookup.

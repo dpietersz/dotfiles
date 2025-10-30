@@ -264,6 +264,15 @@ These are inherited from LazyVim and are commonly used:
 | `<leader>fb` | Find buffers | Normal | File Navigation |
 | `<leader>fh` | Find help | Normal | File Navigation |
 
+### Snacks Picker - File Filtering
+
+| Keybinding | Action | Mode | Category | Context |
+|------------|--------|------|----------|---------|
+| `<A-h>` | Toggle hidden files on/off | Normal | File Navigation | When picker is open |
+| `<A-i>` | Toggle ignored files (from .gitignore) on/off | Normal | File Navigation | When picker is open |
+
+**How it works**: When the file picker is open (e.g., after pressing `<leader>ff`), use these keybindings to dynamically filter the displayed files. Hidden files include dotfiles and directories starting with `.`. Ignored files are those listed in your `.gitignore`.
+
 ### LSP (Language Server Protocol)
 
 | Keybinding | Action | Mode | Category |
