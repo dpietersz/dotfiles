@@ -33,9 +33,9 @@ sudo rpm-ostree refresh-md --force
 # - waybar: Status bar
 # - pavucontrol: PulseAudio volume control GUI
 # - NetworkManager-tui: Network management TUI
-# - nm-connection-editor: Network connection manager GUI
+# - blueman: Bluetooth device manager
 echo "Installing packages..."
-sudo rpm-ostree install niri waybar pavucontrol NetworkManager-tui nm-connection-editor || {
+sudo rpm-ostree install niri waybar pavucontrol NetworkManager-tui blueman || {
   # If installation fails due to package already requested, that's OK
   # It means a previous attempt is still pending
   if sudo rpm-ostree status | grep -q "niri"; then
