@@ -1,0 +1,38 @@
+#!/bin/bash
+{{- if not .remote }}
+# auggie installation hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+
+set -euo pipefail
+
+# Check if npm is available
+if ! command -v npm >/dev/null 2>&1; then
+  echo "[auggie] npm not found, skipping installation"
+  exit 0
+fi
+
+# Check if auggie is already installed
+if command -v auggie >/dev/null 2>&1; then
+  echo "[auggie] already installed, skipping"
+  exit 0
+fi
+
+# Install auggie to persistent user directory (works on Bluefin/atomic systems)
+# - Uses ~/.local/share/npm instead of /usr/local (which is immutable on Bluefin)
+# - ~/.local/share/npm/bin is in PATH (configured in dot_config/shell/10-path.sh.tmpl)
+echo "[auggie] Installing to ~/.local/share/npm..."
+npm install --prefix "$HOME/.local/share/npm" --no-save --ignore-scripts @augmentcode/auggie@latest
+
+# Create symlink from bin to node_modules/.bin for PATH compatibility
+NPM_BIN_DIR="$HOME/.local/share/npm/bin"
+NPM_NODE_MODULES_BIN="$HOME/.local/share/npm/node_modules/.bin"
+
+if [[ -d "$NPM_NODE_MODULES_BIN" ]]; then
+  mkdir -p "$NPM_BIN_DIR"
+  ln -sf "$NPM_NODE_MODULES_BIN" "$NPM_BIN_DIR" 2>/dev/null || true
+  echo "[auggie] ✓ Installation successful: $NPM_BIN_DIR/auggie"
+else
+  echo "[auggie] ✗ Installation failed: node_modules/.bin not found"
+  exit 1
+fi
+
+{{- end }}
