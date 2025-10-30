@@ -182,9 +182,8 @@ binds {
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 
-    // === Workspace Management ===
-    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-lg"; }
-    Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-laptop"; }
+     // === Workspace Management ===
+     Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-lg"; }
 
 }
 
@@ -326,6 +325,55 @@ hotkey-overlay {
 // Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Miscellaneous
 screenshot-path "~/dev/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
+// ============================================================================
+// Window Rules - Assign applications to specific workspaces
+// ============================================================================
+// Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
+
+// === Browsers → Media Workspace ===
+window-rule {
+    match app-id="zen"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="firefox"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="chromium"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="qutebrowser"
+    open-on-workspace "Media"
+}
+
+// === Terminals → Coding Workspace ===
+window-rule {
+    match app-id="kitty"
+    open-on-workspace "Coding"
+}
+
+window-rule {
+    match app-id="Alacritty"
+    open-on-workspace "Coding"
+}
+
+window-rule {
+    match app-id="gnome-terminal-server"
+    open-on-workspace "Coding"
+}
+
+// === Code Editors → Coding Workspace ===
+window-rule {
+    match app-id="Code"
+    open-on-workspace "Coding"
+}
+
+// === Default window styling ===
 window-rule {
     geometry-corner-radius 9
     clip-to-geometry true
