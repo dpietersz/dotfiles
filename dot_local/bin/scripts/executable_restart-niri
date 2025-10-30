@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Script: restart-niri
+# Purpose: Safely restart Niri window manager
+# Usage: restart-niri
+#
+# This script will:
+# 1. Save current workspace state (optional)
+# 2. Kill the current Niri process
+# 3. Wait for Niri to restart
+# 4. Restore workspace state (optional)
+
+echo "Restarting Niri..."
+
+# Kill Niri process
+pkill -f "niri" || true
+
+# Wait for Niri to fully shut down
+sleep 1
+
+# Niri should auto-restart via systemd or your session manager
+# If it doesn't, you can manually start it with:
+# niri &
+
+echo "Niri restart initiated."
+echo "Waiting for Niri to come back online..."
+
+# Wait for Niri to be ready
+for i in {1..30}; do
+  if niri msg outputs &>/dev/null; then
+    echo "Niri is back online!"
+    sleep 1
+    echo "New workspaces should now be available:"
+    niri msg workspaces
+    exit 0
+  fi
+  sleep 0.5
+done
+
+echo "Warning: Niri did not come back online within 15 seconds"
+exit 1
