@@ -1,0 +1,38 @@
+#!/bin/bash
+# Install Kanshi - Wayland display configuration daemon
+# Kanshi automatically switches monitor profiles based on connected outputs
+# Documentation: https://github.com/emersion/kanshi
+
+set -euo pipefail
+
+# Only install on host machines, not in remote environments
+{{ if .remote }}
+echo "Skipping Kanshi installation in remote environment"
+exit 0
+{{ end }}
+
+# Detect the package manager and install Kanshi
+if command -v dnf &> /dev/null; then
+    # Fedora/RHEL/CentOS
+    echo "Installing Kanshi via dnf..."
+    sudo dnf install -y kanshi
+elif command -v pacman &> /dev/null; then
+    # Arch Linux
+    echo "Installing Kanshi via pacman..."
+    sudo pacman -S --noconfirm kanshi
+elif command -v apt &> /dev/null; then
+    # Debian/Ubuntu
+    echo "Installing Kanshi via apt..."
+    sudo apt-get update
+    sudo apt-get install -y kanshi
+elif command -v brew &> /dev/null; then
+    # macOS
+    echo "Installing Kanshi via Homebrew..."
+    brew install kanshi
+else
+    echo "Error: Could not detect package manager. Please install Kanshi manually."
+    echo "Visit: https://github.com/emersion/kanshi"
+    exit 1
+fi
+
+echo "✓ Kanshi installed successfully"
