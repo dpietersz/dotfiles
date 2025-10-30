@@ -50,13 +50,10 @@ if (which pass | is-not-empty) {
     $env.OPENAI_API_KEY = (pass show Sites/openai.com/api-keys/neovim | str trim)
     $env.OPENAI_KEY = $env.OPENAI_API_KEY
     $env.PERPLEXITY_API_KEY = (pass show Sites/perplexity.ai/api-key | str trim)
-    $env.GEMINI_API_KEY = (pass show Sites/google.com/api-key/gemini-pro-2-5 | str trim)
-    $env.GOOGLE_AI_API_KEY = $env.GEMINI_API_KEY
-    $env.GOOGLE_API_KEY = $env.GEMINI_API_KEY
-    $env.DATABRICKS_HOST = (pass show Logins/gemeente-hilversum/databricks/host | str trim)
-    $env.DATABRICKS_SECRET = (pass show Logins/gemeente-hilversum/databricks/service-principal | lines | first)
-    $env.DATABRICKS_CLIENT_ID = (pass show Logins/gemeente-hilversum/databricks/service-principal | lines | where {|line| $line | str contains "client-id:" } | first | str replace "client-id: " "")
-    $env.OPENROUTER_API_KEY = (pass show Sites/openrouter.ai/api-keys/aider | str trim)
+     $env.GEMINI_API_KEY = (pass show Sites/google.com/api-key/gemini-pro-2-5 | str trim)
+     $env.GOOGLE_AI_API_KEY = $env.GEMINI_API_KEY
+     $env.GOOGLE_API_KEY = $env.GEMINI_API_KEY
+     $env.OPENROUTER_API_KEY = (pass show Sites/openrouter.ai/api-keys/aider | str trim)
     $env.DEEPSEEK_API_KEY = (pass show Sites/deepseek.com/api-key/aider | str trim)
     $env.DOCSFETCHER_API_KEY = (pass show Sites/surpassion.xyz/api-key/fetchdoc | str trim)
   } catch {

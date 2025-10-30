@@ -20,7 +20,7 @@
 ```
 Private key: /path/to/private.key
 Public key: /path/to/public.key (optional)
-Install to: ~/.target/location/
+Install to: ~/.ssh/
 ```
 
 ---
@@ -112,16 +112,16 @@ git push
 ```bash
 # Decrypt YOUR_KEY_NAME
 echo "🔓 Decrypting YOUR_KEY_NAME..."
-mkdir -p "$HOME/.target/location"
+mkdir -p "$HOME/.ssh"
 
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/YOUR_FILENAME.age" > "$HOME/.target/location/private.key"
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/YOUR_FILENAME.age" > "$HOME/.ssh/private.key"
 
 # If public key exists
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/YOUR_FILENAME.pub.age" > "$HOME/.target/location/public.key"
+echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/YOUR_FILENAME.pub.age" > "$HOME/.ssh/public.key"
 
 # Set proper permissions
-chmod 600 "$HOME/.target/location/private.key"
-chmod 644 "$HOME/.target/location/public.key"  # if applicable
+chmod 600 "$HOME/.ssh/private.key"
+chmod 644 "$HOME/.ssh/public.key"  # if applicable
 
 echo "✅ YOUR_KEY_NAME installed"
 ```
@@ -131,7 +131,7 @@ echo "✅ YOUR_KEY_NAME installed"
 # Add to the condition
 if [ -f "$HOME/.ssh/id_ed25519" ] && \
    gpg --list-secret-keys 207F38BA91AB8330DBF08766B4320995C8E1D17D &>/dev/null && \
-   [ -f "$HOME/.target/location/private.key" ]; then
+   [ -f "$HOME/.ssh/private.key" ]; then
 ```
 
 **Commit the script update:**
@@ -147,8 +147,8 @@ git push
 ```bash
 # When you need this key on a new machine:
 cd ~/dev/Projects/dotfiles
-age -d .encrypted/YOUR_FILENAME.age > ~/.target/location/private.key
-chmod 600 ~/.target/location/private.key
+age -d .encrypted/YOUR_FILENAME.age > ~/.ssh/private.key
+chmod 600 ~/.ssh/private.key
 ```
 
 ---
@@ -240,7 +240,7 @@ age -d .encrypted/FILENAME.age
 age -d .encrypted/FILENAME.age > /tmp/test && diff /path/to/original /tmp/test && rm /tmp/test
 
 # Manual decrypt when needed
-age -d .encrypted/FILENAME.age > ~/.target/location/key && chmod 600 ~/.target/location/key
+age -d .encrypted/FILENAME.age > ~/.ssh/key && chmod 600 ~/.ssh/key
 ```
 
 ---

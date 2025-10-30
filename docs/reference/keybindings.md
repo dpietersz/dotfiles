@@ -399,7 +399,6 @@ Quick access scripts in `~/.local/bin/scripts/`
 | `connect-airpods` | `connect-airpods` | Connect to AirPods |
 | `extract` | `extract <file>` | Extract archives |
 | `git-llm` | `git-llm <prompt>` | Generate git commits with LLM |
-| `git-llm-hvs` | `git-llm-hvs <prompt>` | HVS-specific git LLM |
 | `hnow` | `hnow` | Show current time |
 | `jj-llm` | `jj-llm <prompt>` | Jujutsu commits with LLM |
 | `llm-process-pitch` | `llm-process-pitch` | Process pitch with LLM |

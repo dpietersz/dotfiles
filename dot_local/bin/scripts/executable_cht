@@ -8,7 +8,7 @@ cheat() {
     path="$path/$arg"
   done
 
-  curl -sS "http://cht.sh/$path"
+  curl -sS "https://cht.sh/$path"
 }
 
 cheat "$@"

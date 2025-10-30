@@ -18,4 +18,4 @@ fpath+=(~/.zsh/completion)
 # Initialize completion system
 autoload -Uz compinit && compinit
 
-eval "$(direnv hook zsh)"
+source <(direnv hook zsh)

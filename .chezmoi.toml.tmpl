@@ -6,6 +6,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
   remote = {{ $remote }}
+  gpgKeyId = "207F38BA91AB8330DBF08766B4320995C8E1D17D"
 
 {{- if not $remote }}
 [git]

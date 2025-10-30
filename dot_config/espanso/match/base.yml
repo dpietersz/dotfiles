@@ -40,19 +40,13 @@ matches:
         params:
           cmd: "echo 'Hello from your shell'"
 
-  - trigger: ";em"
-    replace: "pietersz@gmail.com"
+   - trigger: ";em"
+     replace: "pietersz@gmail.com"
 
-  - trigger: ";sp"
-    replace: "d.pietersz@surpassion.nl"
-
-  - trigger: "#dimitri"
-    replace: "0634646487"
-
-  - trigger: "mvg,"
-    replace: |
-      Met vriendelijke groet,
-      Dimitri Pietersz
+   - trigger: "mvg,"
+     replace: |
+       Met vriendelijke groet,
+       Dimitri Pietersz
 
   - trigger: "!hsh"
     replace: "holisticskincarehaarlem.nl"
@@ -536,11 +530,7 @@ matches:
       - Tailwind v4 Guide for shadcn-ui: https://shadcn-svelte.com/docs/migration/tailwind-v4
       - Tailwind upgrade Guide v3 to v4: https://tailwindcss.com/docs/upgrade-guide
       - shadcn-ui v1 Guide latest version: https://www.shadcn-svelte.com/docs/installation/sveltekit
-      - Monorepo info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/README.md 
-      - Frontend service info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/services/frontend/README.md 
-      - Documentation Info: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/README.md 
-      - Development workflow: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/reference/development-workflow.md 
-      -Naming conventions: @/home/pietersz/dev/Projects/[REDACTED_PROJECT]/docs/reference/naming-conventions.md
+
 
       Key Responsibilities:
 

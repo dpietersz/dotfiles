@@ -1,7 +1,7 @@
 #!/bin/bash
 
 AIRPODS_MAC="68:CA:C4:EC:2D:71"
-DEVICE_NAME="Dimitri’s AirPods Pro"
+DEVICE_NAME="My AirPods Pro"
 
 echo "📡 Connecting to $DEVICE_NAME..."
 

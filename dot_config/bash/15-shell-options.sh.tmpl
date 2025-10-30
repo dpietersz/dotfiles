@@ -6,10 +6,10 @@ set -o vi
 # Make ESC key more responsive in vi mode
 export KEYSEQTIMEOUT=1
 
-eval "$(direnv hook bash)"
+source <(direnv hook bash)
 
 {{ if not .remote -}}
-eval "$(ssh-agent -s)" > /dev/null 2>&1
+source <(ssh-agent -s) > /dev/null 2>&1
 ssh-add ~/.ssh/id_ed25519 > /dev/null 2>&1
 {{ end -}}
 

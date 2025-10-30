@@ -7,7 +7,7 @@ echo "🔐 Dotfiles encryption setup"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Check if keys already exist (already bootstrapped)
-if [ -f "$HOME/.ssh/id_ed25519" ] && gpg --list-secret-keys 207F38BA91AB8330DBF08766B4320995C8E1D17D &>/dev/null; then
+if [ -f "$HOME/.ssh/id_ed25519" ] && gpg --list-secret-keys {{ .gpgKeyId }} &>/dev/null; then
     echo "✅ Keys already installed. Skipping decryption."
     exit 0
 fi
@@ -40,7 +40,7 @@ GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .c
 echo "$GPG_KEY" | gpg --import --batch
 
 # Trust the key
-echo "207F38BA91AB8330DBF08766B4320995C8E1D17D:6:" | gpg --import-ownertrust
+echo "{{ .gpgKeyId }}:6:" | gpg --import-ownertrust
 
 echo "✅ GPG key imported and trusted"
 
@@ -76,7 +76,7 @@ echo "✅ Cosign keys installed"
 
 # Decrypt Azure HVS keys
 echo "🔓 Decrypting Azure HVS Keys..."
-mkdir -p "$HOME/.target/location"
+mkdir -p "$HOME/.ssh"
 
 echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].age" > "$HOME/.ssh/[REDACTED_AZURE_KEY]"
 
@@ -87,7 +87,7 @@ echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sou
 chmod 600 "$HOME/.ssh/[REDACTED_AZURE_KEY]"
 chmod 644 "$HOME/.ssh/[REDACTED_AZURE_KEY].pub"  # if applicable
 
-echo "✅ YOUR_KEY_NAME installed"
+echo "✅ Azure HVS keys installed"
 
 # Clear passphrase from memory
 unset DOTFILES_PASSPHRASE
