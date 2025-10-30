@@ -183,8 +183,8 @@ binds {
     Alt+Print { screenshot-window; }
 
     // === Workspace Management ===
-    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "/var/home/pietersz/.local/bin/scripts/toggle-workspaces" "--to-lg"; }
-    Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop" { spawn "/var/home/pietersz/.local/bin/scripts/toggle-workspaces" "--to-laptop"; }
+    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-lg"; }
+    Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-laptop"; }
 
 }
 
