@@ -10,12 +10,15 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 - [Getting Started Guide](./getting-started/README.md) - Introduction to tutorials and learning materials
 - [Getting Started with OpenCode](./getting-started/opencode-setup.md) - Quick 5-minute introduction to the agent system
+- [**Auggie CLI Multi-Agent Tutorial**](./getting-started/auggie-cli-tutorial.md) - **Learn the new Auggie CLI system step-by-step**
 - [Security Remediation Status](./getting-started/remediation-status.md) - Current status of security remediation
 
 ### 📋 [How-To Guides](./how-to/)
 
 **Goal-oriented guides** for solving specific problems. Assumes you know what you want and focuses on achieving the goal.
 
+- [**Modify Neovim Config with Auggie CLI**](./how-to/auggie-modify-neovim-config.md) - **Use the new Auggie CLI system for Neovim**
+- [**Modify Shell Config with Auggie CLI**](./how-to/auggie-modify-shell-config.md) - **Use the new Auggie CLI system for shell**
 - [Modify Any Configuration with OpenCode](./how-to/opencode-modify-config.md) - Change Neovim, shell, UI, and app settings
 - [Install Applications with OpenCode](./how-to/opencode-install-app.md) - Install and manage applications
 - [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md) - Securely add and validate encrypted keys
@@ -29,6 +32,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 **Information-oriented documentation** for looking up facts and specifications. Neutral, factual descriptions of the machinery.
 
 - [Reference Documentation Hub](./reference/README.md) - Overview of all reference materials
+- [**Auggie CLI Commands Reference**](./reference/auggie-cli-commands.md) - **Complete reference for all Auggie CLI commands**
 - [OpenCode Agents Reference](./reference/opencode-agents.md) - Quick reference for all agents and commands
 - [Neovim Keybindings](./reference/nvim-keybindings.md) - Complete Neovim keybindings reference
 - [Niri Window Manager Keybindings](./reference/niri-keybindings.md) - Complete Niri WM keybindings reference
@@ -41,6 +45,9 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **Understanding-oriented documentation** that provides context and background. Explores the "why" behind design decisions.
 
+- [**Auggie CLI Architecture**](./explanation/auggie-cli-architecture.md) - **Understanding the new Auggie CLI multi-agent system**
+- [**OpenCode to Auggie Migration**](./explanation/opencode-to-auggie-migration.md) - **How to migrate from OpenCode to Auggie CLI**
+- [**Auggie CLI Translation Summary**](./explanation/auggie-cli-translation-summary.md) - **Complete summary of the translation project**
 - [OpenCode Architecture](./explanation/opencode-architecture.md) - Understanding the agent system design and philosophy
 - [Diátaxis Framework](./explanation/diataxis-framework.md) - Why and how this documentation is organized
 - [Daily-Driver Containers](./explanation/daily-driver-containers.md) - Understanding containerized development environments
@@ -50,6 +57,16 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **I want to...**
 
+### 🆕 New Auggie CLI System
+- **🚀 Learn the new Auggie CLI system** → [**Auggie CLI Multi-Agent Tutorial**](./getting-started/auggie-cli-tutorial.md)
+- **🔧 Modify Neovim with Auggie CLI** → [**Modify Neovim Config with Auggie CLI**](./how-to/auggie-modify-neovim-config.md)
+- **🐚 Modify shell with Auggie CLI** → [**Modify Shell Config with Auggie CLI**](./how-to/auggie-modify-shell-config.md)
+- **📖 Look up Auggie CLI commands** → [**Auggie CLI Commands Reference**](./reference/auggie-cli-commands.md)
+- **🏗️ Understand Auggie CLI architecture** → [**Auggie CLI Architecture**](./explanation/auggie-cli-architecture.md)
+- **🔄 Migrate from OpenCode** → [**OpenCode to Auggie Migration**](./explanation/opencode-to-auggie-migration.md)
+- **📊 See translation summary** → [**Auggie CLI Translation Summary**](./explanation/auggie-cli-translation-summary.md)
+
+### OpenCode System (Legacy)
 - **Get started with OpenCode** → [Getting Started with OpenCode](./getting-started/opencode-setup.md)
 - **Modify a configuration** → [Modify Any Configuration with OpenCode](./how-to/opencode-modify-config.md)
 - **Install an application** → [Install Applications with OpenCode](./how-to/opencode-install-app.md)
@@ -57,6 +74,8 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - **Create a custom script** → [Create Custom Scripts with OpenCode](./how-to/opencode-create-scripts.md)
 - **Look up an agent** → [OpenCode Agents Reference](./reference/opencode-agents.md)
 - **Understand the agent system** → [OpenCode Architecture](./explanation/opencode-architecture.md)
+
+### General
 - **Learn the basics** → [Getting Started Guide](./getting-started/README.md)
 - **Check remediation status** → [Security Remediation Status](./getting-started/remediation-status.md)
 - **Verify the remediation** → [Verify Security Remediation](./how-to/verify-remediation.md)
@@ -70,9 +89,22 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - **Learn about containers** → [Daily-Driver Containers](./explanation/daily-driver-containers.md)
 - **Understand the remediation** → [Security Remediation](./explanation/security-remediation.md)
 
-## Using the Agent System
+## Using the Multi-Agent Systems
 
-OpenCode is an AI-powered agent system for managing your dotfiles. Start with:
+### 🆕 Auggie CLI Multi-Agent System (Recommended)
+
+The new Auggie CLI system provides the same powerful multi-agent capabilities with better integration and control:
+
+- **[Auggie CLI Multi-Agent Tutorial](./getting-started/auggie-cli-tutorial.md)** - Step-by-step introduction
+- **[Auggie CLI Commands Reference](./reference/auggie-cli-commands.md)** - Complete command reference
+- **[Auggie CLI Architecture](./explanation/auggie-cli-architecture.md)** - Understanding the design
+- **[OpenCode to Auggie Migration](./explanation/opencode-to-auggie-migration.md)** - Migration guide
+
+For detailed implementation, see the [Auggie CLI System documentation](../.augment/README.md).
+
+### OpenCode System (Legacy)
+
+OpenCode is the original AI-powered agent system for managing your dotfiles:
 
 - **[Getting Started with OpenCode](./getting-started/opencode-setup.md)** - 5-minute introduction
 - **[OpenCode Agents Reference](./reference/opencode-agents.md)** - Quick reference for all agents
