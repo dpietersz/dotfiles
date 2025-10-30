@@ -9,7 +9,7 @@
 
     "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "backlight", "custom/arrow2", "idle_inhibitor", "custom/arrow3",  "mpris"],
     "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
-    "modules-right": ["custom/arrow6", "battery", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "network", "bluetooth", "pulseaudio","tray"],
+    "modules-right": ["custom/arrow6", "battery", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "bluetooth", "network", "pulseaudio","tray"],
 
     // TODO: Add more gruvbox arrows in other colors (orange, yellow) with matching background colors for modules
 
@@ -27,8 +27,8 @@
     },
     "bluetooth": {
         "interval": 30,
-        "format-on": "",
-        "format-off": "",
+        "format-on": "<span face='Font Awesome'>󰂯</span>",
+        "format-off": "<span face='Font Awesome'>󰂲</span>",
         "on-click": "blueman-manager",
         "on-click-right": "blueman-manager",
         "tooltip-format": "{status}"
@@ -99,7 +99,7 @@
     },     
     "network": {
         // "interface": "wlan0", // (Optional) To force the use of this interface,
-        "format-wifi": "<span color=\"#ebdbb2\"></span>",
+        "format-wifi": "<span face='Font Awesome'>󰤨</span>",
         "format-ethernet": "{ifname}: {ipaddr}/{cidr} ",
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "",
