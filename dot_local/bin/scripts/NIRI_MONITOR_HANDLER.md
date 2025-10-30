@@ -1,191 +1,173 @@
-# Niri Monitor Handler
+# Niri Monitor Reset
 
-Automatically adjusts monitor positioning when displays connect/disconnect.
+Manually reset eDP-1 (laptop screen) position to [0,0] when needed.
 
 ## Overview
 
-This script monitors your display configuration and automatically updates the eDP-1 (laptop screen) position when the LG external monitor is disconnected. This ensures you can always see your laptop screen, whether the LG monitor is connected or not.
+This script provides a simple way to reset your laptop screen position when the external monitor is disconnected and the laptop screen ends up off-screen.
+
+Instead of a continuous background service that drains battery, you can simply press a keybinding to reset the position when needed.
 
 ## How It Works
 
-### Configuration
+### The Scenario
 
-Your Niri config specifies:
-- **With LG connected**: LG at [0,0], eDP-1 centered below at [760,1440]
-- **Without LG**: eDP-1 should be at [0,0]
+When your LG external monitor is connected:
+- LG monitor at [0,0]
+- eDP-1 (laptop screen) at [760,1440] (centered below)
 
-### Script Behavior
+When you disconnect the LG monitor:
+- eDP-1 is still at [760,1440] (off-screen!)
+- You can't see anything
 
-The monitor handler runs continuously and:
-1. Checks every 5 seconds if the LG monitor is connected
-2. Detects when the LG monitor disconnects
-3. Automatically updates eDP-1 position from [760,1440] to [0,0]
-4. Reloads the Niri configuration to apply changes
+### The Solution
 
-### Scenarios
-
-**Scenario 1: LG Monitor Connected**
-```
-LG at [0,0]
-eDP-1 at [760,1440] (centered below)
-✓ Both displays visible
-```
-
-**Scenario 2: LG Monitor Disconnected**
-```
-Script detects disconnection
-Updates eDP-1 position to [0,0]
-✓ Laptop screen visible at correct position
-```
-
-## Installation
-
-The script is automatically installed via chezmoi:
-
-```bash
-chezmoi apply
-```
-
-This creates:
-- `~/.local/bin/scripts/niri-monitor-handler` - The monitoring script
-- `~/.config/systemd/user/niri-monitor-handler.service` - Systemd service
+Press **Mod+Shift+M** to reset eDP-1 to [0,0]:
+- Script updates the Niri config
+- Reloads the configuration
+- Laptop screen is now visible at [0,0]
 
 ## Usage
 
-### Manual Start
+### Via Keybinding (Recommended)
+
+Simply press:
+```
+Mod+Shift+M
+```
+
+This will:
+1. Check current eDP-1 position
+2. If not at [0,0], update the config
+3. Reload Niri configuration
+4. Display success/error message
+
+### Via Command Line
 
 ```bash
 # Run the script directly
-~/.local/bin/scripts/niri-monitor-handler
+niri-reset-monitor
 
-# Or via systemctl
-systemctl --user start niri-monitor-handler
+# Or with full path
+~/.local/bin/scripts/niri-reset-monitor
 ```
 
-### Enable at Startup
+## Output Examples
 
-```bash
-# Enable the service to start automatically
-systemctl --user enable niri-monitor-handler
-
-# Start it now
-systemctl --user start niri-monitor-handler
+### Already at [0,0]
+```
+[Niri Monitor Reset]
+Current eDP-1 position: x=0 y=0
+✓ eDP-1 is already at [0,0]
 ```
 
-### Check Status
-
-```bash
-# Check if service is running
-systemctl --user status niri-monitor-handler
-
-# View logs
-journalctl --user -u niri-monitor-handler -f
-
-# View detailed logs
-cat /run/user/$(id -u)/niri-monitor-handler.log
+### Successfully Reset
+```
+[Niri Monitor Reset]
+Current eDP-1 position: x=760 y=1440
+Resetting eDP-1 position to [0,0]...
+✓ Config updated successfully
+✓ Niri config reloaded
+✓ Monitor position reset complete!
 ```
 
-### Stop the Service
-
-```bash
-systemctl --user stop niri-monitor-handler
+### Error Case
+```
+[Niri Monitor Reset]
+Current eDP-1 position: x=760 y=1440
+Resetting eDP-1 position to [0,0]...
+✗ Failed to update position in config
 ```
 
-## Configuration
+## Keybinding
 
-The script reads from your Niri config at:
+The keybinding is configured in your Niri config:
+
+```kdl
+Mod+Shift+M hotkey-overlay-title="Reset Monitor: niri-reset-monitor" { spawn "niri-reset-monitor"; }
+```
+
+You can change this to any keybinding you prefer by editing:
 ```
 ~/.config/niri/config.kdl
 ```
 
-It automatically detects:
-- LG monitor connection status
-- eDP-1 current position
-- When position needs updating
+## Battery Impact
+
+✓ **Zero battery impact** - Only runs when you press the keybinding
+✓ **No background service** - No continuous monitoring
+✓ **Fast execution** - Completes in milliseconds
 
 ## Troubleshooting
 
-### Script Not Detecting Monitor Changes
+### Script Not Found
 
-1. Check if the script is running:
+Make sure the script is in your PATH:
+```bash
+# Check if script is executable
+ls -la ~/.local/bin/scripts/niri-reset-monitor
+
+# Make sure ~/.local/bin/scripts is in your PATH
+echo $PATH | grep -q ".local/bin" && echo "In PATH" || echo "Not in PATH"
+```
+
+### Keybinding Not Working
+
+1. Check if the script is executable:
    ```bash
-   systemctl --user status niri-monitor-handler
+   chmod +x ~/.local/bin/scripts/niri-reset-monitor
    ```
 
-2. View the logs:
+2. Verify the keybinding in your config:
    ```bash
-   journalctl --user -u niri-monitor-handler -f
+   grep "Mod+Shift+M" ~/.config/niri/config.kdl
    ```
 
-3. Manually check monitor status:
+3. Reload Niri config:
    ```bash
-   niri msg outputs
-   ```
-
-### Position Not Updating
-
-1. Check the current config:
-   ```bash
-   grep -A 5 'output "eDP-1"' ~/.config/niri/config.kdl
-   ```
-
-2. Check the logs for errors:
-   ```bash
-   journalctl --user -u niri-monitor-handler -f
-   ```
-
-3. Try manually updating:
-   ```bash
-   # Edit the config manually
-   nano ~/.config/niri/config.kdl
-   
-   # Reload Niri
    niri msg action reload-config
    ```
 
-### Niri Not Reloading Config
+### Config Not Reloading
 
 If the script updates the config but Niri doesn't reload:
 
-1. Check if Niri is running:
-   ```bash
-   pgrep niri
-   ```
-
-2. Try manual reload:
+1. Try manual reload:
    ```bash
    niri msg action reload-config
    ```
 
-3. Or restart Niri:
+2. Or restart Niri:
    ```bash
    pkill niri
    niri &
    ```
 
-## Performance
+## Customization
 
-- **CPU**: Minimal - only checks every 5 seconds
-- **Memory**: ~5-10 MB for the script
-- **Disk**: Only writes to config when changes are needed
+### Change the Keybinding
 
-## Limitations
+Edit `~/.config/niri/config.kdl` and change:
+```kdl
+Mod+Shift+M { spawn "niri-reset-monitor"; }
+```
 
-- Only monitors LG monitor connection (can be extended for other monitors)
-- Requires Niri to be running
-- Position updates require Niri config reload (automatic)
+To your preferred keybinding, for example:
+```kdl
+Mod+Ctrl+R { spawn "niri-reset-monitor"; }
+```
 
-## Future Enhancements
+### Add to Hotkey Overlay
 
-Possible improvements:
-- Support for multiple external monitors
-- Configurable check interval
-- Custom position presets for different scenarios
-- GUI for manual position adjustment
-- Integration with other display managers
+The keybinding already includes a hotkey overlay title:
+```kdl
+hotkey-overlay-title="Reset Monitor: niri-reset-monitor"
+```
+
+This shows up when you press Mod+Shift+Slash to see all keybindings.
 
 ## References
 
 - [Niri Configuration: Outputs](https://github.com/YaLTeR/niri/wiki/Configuration:-Outputs)
+- [Niri Key Bindings](https://github.com/YaLTeR/niri/wiki/Configuration:-Key-Bindings)
 - [Niri IPC Documentation](https://github.com/YaLTeR/niri/wiki/IPC)
-- [Systemd User Services](https://wiki.archlinux.org/title/Systemd/User)

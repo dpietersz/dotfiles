@@ -1,0 +1,75 @@
+#!/bin/bash
+# Niri Reset Monitor Position
+# Resets eDP-1 (laptop screen) position to [0,0]
+# Useful when external monitor is disconnected and laptop screen is off-screen
+#
+# Usage: niri-reset-monitor
+# Can be bound to a Niri keybinding for quick access
+
+set -euo pipefail
+
+# Configuration
+NIRI_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/niri"
+NIRI_CONFIG="$NIRI_CONFIG_DIR/config.kdl"
+TEMP_CONFIG="/tmp/niri-config-temp.kdl"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}[Niri Monitor Reset]${NC}"
+
+# Check if config exists
+if [ ! -f "$NIRI_CONFIG" ]; then
+    echo -e "${RED}✗ Error: Niri config not found at $NIRI_CONFIG${NC}"
+    exit 1
+fi
+
+# Check if eDP-1 is in config
+if ! grep -q 'output "eDP-1"' "$NIRI_CONFIG"; then
+    echo -e "${RED}✗ Error: eDP-1 output not found in config${NC}"
+    exit 1
+fi
+
+# Get current position
+current_position=$(grep -A 5 'output "eDP-1"' "$NIRI_CONFIG" | grep "position" | sed 's/.*position //' | tr -d ' ' || echo "unknown")
+
+echo -e "${BLUE}Current eDP-1 position: $current_position${NC}"
+
+# Check if already at [0,0]
+if [[ "$current_position" == "x=0y=0" ]] || [[ "$current_position" == "x=0 y=0" ]]; then
+    echo -e "${GREEN}✓ eDP-1 is already at [0,0]${NC}"
+    exit 0
+fi
+
+echo -e "${YELLOW}Resetting eDP-1 position to [0,0]...${NC}"
+
+# Create temporary config with updated position
+cp "$NIRI_CONFIG" "$TEMP_CONFIG"
+
+# Use sed to replace the position line for eDP-1
+sed -i "/output \"eDP-1\"/,/^}/ s/position x=[0-9]* y=[0-9]*/position x=0 y=0/" "$TEMP_CONFIG"
+
+# Verify the change was made
+if grep -q "position x=0 y=0" "$TEMP_CONFIG"; then
+    mv "$TEMP_CONFIG" "$NIRI_CONFIG"
+    echo -e "${GREEN}✓ Config updated successfully${NC}"
+    
+    # Reload Niri config
+    if niri msg action reload-config 2>/dev/null; then
+        echo -e "${GREEN}✓ Niri config reloaded${NC}"
+    else
+        echo -e "${YELLOW}⚠ Could not reload Niri config via IPC${NC}"
+        echo -e "${YELLOW}Try restarting Niri or running: niri msg action reload-config${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Monitor position reset complete!${NC}"
+else
+    echo -e "${RED}✗ Failed to update position in config${NC}"
+    rm -f "$TEMP_CONFIG"
+    exit 1
+fi
