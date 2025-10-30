@@ -204,7 +204,6 @@ output "LG Electronics LG HDR WQHD 107NTNH4K559" {
     mode "3440x1440@49.987"
     position x=0 y=0
     scale 1.0
-    primary = true
 }
 
 output "eDP-1" {
@@ -223,7 +222,6 @@ output "LG Electronics LG HDR WQHD 107NTNH4K559" {
     mode "3440x1440@59.97"
     position x=0 y=0
     scale 1.0
-    primary = true
 }
 
 output "eDP-1" {
@@ -332,50 +330,5 @@ window-rule {
     geometry-corner-radius 9
     clip-to-geometry true
     draw-border-with-background false
-}
-
-// === Workspace-specific window rules ===
-
-// Terminals open on Coding workspace
-window-rule {
-    match app-id="kitty"
-    open-on-workspace "Coding"
-}
-
-window-rule {
-    match app-id="Alacritty"
-    open-on-workspace "Coding"
-}
-
-window-rule {
-    match app-id="gnome-terminal"
-    open-on-workspace "Coding"
-}
-
-// VS Code opens on Coding workspace
-window-rule {
-    match app-id="code"
-    open-on-workspace "Coding"
-}
-
-// Browsers open on Media workspace
-window-rule {
-    match app-id="zen"
-    open-on-workspace "Media"
-}
-
-window-rule {
-    match app-id="qutebrowser"
-    open-on-workspace "Media"
-}
-
-window-rule {
-    match app-id="chromium"
-    open-on-workspace "Media"
-}
-
-window-rule {
-    match app-id="firefox"
-    open-on-workspace "Media"
 }
 
