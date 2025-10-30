@@ -44,6 +44,11 @@ require("lazy").setup({
     enabled = true, -- check for plugin updates periodically
     notify = false, -- notify on update
   }, -- automatically check for plugin updates
+  git = {
+    -- Disable SSH authentication prompts in Neovim subprocess
+    -- Use HTTPS for cloning to avoid SSH agent issues
+    url_format = "https://github.com/%s.git",
+  },
   performance = {
     rtp = {
       -- disable some rtp plugins

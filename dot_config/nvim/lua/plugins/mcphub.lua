@@ -5,13 +5,37 @@ return {
     "nvim-lua/plenary.nvim",
   },
   build = function()
-    -- mcp-hub is installed via chezmoi script for persistence on immutable systems (Bluefin, etc.)
-    -- Check if mcp-hub is available in PATH
-    local mcp_check = vim.fn.system("command -v mcp-hub 2>/dev/null")
-    if vim.v.shell_error ~= 0 then
+    -- mcp-hub is installed via mise for persistence on immutable systems (Bluefin, etc.)
+    -- Try multiple methods to find mcp-hub since Neovim's subprocess may not have full PATH
+    local function find_mcp_hub()
+      -- Method 1: Check if mcp-hub is in PATH
+      local path_check = vim.fn.system("command -v mcp-hub 2>/dev/null")
+      if vim.v.shell_error == 0 then
+        return true
+      end
+
+      -- Method 2: Check mise installation directly
+      local home = vim.fn.expand("~")
+      local mise_path = home .. "/.local/share/mise/installs/node/*/bin/mcp-hub"
+      local mise_check = vim.fn.glob(mise_path)
+      if mise_check ~= "" then
+        return true
+      end
+
+      -- Method 3: Check npm global bin
+      local npm_path = home .. "/.local/share/npm/bin/mcp-hub"
+      local npm_check = vim.fn.filereadable(npm_path)
+      if npm_check == 1 then
+        return true
+      end
+
+      return false
+    end
+
+    if not find_mcp_hub() then
       vim.notify(
-        "mcp-hub not found in PATH. Please run:\n  chezmoi apply\n\n"
-          .. "This will install mcp-hub via the setup script for persistence on immutable systems.",
+        "mcp-hub not found. Please run:\n  chezmoi apply\n\n"
+          .. "This will install mcp-hub via mise for persistence on immutable systems.",
         vim.log.levels.WARN
       )
     end
