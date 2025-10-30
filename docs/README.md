@@ -9,12 +9,17 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 **Learning-oriented tutorials** for beginners. Follow step-by-step instructions to complete meaningful tasks and acquire skills.
 
 - [Getting Started Guide](./getting-started/README.md) - Introduction to tutorials and learning materials
+- [Getting Started with OpenCode](./getting-started/opencode-setup.md) - Quick 5-minute introduction to the agent system
 - [Security Remediation Status](./getting-started/remediation-status.md) - Current status of security remediation
 
 ### 📋 [How-To Guides](./how-to/)
 
 **Goal-oriented guides** for solving specific problems. Assumes you know what you want and focuses on achieving the goal.
 
+- [Modify Any Configuration with OpenCode](./how-to/opencode-modify-config.md) - Change Neovim, shell, UI, and app settings
+- [Install Applications with OpenCode](./how-to/opencode-install-app.md) - Install and manage applications
+- [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md) - Securely add and validate encrypted keys
+- [Create Custom Scripts with OpenCode](./how-to/opencode-create-scripts.md) - Create automation scripts
 - [Add Encrypted Keys](./how-to/add-encrypted-keys.md) - Securely add private keys to your dotfiles
 - [Write Git Commits](./how-to/git-commits.md) - Follow conventional commit standards
 - [Verify Security Remediation](./how-to/verify-remediation.md) - Verify and update after security remediation
@@ -24,6 +29,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 **Information-oriented documentation** for looking up facts and specifications. Neutral, factual descriptions of the machinery.
 
 - [Reference Documentation Hub](./reference/README.md) - Overview of all reference materials
+- [OpenCode Agents Reference](./reference/opencode-agents.md) - Quick reference for all agents and commands
 - [Neovim Keybindings](./reference/nvim-keybindings.md) - Complete Neovim keybindings reference
 - [Niri Window Manager Keybindings](./reference/niri-keybindings.md) - Complete Niri WM keybindings reference
 - [Shell Aliases & Functions](./reference/shell-aliases.md) - Complete shell aliases and functions reference
@@ -35,6 +41,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **Understanding-oriented documentation** that provides context and background. Explores the "why" behind design decisions.
 
+- [OpenCode Architecture](./explanation/opencode-architecture.md) - Understanding the agent system design and philosophy
 - [Diátaxis Framework](./explanation/diataxis-framework.md) - Why and how this documentation is organized
 - [Daily-Driver Containers](./explanation/daily-driver-containers.md) - Understanding containerized development environments
 - [Security Remediation](./explanation/security-remediation.md) - Understanding the security remediation process
@@ -43,6 +50,13 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 **I want to...**
 
+- **Get started with OpenCode** → [Getting Started with OpenCode](./getting-started/opencode-setup.md)
+- **Modify a configuration** → [Modify Any Configuration with OpenCode](./how-to/opencode-modify-config.md)
+- **Install an application** → [Install Applications with OpenCode](./how-to/opencode-install-app.md)
+- **Manage encrypted keys** → [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md)
+- **Create a custom script** → [Create Custom Scripts with OpenCode](./how-to/opencode-create-scripts.md)
+- **Look up an agent** → [OpenCode Agents Reference](./reference/opencode-agents.md)
+- **Understand the agent system** → [OpenCode Architecture](./explanation/opencode-architecture.md)
 - **Learn the basics** → [Getting Started Guide](./getting-started/README.md)
 - **Check remediation status** → [Security Remediation Status](./getting-started/remediation-status.md)
 - **Verify the remediation** → [Verify Security Remediation](./how-to/verify-remediation.md)
@@ -58,7 +72,13 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 ## Using the Agent System
 
-For modifying configurations and installing applications, see the [OpenCode Agent System documentation](../.opencode/README.md).
+OpenCode is an AI-powered agent system for managing your dotfiles. Start with:
+
+- **[Getting Started with OpenCode](./getting-started/opencode-setup.md)** - 5-minute introduction
+- **[OpenCode Agents Reference](./reference/opencode-agents.md)** - Quick reference for all agents
+- **[OpenCode Architecture](./explanation/opencode-architecture.md)** - Understanding the design
+
+For detailed configuration and implementation, see the [OpenCode Agent System documentation](../.opencode/README.md).
 
 ## Key Concepts
 
