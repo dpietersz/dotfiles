@@ -18,8 +18,9 @@ The `@security-auditor` subagent is responsible for:
 
 ### Research & Analysis Capabilities
 
-The security-auditor uses advanced research and analysis tools:
+The security-auditor uses advanced research and analysis tools when available:
 
+**Primary Tools (If Available):**
 - **Perplexity Research** (@search_perplexity-search)
   - Searches for current security best practices
   - Finds industry-standard solutions
@@ -33,7 +34,14 @@ The security-auditor uses advanced research and analysis tools:
   - Considers implementation complexity and maintainability
   - Verifies compatibility with existing setup
 
-This ensures mitigation options are based on **current security best practices** and **industry standards**, not generic recommendations.
+**Fallback Tools (If Primary Unavailable):**
+- **@web-search** - General security best practices
+- **@codebase-retrieval** - Existing patterns in dotfiles
+- **@git-commit-retrieval** - How similar issues were solved before
+- **bash commands** - Local documentation and man pages
+- **Built-in knowledge** - Established security principles
+
+This ensures mitigation options are based on **current security best practices** and **industry standards** using available tools, with graceful fallback to alternative approaches.
 
 ## Output Format: Dual Communication Strategy
 
@@ -312,6 +320,35 @@ opencode /audit-changes
 ```
 
 This allows you to audit changes at any time without going through the full workflow.
+
+## Tool Availability & Fallback Strategy
+
+The security-auditor is designed to work effectively regardless of which tools are available:
+
+### Tool Availability Check
+
+Before generating mitigation options, the agent checks:
+1. Is Perplexity Research available? → Use it for current best practices
+2. Is Sequential Thinking available? → Use it for systematic analysis
+3. If not available → Use fallback tools and built-in knowledge
+
+### Fallback Priority
+
+If primary tools are unavailable, use in this order:
+1. **@web-search** - General security information
+2. **@codebase-retrieval** - Existing patterns in this dotfiles repo
+3. **@git-commit-retrieval** - Historical solutions to similar issues
+4. **bash commands** - Local documentation (man pages, help text)
+5. **Built-in knowledge** - Established security principles and best practices
+
+### Quality Assurance
+
+Regardless of which tools are used:
+- ✅ Always provide 2-3 mitigation options
+- ✅ Always explain trade-offs
+- ✅ Always recommend best option
+- ✅ Always cite security standards when possible
+- ✅ Never provide generic recommendations
 
 ## How Mitigation Options Are Generated
 
