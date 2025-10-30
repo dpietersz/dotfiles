@@ -93,38 +93,36 @@ List of modified files to audit
 ## Output
 
 **Pre-Modification:**
-```json
-{
-  "phase": "PRE_MODIFICATION",
-  "status": "APPROVED|BLOCKED|REQUIRES_MITIGATION",
-  "risk_level": "CRITICAL|HIGH|MEDIUM|LOW",
-  "issues": [
-    {
-      "type": "credential_exposure|path_exposure|secret_hardcoding|...",
-      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
-      "description": "...",
-      "affected_files": ["..."],
-      "mitigation_options": [
-        {"option": 1, "description": "...", "trade_offs": "..."},
-        {"option": 2, "description": "...", "trade_offs": "..."}
-      ]
-    }
-  ],
-  "recommendation": "..."
-}
+```yaml
+phase: PRE_MODIFICATION
+status: APPROVED|BLOCKED|REQUIRES_MITIGATION
+risk_level: CRITICAL|HIGH|MEDIUM|LOW
+issues:
+  - type: credential_exposure|path_exposure|secret_hardcoding|...
+    severity: CRITICAL|HIGH|MEDIUM|LOW
+    description: "..."
+    affected_files:
+      - "..."
+    mitigation_options:
+      - option: 1
+        description: "..."
+        trade_offs: "..."
+      - option: 2
+        description: "..."
+        trade_offs: "..."
+recommendation: "..."
 ```
 
 **Post-Modification:**
-```json
-{
-  "phase": "POST_MODIFICATION",
-  "status": "APPROVED|BLOCKED|CONDITIONAL",
-  "risk_level": "CRITICAL|HIGH|MEDIUM|LOW",
-  "files_audited": ["..."],
-  "issues_found": [...],
-  "commit_approved": true|false,
-  "summary": "..."
-}
+```yaml
+phase: POST_MODIFICATION
+status: APPROVED|BLOCKED|CONDITIONAL
+risk_level: CRITICAL|HIGH|MEDIUM|LOW
+files_audited:
+  - "..."
+issues_found: []
+commit_approved: true|false
+summary: "..."
 ```
 
 ## Security Threat Categories
@@ -154,47 +152,64 @@ List of modified files to audit
 ## Examples
 
 **Example 1: Pre-Modification - Credential Exposure (BLOCKED)**
-```
-Plan: "Add my GitHub token to dot_config/git/config"
-
-Audit Result:
-- Status: BLOCKED
-- Risk: CRITICAL
-- Issue: GitHub tokens are credentials and will be exposed in public repo
-- Mitigation Options:
-  1. Use SSH keys instead (stored encrypted in .encrypted/)
-  2. Use GitHub CLI authentication (stored locally, not in repo)
-  3. Use environment variables (not stored in repo)
-- Recommendation: Use option 1 (SSH keys with encryption)
+```yaml
+phase: PRE_MODIFICATION
+status: BLOCKED
+risk_level: CRITICAL
+issues:
+  - type: credential_exposure
+    severity: CRITICAL
+    description: GitHub tokens are credentials and will be exposed in public repo
+    affected_files:
+      - dot_config/git/config
+    mitigation_options:
+      - option: 1
+        description: Use SSH keys instead (stored encrypted in .encrypted/)
+        trade_offs: Requires SSH key setup
+      - option: 2
+        description: Use GitHub CLI authentication (stored locally, not in repo)
+        trade_offs: Requires GitHub CLI installation
+      - option: 3
+        description: Use environment variables (not stored in repo)
+        trade_offs: Must be set manually on each machine
+recommendation: Use option 1 (SSH keys with encryption)
 ```
 
 **Example 2: Post-Modification - Approved**
-```
-Files Audited:
-- dot_config/nvim/init.lua
-- dot_config/shell/aliases.sh
-
-Audit Result:
-- Status: APPROVED
-- Risk: LOW
-- Issues: None found
-- Summary: All changes are safe for public repository
-- Commit Approved: YES
+```yaml
+phase: POST_MODIFICATION
+status: APPROVED
+risk_level: LOW
+files_audited:
+  - dot_config/nvim/init.lua
+  - dot_config/shell/aliases.sh
+issues_found: []
+commit_approved: true
+summary: All changes are safe for public repository
 ```
 
 **Example 3: Pre-Modification - Path Exposure (Requires Mitigation)**
-```
-Plan: "Add custom script that uses /home/pietersz/..."
-
-Audit Result:
-- Status: REQUIRES_MITIGATION
-- Risk: HIGH
-- Issue: Hardcoded home directory path exposes username
-- Mitigation Options:
-  1. Use $HOME environment variable instead
-  2. Use chezmoi template {{ .chezmoi.homeDir }}
-  3. Use relative paths from repo root
-- Recommendation: Use option 2 (chezmoi template)
+```yaml
+phase: PRE_MODIFICATION
+status: REQUIRES_MITIGATION
+risk_level: HIGH
+issues:
+  - type: path_exposure
+    severity: HIGH
+    description: Hardcoded home directory path exposes username
+    affected_files:
+      - dot_local/bin/scripts/custom-script.sh
+    mitigation_options:
+      - option: 1
+        description: Use $HOME environment variable instead
+        trade_offs: Requires environment variable support
+      - option: 2
+        description: Use chezmoi template {{ .chezmoi.homeDir }}
+        trade_offs: Requires chezmoi template processing
+      - option: 3
+        description: Use relative paths from repo root
+        trade_offs: May not work in all contexts
+recommendation: Use option 2 (chezmoi template)
 ```
 
 ## IMPORTANT CONSTRAINTS
@@ -203,7 +218,7 @@ Audit Result:
 - **NEVER approve** changes with CRITICAL security issues
 - **ALWAYS provide mitigation options** before blocking
 - **ALWAYS verify** actual changes match the plan
-- **ALWAYS use JSON format** for structured output
+- **ALWAYS use YAML format** for structured output
 - **NEVER make assumptions** - if uncertain, escalate to HIGH risk
 - **ALWAYS check** for environment variables, API keys, tokens, passwords
 - **ALWAYS verify** no personal information is exposed
