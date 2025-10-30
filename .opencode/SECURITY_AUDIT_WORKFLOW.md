@@ -16,6 +16,68 @@ The `@security-auditor` subagent is responsible for:
 4. **Mitigation Options**: Provides concrete options to mitigate security threats
 5. **Commit Blocking**: Has the power to block `@git-manager` from committing unsafe changes
 
+## Output Format: Dual Communication Strategy
+
+The security-auditor uses a **dual output approach** to serve both users and agents:
+
+### User-Facing Output (Formatted Text)
+
+**Purpose**: Clear, actionable reports for human users
+
+**Format**:
+- Emoji indicators for quick status recognition (✅ ❌ ⚠️)
+- Color-coded risk levels (🔴 🟠 🟡 🟢)
+- Readable sections with clear hierarchy
+- Mitigation options with trade-offs explained
+- Actionable recommendations
+
+**Example:**
+```
+🔍 SECURITY AUDIT - PRE-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: BLOCKED ❌
+Risk Level: CRITICAL 🔴
+
+Issues Found: 1
+Issue: GitHub tokens are credentials and will be exposed in public repository
+...
+```
+
+### Internal Output (JSON for Agent Coordination)
+
+**Purpose**: Structured data for agent-to-agent communication
+
+**Format**:
+- Structured JSON with all audit details
+- Machine-readable for programmatic processing
+- Used by @dotfiles-manager, @git-manager, and other agents
+- Enables workflow automation and decision-making
+
+**Example:**
+```json
+{
+  "phase": "PRE_MODIFICATION",
+  "status": "BLOCKED",
+  "risk_level": "CRITICAL",
+  "issues": [...],
+  "recommendation": "..."
+}
+```
+
+### Communication Flow
+
+```
+User Request
+    ↓
+@security-auditor (audit)
+    ├─ Output 1: Formatted text → User (readable report)
+    └─ Output 2: JSON → Agents (structured data)
+    ↓
+User sees clear report with options
+Agents process JSON for workflow decisions
+```
+
 ## Workflow Integration
 
 ### Primary Agent Workflow
@@ -117,13 +179,38 @@ These are suggestions and warnings:
 
 ## Pre-Modification Audit Example
 
+**User sees this (formatted output):**
 ```
-User: "Add my GitHub token to git config"
+🔍 SECURITY AUDIT - PRE-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-@dotfiles-manager invokes @security-auditor:
-"I plan to add a GitHub token to dot_config/git/config"
+Status: BLOCKED ❌
+Risk Level: CRITICAL 🔴
 
-@security-auditor responds:
+Issues Found: 1
+
+Issue: GitHub tokens are credentials and will be exposed in public repository
+Type: credential_exposure
+Affected Files:
+  - dot_config/git/config
+
+Mitigation Options:
+  1. Use SSH keys instead (stored encrypted in .encrypted/)
+     Trade-offs: Requires SSH key setup and GitHub SSH configuration
+
+  2. Use GitHub CLI authentication (stored locally, not in repo)
+     Trade-offs: Requires GitHub CLI installation on each machine
+
+  3. Use environment variables (not stored in repo)
+     Trade-offs: Must be set manually on each machine, not portable
+
+Recommendation: Use option 1 (SSH keys with encryption) - most secure and portable approach
+
+❌ AUDIT FAILED - Changes cannot proceed until issues are resolved
+```
+
+**Agents communicate with this (internal JSON):**
+```json
 {
   "phase": "PRE_MODIFICATION",
   "status": "BLOCKED",
@@ -133,41 +220,49 @@ User: "Add my GitHub token to git config"
       "type": "credential_exposure",
       "severity": "CRITICAL",
       "description": "GitHub tokens are credentials and will be exposed in public repo",
+      "affected_files": ["dot_config/git/config"],
       "mitigation_options": [
-        {
-          "option": 1,
-          "description": "Use SSH keys instead (stored encrypted in .encrypted/)",
-          "trade_offs": "Requires SSH key setup"
-        },
-        {
-          "option": 2,
-          "description": "Use GitHub CLI authentication (stored locally, not in repo)",
-          "trade_offs": "Requires GitHub CLI installation"
-        },
-        {
-          "option": 3,
-          "description": "Use environment variables (not stored in repo)",
-          "trade_offs": "Must be set manually on each machine"
-        }
+        {"option": 1, "description": "Use SSH keys instead (stored encrypted in .encrypted/)", "trade_offs": "Requires SSH key setup"},
+        {"option": 2, "description": "Use GitHub CLI authentication (stored locally, not in repo)", "trade_offs": "Requires GitHub CLI installation"},
+        {"option": 3, "description": "Use environment variables (not stored in repo)", "trade_offs": "Must be set manually on each machine"}
       ]
     }
   ],
   "recommendation": "Use option 1 (SSH keys with encryption)"
 }
-
-User chooses mitigation option 1
-@dotfiles-manager proceeds with SSH key setup instead
 ```
+
+**Workflow:**
+1. User: "Add my GitHub token to git config"
+2. @dotfiles-manager invokes @security-auditor with plan
+3. @security-auditor returns formatted output to user + JSON to agents
+4. User sees clear, actionable report with mitigation options
+5. User chooses mitigation option 1
+6. @dotfiles-manager receives JSON confirmation and proceeds with SSH key setup instead
 
 ## Post-Modification Audit Example
 
+**User sees this (formatted output):**
 ```
-@dotfiles-manager invokes @security-auditor:
-"Please audit these modified files:
-- dot_config/nvim/init.lua
-- dot_config/shell/aliases.sh"
+🔍 SECURITY AUDIT - POST-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-@security-auditor responds:
+Status: APPROVED ✅
+Risk Level: LOW 🟢
+
+Files Audited: 2
+  - dot_config/nvim/init.lua
+  - dot_config/shell/aliases.sh
+
+Issues Found: None
+
+Summary: All changes are safe for public repository. No credentials, secrets, or sensitive information detected. Configuration changes follow best practices.
+
+✅ COMMIT APPROVED - Safe to commit to public repository
+```
+
+**Agents communicate with this (internal JSON):**
+```json
 {
   "phase": "POST_MODIFICATION",
   "status": "APPROVED",
@@ -180,9 +275,14 @@ User chooses mitigation option 1
   "commit_approved": true,
   "summary": "All changes are safe for public repository"
 }
-
-@dotfiles-manager proceeds to @git-manager for commit
 ```
+
+**Workflow:**
+1. @dotfiles-manager invokes @security-auditor with modified files list
+2. @security-auditor audits files and returns formatted output to user + JSON to agents
+3. User sees clear approval status
+4. @dotfiles-manager receives JSON confirmation
+5. @dotfiles-manager proceeds to @git-manager for commit
 
 ## Using the Security Audit Command
 
