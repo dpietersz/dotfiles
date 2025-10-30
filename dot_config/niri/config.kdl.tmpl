@@ -27,8 +27,9 @@ binds {
     Mod+Ctrl+Space hotkey-overlay-title="Toggle bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/toggle-waybar.sh"; }
     Mod+Ctrl+I hotkey-overlay-title="Relaunch bar: waybar" { spawn "bash" "-c" "$HOME/.config/waybar/custom_modules/launch.sh"; }
     Mod+N hotkey-overlay-title="Toggle Notification: swaync" { spawn "swaync-client" "-t"; }
-    Mod+Shift+Space hotkey-overlay-title="Lock bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/lock-waybar.sh"; }
-    XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
+     Mod+Shift+Space hotkey-overlay-title="Lock bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/lock-waybar.sh"; }
+     XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
+     Mod+B hotkey-overlay-title="Open Zen Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /opt/zen-browser-bin/zen-bin"; }
 
     // === Volume & Media Controls ===
     // Volume keys work even when the session is locked
