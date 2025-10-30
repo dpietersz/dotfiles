@@ -121,7 +121,7 @@ List of modified files to audit
   "status": "APPROVED|BLOCKED|CONDITIONAL",
   "risk_level": "CRITICAL|HIGH|MEDIUM|LOW",
   "files_audited": ["..."],
-  "issues_found": [],
+  "issues_found": [...],
   "commit_approved": true|false,
   "summary": "..."
 }
@@ -163,16 +163,28 @@ List of modified files to audit
     {
       "type": "credential_exposure",
       "severity": "CRITICAL",
-      "description": "GitHub tokens are credentials and will be exposed in public repo",
+      "description": "GitHub tokens are credentials and will be exposed in public repository",
       "affected_files": ["dot_config/git/config"],
       "mitigation_options": [
-        {"option": 1, "description": "Use SSH keys instead (stored encrypted in .encrypted/)", "trade_offs": "Requires SSH key setup"},
-        {"option": 2, "description": "Use GitHub CLI authentication (stored locally, not in repo)", "trade_offs": "Requires GitHub CLI installation"},
-        {"option": 3, "description": "Use environment variables (not stored in repo)", "trade_offs": "Must be set manually on each machine"}
+        {
+          "option": 1,
+          "description": "Use SSH keys instead (stored encrypted in .encrypted/)",
+          "trade_offs": "Requires SSH key setup and GitHub SSH configuration"
+        },
+        {
+          "option": 2,
+          "description": "Use GitHub CLI authentication (stored locally, not in repo)",
+          "trade_offs": "Requires GitHub CLI installation on each machine"
+        },
+        {
+          "option": 3,
+          "description": "Use environment variables (not stored in repo)",
+          "trade_offs": "Must be set manually on each machine, not portable"
+        }
       ]
     }
   ],
-  "recommendation": "Use option 1 (SSH keys with encryption)"
+  "recommendation": "Use option 1 (SSH keys with encryption) - most secure and portable approach"
 }
 ```
 
@@ -182,10 +194,13 @@ List of modified files to audit
   "phase": "POST_MODIFICATION",
   "status": "APPROVED",
   "risk_level": "LOW",
-  "files_audited": ["dot_config/nvim/init.lua", "dot_config/shell/aliases.sh"],
+  "files_audited": [
+    "dot_config/nvim/init.lua",
+    "dot_config/shell/aliases.sh"
+  ],
   "issues_found": [],
   "commit_approved": true,
-  "summary": "All changes are safe for public repository"
+  "summary": "All changes are safe for public repository. No credentials, secrets, or sensitive information detected. Configuration changes follow best practices."
 }
 ```
 
@@ -199,16 +214,28 @@ List of modified files to audit
     {
       "type": "path_exposure",
       "severity": "HIGH",
-      "description": "Hardcoded home directory path exposes username",
+      "description": "Hardcoded home directory path '/home/pietersz/...' exposes username and system architecture",
       "affected_files": ["dot_local/bin/scripts/custom-script.sh"],
       "mitigation_options": [
-        {"option": 1, "description": "Use $HOME environment variable instead", "trade_offs": "Requires environment variable support"},
-        {"option": 2, "description": "Use chezmoi template {{ .chezmoi.homeDir }}", "trade_offs": "Requires chezmoi template processing"},
-        {"option": 3, "description": "Use relative paths from repo root", "trade_offs": "May not work in all contexts"}
+        {
+          "option": 1,
+          "description": "Use $HOME environment variable instead of hardcoded path",
+          "trade_offs": "Requires environment variable to be set at runtime"
+        },
+        {
+          "option": 2,
+          "description": "Use chezmoi template {{ .chezmoi.homeDir }} for portable paths",
+          "trade_offs": "Requires chezmoi template processing during apply"
+        },
+        {
+          "option": 3,
+          "description": "Use relative paths from repository root",
+          "trade_offs": "May not work in all execution contexts"
+        }
       ]
     }
   ],
-  "recommendation": "Use option 2 (chezmoi template)"
+  "recommendation": "Use option 2 (chezmoi template) - most portable and secure approach for dotfiles"
 }
 ```
 
