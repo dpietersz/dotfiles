@@ -190,18 +190,15 @@ binds {
 // Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Outputs
 // Run `niri msg outputs` to find monitor names and available modes
 //
-// IMPORTANT: This configuration works seamlessly in both scenarios:
-// - With LG monitor connected: LG at [0,0], eDP-1 auto-positioned to the right
-// - Without LG monitor: eDP-1 automatically positioned at [0,0]
-//
-// Niri's automatic positioning algorithm handles monitor disconnection
-// gracefully without requiring manual intervention or configuration changes.
+// NOTE: When the LG monitor is disconnected, a helper script will
+// automatically update the eDP-1 position to [0,0]. See:
+// ~/.local/bin/scripts/niri-monitor-handler
 
 {{- if eq .chezmoi.hostname "bluefin" }}
 
 // ThinkPad T580 (20LAS61N01) - Home Monitor Setup
-// LG Electronics LG HDR WQHD external monitor (3440x1440)
-// BOE 0x06DD Unknown (eDP-1) laptop screen (1920x1080)
+// LG Electronics LG HDR WQHD external monitor (3440x1440) at top
+// BOE 0x06DD Unknown (eDP-1) laptop screen (1920x1080) centered below
 
 output "LG Electronics LG HDR WQHD 107NTNH4K559" {
     mode "3440x1440@49.987"
@@ -211,14 +208,15 @@ output "LG Electronics LG HDR WQHD 107NTNH4K559" {
 
 output "eDP-1" {
     mode "1920x1080@59.999"
+    position x=760 y=1440
     scale 1.0
 }
 
 {{- else if eq .chezmoi.hostname "thinkpad-p14s" }}
 
 // ThinkPad P14s Gen 5 (21G2CTO1WW) - Home Monitor Setup
-// LG Electronics LG HDR WQHD external monitor (3440x1440)
-// Internal display (2560x1600 scaled to 1.25)
+// LG Electronics LG HDR WQHD external monitor (3440x1440) at top
+// Internal display (2560x1600 scaled to 1.25) centered below
 
 output "LG Electronics LG HDR WQHD 107NTNH4K559" {
     mode "3440x1440@59.97"
@@ -228,6 +226,7 @@ output "LG Electronics LG HDR WQHD 107NTNH4K559" {
 
 output "eDP-1" {
     mode "2560x1600@90"
+    position x=664 y=1440
     scale 1.25
 }
 
@@ -236,6 +235,7 @@ output "eDP-1" {
 // Default configuration - single laptop screen
 output "eDP-1" {
     mode "1920x1080@59.999"
+    position x=0 y=0
     scale 1.0
 }
 

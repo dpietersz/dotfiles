@@ -1,0 +1,23 @@
+[Unit]
+Description=Niri Monitor Handler - Auto-adjust display positioning
+Documentation=https://github.com/YaLTeR/niri
+After=niri.service
+PartOf=niri.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/scripts/niri-monitor-handler
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=niri-monitor-handler
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=niri.service
