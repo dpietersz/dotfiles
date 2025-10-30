@@ -13,8 +13,27 @@ The `@security-auditor` subagent is responsible for:
 1. **Pre-Modification Audit**: Evaluates planned changes for security threats BEFORE modifications begin
 2. **Post-Modification Audit**: Verifies actual changes for security threats AFTER modifications complete
 3. **Threat Assessment**: Identifies credentials, secrets, sensitive paths, and personal information
-4. **Mitigation Options**: Provides concrete options to mitigate security threats
+4. **Research-Backed Mitigation**: Uses Perplexity research and sequential thinking to generate informed mitigation options
 5. **Commit Blocking**: Has the power to block `@git-manager` from committing unsafe changes
+
+### Research & Analysis Capabilities
+
+The security-auditor uses advanced research and analysis tools:
+
+- **Perplexity Research** (@search_perplexity-search)
+  - Searches for current security best practices
+  - Finds industry-standard solutions
+  - Identifies dotfiles-specific security patterns
+  - Researches tool-specific security guidelines (chezmoi, mise, etc.)
+
+- **Sequential Thinking**
+  - Breaks down security issues systematically
+  - Analyzes each mitigation option thoroughly
+  - Evaluates trade-offs based on research findings
+  - Considers implementation complexity and maintainability
+  - Verifies compatibility with existing setup
+
+This ensures mitigation options are based on **current security best practices** and **industry standards**, not generic recommendations.
 
 ## Output Format: Dual Communication Strategy
 
@@ -293,6 +312,51 @@ opencode /audit-changes
 ```
 
 This allows you to audit changes at any time without going through the full workflow.
+
+## How Mitigation Options Are Generated
+
+The security-auditor uses a systematic research-backed process:
+
+### 1. Identify the Security Issue
+- Categorize the threat type (credential exposure, path exposure, etc.)
+- Understand the specific risk in dotfiles context
+- Consider target environments (local, remote, containers)
+
+### 2. Research Current Best Practices
+The agent searches for:
+- Industry security standards for this issue type
+- Current best practices from security community
+- Tool-specific recommendations (chezmoi, mise, etc.)
+- Dotfiles-specific security patterns
+- Recent security advisories or updates
+
+**Example Search Queries:**
+- "SSH key management best practices 2024"
+- "chezmoi encrypted secrets handling"
+- "dotfiles credential storage security"
+- "environment variable security in shell scripts"
+
+### 3. Apply Sequential Thinking
+The agent analyzes each potential solution:
+- Security effectiveness
+- Implementation complexity
+- Maintenance burden
+- Compatibility with existing setup
+- Portability across environments
+- Long-term sustainability
+
+### 4. Generate Research-Backed Options
+The agent provides 2-3 mitigation strategies:
+- Based on current security best practices
+- With specific implementation details
+- Citing security standards or best practices
+- Explaining trade-offs with evidence
+- Recommending the best option with reasoning
+
+### 5. Validate Against Security Standards
+- Verify options align with security best practices
+- Check for any missed considerations
+- Ensure recommendations are current and relevant
 
 ## Best Practices
 
