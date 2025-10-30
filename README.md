@@ -122,6 +122,39 @@ See [docs/DAILY_DRIVER_CONTAINERS.md](docs/DAILY_DRIVER_CONTAINERS.md) for detai
 
 ---
 
+## 🤖 OpenCode AI Agents
+
+This repository is managed by a sophisticated **multi-agent AI system** that automates dotfiles maintenance while ensuring security and consistency. The primary agent coordinates specialized subagents for different tasks:
+
+### Primary Agent
+- **@dotfiles-manager** - Orchestrates all dotfiles modifications with security-first workflow
+
+### Specialized Subagents
+- **@security-auditor** - Audits all changes for credential leakage and security threats (pre & post-modification)
+- **@nvim-config** - Manages Neovim configuration and plugin updates
+- **@shell-config** - Handles bash/zsh configuration and shell functions
+- **@ui-config** - Manages window manager, terminal, and UI configurations
+- **@app-config** - Updates application configurations
+- **@app-installer** - Installs and manages applications
+- **@mise-manager** - Manages tools via mise
+- **@script-creator** - Creates and maintains custom shell scripts
+- **@custom-scripts** - Manages scripts in `dot_local/bin/scripts/`
+- **@key-encryptor** - Encrypts and manages sensitive keys
+- **@key-validator** - Validates encrypted keys
+- **@documentation** - Maintains and generates documentation
+- **@git-manager** - Handles git operations with conventional commits and pre-commit security audits
+
+### Key Features
+- 🔒 **Security-First**: Every change is audited for credential leakage before committing
+- 🤖 **Intelligent Automation**: Agents coordinate to handle complex workflows
+- 📝 **Conventional Commits**: Automated changelog generation via semantic versioning
+- 🔄 **Tool-Aware**: Understands chezmoi, mise, and dotfiles-specific patterns
+- 🛡️ **Defense in Depth**: Multiple security layers (pre-modification + pre-commit audits)
+
+For details, see [.opencode/](/.opencode/) directory and [.opencode/SECURITY_AUDIT_WORKFLOW.md](/.opencode/SECURITY_AUDIT_WORKFLOW.md).
+
+---
+
 ## Customization
 
 - All dotfiles are templated for local/remote/container/cloud detection
