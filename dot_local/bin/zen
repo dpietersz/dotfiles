@@ -1,0 +1,5 @@
+#!/bin/bash
+# Wrapper script to launch Zen browser from browser-toolbox distrobox
+# This allows the BROWSER environment variable to work correctly
+
+exec distrobox-enter -n browser-toolbox -- /opt/zen-browser-bin/zen-bin "$@"

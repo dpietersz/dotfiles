@@ -40,7 +40,9 @@ export GHREPOS="$REPOS/github.com"
 export GLREPOS="$REPOS/gitlab.com"
 export AZREPOS="$REPOS/dev.azure.com"
 
-export BROWSER="zen"
+# Zen browser from browser-toolbox distrobox
+# Uses wrapper script at ~/.local/bin/zen to handle distrobox entry
+export BROWSER="$HOME/.local/bin/zen"
 
 # Dagger - disable nag messages
 if command -v dagger >/dev/null; then
