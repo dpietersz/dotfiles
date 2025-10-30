@@ -1,3 +1,5 @@
+{{- $hardwareModel := output "cat" "/sys/class/dmi/id/product_name" | trim -}}
+
 // Auto-start waybar
 spawn-at-startup "waybar"
 
@@ -181,8 +183,6 @@ binds {
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 
-    // === Monitor Management ===
-    Mod+Shift+M hotkey-overlay-title="Reset Monitor: niri-reset-monitor" { spawn "niri-reset-monitor"; }
 
 }
 
@@ -191,12 +191,8 @@ binds {
 // ============================================================================
 // Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Outputs
 // Run `niri msg outputs` to find monitor names and available modes
-//
-// NOTE: When the LG monitor is disconnected, a helper script will
-// automatically update the eDP-1 position to [0,0]. See:
-// ~/.local/bin/scripts/niri-monitor-handler
 
-{{- if eq .chezmoi.hostname "bluefin" }}
+{{- if eq $hardwareModel "20LAS61N01" }}
 
 // ThinkPad T580 (20LAS61N01) - Home Monitor Setup
 // LG Electronics LG HDR WQHD external monitor (3440x1440) at top
@@ -214,7 +210,7 @@ output "eDP-1" {
     scale 1.0
 }
 
-{{- else if eq .chezmoi.hostname "thinkpad-p14s" }}
+{{- else if eq $hardwareModel "21G2CTO1WW" }}
 
 // ThinkPad P14s Gen 5 (21G2CTO1WW) - Home Monitor Setup
 // LG Electronics LG HDR WQHD external monitor (3440x1440) at top

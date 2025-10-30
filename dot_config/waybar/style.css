@@ -392,7 +392,7 @@
 }
 #systemd-failed-units {
     background: @bluetint;
-    color: @critical;
+    color: @font_gruv_normal;
     font-weight: bolder;
     padding-left: 0.2em;
     padding-right: 0.2em;

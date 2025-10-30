@@ -40,13 +40,13 @@ matches:
         params:
           cmd: "echo 'Hello from your shell'"
 
-   - trigger: ";em"
-     replace: "pietersz@gmail.com"
+  - trigger: ";em"
+    replace: "pietersz@gmail.com"
 
-   - trigger: "mvg,"
-     replace: |
-       Met vriendelijke groet,
-       Dimitri Pietersz
+  - trigger: "mvg,"
+    replace: |
+      Met vriendelijke groet,
+      Dimitri Pietersz
 
   - trigger: "!hsh"
     replace: "holisticskincarehaarlem.nl"

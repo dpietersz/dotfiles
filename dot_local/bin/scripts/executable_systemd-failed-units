@@ -1,0 +1,114 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Script: systemd-failed-units
+# Purpose: List all failed systemd units (both system and user)
+# Usage: systemd-failed-units
+
+# Color codes for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Function to display failed units
+show_failed_units() {
+  local scope=$1
+  local scope_flag=""
+  
+  if [ "$scope" = "user" ]; then
+    scope_flag="--user"
+  fi
+  
+  # Get failed units (filter out headers and legend)
+  # The bullet character (●) is UTF-8 encoded as 342 227 217
+  local failed_units
+  failed_units=$(systemctl $scope_flag list-units --failed --no-pager --output=short 2>/dev/null | grep "failed" | grep -v "^Legend" | grep -v "loaded units" || echo "")
+  
+  if [ -z "$failed_units" ]; then
+    echo -e "${GREEN}✓ No failed $scope units${NC}"
+    return 0
+  fi
+  
+  # Count failed units
+  local count
+  count=$(echo "$failed_units" | wc -l)
+  
+  if [ "$count" -gt 0 ]; then
+    echo -e "${RED}✗ Failed $scope units ($count):${NC}"
+    echo "$failed_units" | while read -r line; do
+      # Extract unit name (second column, after bullet)
+      local unit_name
+      unit_name=$(echo "$line" | awk '{print $2}')
+      
+      echo -e "  ${RED}●${NC} $unit_name"
+    done
+    return 1
+  fi
+  
+  return 0
+}
+
+# Function to get detailed failure reason
+show_failure_details() {
+  local scope=$1
+  local scope_flag=""
+  
+  if [ "$scope" = "user" ]; then
+    scope_flag="--user"
+  fi
+  
+  # Get failed units
+  local failed_units
+  failed_units=$(systemctl $scope_flag list-units --failed --no-pager --output=short 2>/dev/null | grep "failed" | grep -v "^Legend" | grep -v "loaded units" || echo "")
+  
+  if [ -z "$failed_units" ]; then
+    return 0
+  fi
+  
+  echo ""
+  echo -e "${YELLOW}Failure Details ($scope):${NC}"
+  
+  echo "$failed_units" | awk '{print $2}' | while read -r unit; do
+    local status_output
+    status_output=$(systemctl $scope_flag status "$unit" 2>&1 | head -15 || echo "")
+    
+    echo -e "\n${RED}→ $unit${NC}"
+    echo "$status_output" | grep -E "(Active|Loaded|Process|Error|ExecStart)" | sed 's/^/  /' || true
+  done
+}
+
+# Main execution
+main() {
+  echo -e "${YELLOW}Checking systemd units...${NC}\n"
+  
+  local system_failed=0
+  local user_failed=0
+  
+  # Check system units
+  if ! show_failed_units "system"; then
+    system_failed=1
+  fi
+  
+  echo ""
+  
+  # Check user units
+  if ! show_failed_units "user"; then
+    user_failed=1
+  fi
+  
+  # Show detailed failure information if there are failures
+  if [ "$system_failed" -eq 1 ] || [ "$user_failed" -eq 1 ]; then
+    show_failure_details "system"
+    show_failure_details "user"
+    echo ""
+    return 1
+  fi
+  
+  echo ""
+  echo -e "${GREEN}All systemd units are healthy!${NC}"
+  return 0
+}
+
+main "$@"

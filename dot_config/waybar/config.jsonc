@@ -52,13 +52,13 @@
         "format": "  {:%A %d %b %H:%M}",
         "tooltip": false
     },
-    "systemd-failed-units": {
-        "format": " {nr_failed}",
-        "format-ok": "",
-        "interval": 10,
-        "tooltip": true,
-        "tooltip-format": "{failed_units}"
-    },
+     "systemd-failed-units": {
+         // Display failed systemd units with clear warning icon and count
+         // Shows nothing when all units are healthy (format-ok is empty)
+         "format": "⚠️  {nr_failed} Failed",
+         "format-ok": "",
+         "interval": 10
+     },
     "mpris": {
         "format": "{player_icon} {dynamic}",
         "format-paused": "{status_icon} {dynamic}",
