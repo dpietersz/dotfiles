@@ -242,6 +242,22 @@
       "permission": {
         "bash": "allow"
       }
+    },
+
+    // SUBAGENT 13: Security auditor (CRITICAL - used in every workflow)
+    // Temperature: 0.1 = very focused on security
+    // See: .opencode/agent/security-auditor.md
+    "security-auditor": {
+      "description": "Audits all changes to the public dotfiles repository for security threats and information leakage before and after modifications.",
+      "mode": "subagent",
+      "temperature": 0.1,
+      "tools": {
+        "read": true,
+        "bash": true
+      },
+      "permission": {
+        "bash": "allow"
+      }
     }
   },
 
@@ -319,6 +335,13 @@
       "description": "Commit changes with conventional commits",
       "agent": "git-manager",
       "template": "I want to commit my changes. Please help me create a proper conventional commit message and commit the changes."
+    },
+
+    // SECURITY WORKFLOWS
+    "audit-changes": {
+      "description": "Audit changes for security threats before committing",
+      "agent": "security-auditor",
+      "template": "Please audit the recent changes for security threats and information leakage before I commit them to the public repository."
     }
   }
 }

@@ -45,21 +45,32 @@ You receive requests like:
    - Determine target environments (all or specific)
    - Check if it's already installed
 
-2. **Determine Installation Method**
+2. **PRE-INSTALLATION SECURITY AUDIT** ⚠️
+   - Invoke @security-auditor with installation plan
+   - Describe what will be installed and where
+   - Wait for security audit approval
+   - If BLOCKED or REQUIRES_MITIGATION: Stop and report to user
+
+3. **Determine Installation Method**
    - **Mise**: For standard CLI tools available in mise registry
    - **Chezmoi Script**: For complex installations, system packages, or custom logic
    - Check `dot_config/mise/config.toml` for existing tools
 
-3. **Route to Appropriate Subagent**
+4. **Route to Appropriate Subagent**
    - If Mise → invoke @mise-manager
    - If Script → invoke @script-creator
 
-4. **Coordinate Installation**
+5. **Coordinate Installation**
    - Collect results from subagent
    - Verify installation method is appropriate
    - Ensure environment compatibility
 
-5. **Validate & Document**
+6. **POST-INSTALLATION SECURITY AUDIT** ⚠️
+   - Invoke @security-auditor with modified files
+   - Wait for final security audit approval
+   - If BLOCKED: Stop and report issues
+
+7. **Validate & Document**
    - Confirm installation works across environments
    - Document any manual steps
    - Provide clear summary

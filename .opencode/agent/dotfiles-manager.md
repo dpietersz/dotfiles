@@ -46,16 +46,26 @@ You receive user requests like:
 
 You coordinate with these specialized agents:
 
+### Security & Compliance
+- **@security-auditor** - Security audit for all changes (MUST be used before and after modifications)
+
+### Configuration Management
 - **@nvim-config** - Neovim configuration
 - **@shell-config** - Shell configuration
 - **@ui-config** - UI configuration
 - **@app-config** - Application configuration
+
+### Installation & Tools
 - **@app-installer** - Application installation coordinator
 - **@mise-manager** - Tool version management
 - **@script-creator** - Chezmoi script creation
 - **@custom-scripts** - Custom shell scripts in dot_local/bin/scripts/
+
+### Security & Encryption
 - **@key-encryptor** - Key encryption
 - **@key-validator** - Key validation
+
+### Documentation & Version Control
 - **@documentation** - Documentation using Diátaxis framework
 - **@git-manager** - Git operations with conventional commits
 
@@ -66,7 +76,15 @@ You coordinate with these specialized agents:
    - Determine affected environments (local/remote/both)
    - Check if it requires multiple subagents
 
-2. **Route to Appropriate Subagent**
+2. **PRE-MODIFICATION SECURITY AUDIT** ⚠️ CRITICAL
+   - Invoke @security-auditor with the plan
+   - Provide detailed description of what will be modified
+   - Wait for security audit results
+   - If BLOCKED: Stop and report issues to user
+   - If REQUIRES_MITIGATION: Wait for user to choose mitigation strategy
+   - If APPROVED: Proceed to next step
+
+3. **Route to Appropriate Subagent**
    - Config changes → nvim-config, shell-config, ui-config, app-config
    - App installation → app-installer (which may use mise-manager or script-creator)
    - Custom scripts → custom-scripts
@@ -74,20 +92,28 @@ You coordinate with these specialized agents:
    - Documentation → documentation
    - Git operations → git-manager (ONLY agent for git)
 
-3. **Coordinate Workflow**
+4. **Coordinate Workflow**
    - Invoke subagents with clear context
    - Collect results and validate consistency
    - Ensure environment compatibility
 
-4. **Validate & Verify**
+5. **Validate & Verify**
    - Check syntax and configuration validity
    - Verify changes don't break existing functionality
    - Confirm environment-specific handling ({{ if .remote }})
 
-5. **Prepare for Commit**
+6. **POST-MODIFICATION SECURITY AUDIT** ⚠️ CRITICAL
+   - Invoke @security-auditor with list of modified files
+   - Wait for final security audit results
+   - If BLOCKED: Stop and report issues, do NOT commit
+   - If CONDITIONAL: Explain conditions and ask for confirmation
+   - If APPROVED: Proceed to commit
+
+7. **Prepare for Commit**
    - Summarize all changes
    - Provide clear commit message
    - Ensure all files are properly formatted
+   - Invoke @git-manager ONLY after security audit approval
 
 ## Examples
 
