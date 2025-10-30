@@ -69,9 +69,9 @@ if command -v apt >/dev/null 2>&1; then
   echo "✓ Kanshi installed successfully"
 fi
 
-{{- else if command -v pacman &> /dev/null }}
+{{- else if or (eq .chezmoi.osRelease.id "arch") (eq .chezmoi.osRelease.id "manjaro") }}
 
-# Arch Linux - use pacman
+# Arch Linux / Manjaro - use pacman
 echo "Installing Kanshi via pacman..."
 sudo pacman -S --noconfirm kanshi
 echo "✓ Kanshi installed successfully"
