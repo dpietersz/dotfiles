@@ -6,6 +6,7 @@ set -euo pipefail
 # Install Kanshi - Wayland display configuration daemon
 # Kanshi automatically switches monitor profiles based on connected outputs
 # Documentation: https://github.com/emersion/kanshi
+# Supported on: Bluefin (rpm-ostree) and Fedora (dnf)
 
 # Check if Kanshi is already installed
 if command -v kanshi >/dev/null 2>&1; then
@@ -13,19 +14,7 @@ if command -v kanshi >/dev/null 2>&1; then
   exit 0
 fi
 
-{{- if eq .chezmoi.os "darwin" }}
-
-# macOS - use Homebrew
-if command -v brew >/dev/null 2>&1; then
-  echo "Installing Kanshi via Homebrew..."
-  brew install kanshi
-  echo "✓ Kanshi installed successfully"
-else
-  echo "Error: Homebrew not installed"
-  exit 1
-fi
-
-{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+{{- if eq .chezmoi.osRelease.id "bluefin" }}
 
 # Bluefin - use rpm-ostree (atomic distro)
 echo "Installing Kanshi via rpm-ostree..."
@@ -52,33 +41,14 @@ echo "Run: systemctl reboot"
 
 {{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
 
-# Regular Fedora - use dnf
-if command -v dnf >/dev/null 2>&1; then
-  echo "Installing Kanshi via dnf..."
-  sudo dnf install -y kanshi
-  echo "✓ Kanshi installed successfully"
-fi
-
-{{- else if or (eq .chezmoi.osRelease.id "ubuntu") (eq .chezmoi.osRelease.id "debian") }}
-
-# Ubuntu/Debian - use apt
-if command -v apt >/dev/null 2>&1; then
-  echo "Installing Kanshi via apt..."
-  sudo apt update
-  sudo apt install -y kanshi
-  echo "✓ Kanshi installed successfully"
-fi
-
-{{- else if or (eq .chezmoi.osRelease.id "arch") (eq .chezmoi.osRelease.id "manjaro") }}
-
-# Arch Linux / Manjaro - use pacman
-echo "Installing Kanshi via pacman..."
-sudo pacman -S --noconfirm kanshi
+# Fedora - use dnf
+echo "Installing Kanshi via dnf..."
+sudo dnf install -y kanshi
 echo "✓ Kanshi installed successfully"
 
 {{- else }}
 
-echo "Error: Kanshi installation is not configured for this distribution"
+echo "Error: Kanshi installation is only supported on Bluefin and Fedora"
 echo "Please install Kanshi manually: https://github.com/emersion/kanshi"
 exit 1
 
