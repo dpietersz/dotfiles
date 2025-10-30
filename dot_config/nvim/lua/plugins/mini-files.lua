@@ -1,5 +1,5 @@
 return {
-  "echasnovski/mini.files",
+  "nvim-mini/mini.files",
   version = false,
   dependencies = {
     { "nvim-mini/mini.icons", opts = {} },
