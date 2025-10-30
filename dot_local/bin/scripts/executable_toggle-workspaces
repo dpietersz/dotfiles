@@ -23,7 +23,7 @@ set -euo pipefail
 #   Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop: toggle-workspaces" { spawn "toggle-workspaces" "--to-laptop"; }
 
 # Your named workspaces in order
-WORKSPACES=("Home" "Work" "Coding" "Music")
+WORKSPACES=("Coding" "Media" "Work")
 
 # Default direction
 DIRECTION="${1:---to-lg}"

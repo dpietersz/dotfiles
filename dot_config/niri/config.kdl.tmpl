@@ -3,10 +3,9 @@
 // Auto-start waybar
 spawn-at-startup "waybar"
 
-workspace "Home"
-workspace "Work"
 workspace "Coding"
-workspace "Music"
+workspace "Media"
+workspace "Work"
 
 // Define keybindings
 binds {
@@ -133,10 +132,10 @@ binds {
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
     // === Numbered Workspaces ===
-    Mod+1 { focus-workspace "Home"; }
-    Mod+2 { focus-workspace "Work"; }
-    Mod+3 { focus-workspace "Music"; }
-    Mod+4 { focus-workspace "Coding"; }
+    Mod+1 { focus-workspace "Coding"; }
+    Mod+2 { focus-workspace "Media"; }
+    Mod+3 { focus-workspace "Work"; }
+    Mod+4 { focus-workspace 4; }
     Mod+5 { focus-workspace 5; }
     Mod+6 { focus-workspace 6; }
     Mod+7 { focus-workspace 7; }
@@ -144,10 +143,10 @@ binds {
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 { move-column-to-workspace "Home"; }
-    Mod+Shift+2 { move-column-to-workspace "Work"; }
-    Mod+Shift+3 { move-column-to-workspace "Music"; }
-    Mod+Shift+4 { move-column-to-workspace "Coding"; }
+    Mod+Shift+1 { move-column-to-workspace "Coding"; }
+    Mod+Shift+2 { move-column-to-workspace "Media"; }
+    Mod+Shift+3 { move-column-to-workspace "Work"; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
     Mod+Shift+5 { move-column-to-workspace 5; }
     Mod+Shift+6 { move-column-to-workspace 6; }
     Mod+Shift+7 { move-column-to-workspace 7; }
@@ -184,8 +183,8 @@ binds {
     Alt+Print { screenshot-window; }
 
     // === Workspace Management ===
-    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG: toggle-workspaces" { spawn "bash" "-c" "$HOME/.local/bin/scripts/toggle-workspaces --to-lg"; }
-    Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop: toggle-workspaces" { spawn "bash" "-c" "$HOME/.local/bin/scripts/toggle-workspaces --to-laptop"; }
+    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "toggle-workspaces" "--to-lg"; }
+    Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop" { spawn "toggle-workspaces" "--to-laptop"; }
 
 }
 
@@ -333,5 +332,50 @@ window-rule {
     geometry-corner-radius 9
     clip-to-geometry true
     draw-border-with-background false
+}
+
+// === Workspace-specific window rules ===
+
+// Terminals open on Coding workspace
+window-rule {
+    match app-id="kitty"
+    open-on-workspace "Coding"
+}
+
+window-rule {
+    match app-id="Alacritty"
+    open-on-workspace "Coding"
+}
+
+window-rule {
+    match app-id="gnome-terminal"
+    open-on-workspace "Coding"
+}
+
+// VS Code opens on Coding workspace
+window-rule {
+    match app-id="code"
+    open-on-workspace "Coding"
+}
+
+// Browsers open on Media workspace
+window-rule {
+    match app-id="zen"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="qutebrowser"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="chromium"
+    open-on-workspace "Media"
+}
+
+window-rule {
+    match app-id="firefox"
+    open-on-workspace "Media"
 }
 
