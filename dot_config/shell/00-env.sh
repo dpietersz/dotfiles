@@ -48,23 +48,33 @@ if command -v dagger >/dev/null; then
 fi
 
 if command -v pass &>/dev/null; then
-  export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
-  export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
-  export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
-  export OPENAI_KEY="$OPENAI_API_KEY"
-  export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
-  export GEMINI_API_KEY="$(pass show Sites/google.com/api-key/gemini-pro-2-5)"
-  export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
-  export GOOGLE_API_KEY="$GEMINI_API_KEY"
-  export DATABRICKS_HOST="$(pass show Logins/gemeente-hilversum/databricks/host)"
-  export DATABRICKS_SECRET="$(pass show Logins/gemeente-hilversum/databricks/service-principal | grep -m 1 '^')"
-  export DATABRICKS_CLIENT_ID="$(pass show Logins/gemeente-hilversum/databricks/service-principal | grep "client-id:" | cut -d ' ' -f 2)"
-  export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
-  export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
-  export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
-  export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
-  export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+   export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
+   export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
+   export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
+   export OPENAI_KEY="$OPENAI_API_KEY"
+   export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
+   export GEMINI_API_KEY="$(pass show Sites/google.com/api-key/gemini-pro-2-5)"
+   export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
+   export GOOGLE_API_KEY="$GEMINI_API_KEY"
+   export DATABRICKS_HOST="$(pass show Logins/gemeente-hilversum/databricks/host)"
+   export DATABRICKS_SECRET="$(pass show Logins/gemeente-hilversum/databricks/service-principal | grep -m 1 '^')"
+   export DATABRICKS_CLIENT_ID="$(pass show Logins/gemeente-hilversum/databricks/service-principal | grep "client-id:" | cut -d ' ' -f 2)"
+   export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
+   export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
+   export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
+   export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+   export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+
+   # Populate git credentials cache for GitHub HTTPS authentication
+   # This allows git operations (including lazy.nvim subprocess) to authenticate
+   # without needing pass or GPG agent in subprocess context
+   if command -v git &>/dev/null && [ -n "$GITHUB_TOKEN" ]; then
+      echo "protocol=https
+host=github.com
+username=git
+password=$GITHUB_TOKEN" | git credential approve 2>/dev/null || true
+   fi
 else
-  echo "Install pass to load API keys securely."
+   echo "Install pass to load API keys securely."
 fi
 
