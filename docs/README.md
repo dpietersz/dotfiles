@@ -9,6 +9,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 **Learning-oriented tutorials** for beginners. Follow step-by-step instructions to complete meaningful tasks and acquire skills.
 
 - [Getting Started Guide](./getting-started/README.md) - Introduction to tutorials and learning materials
+- [Security Remediation Status](./getting-started/remediation-status.md) - Current status of security remediation
 
 ### 📋 [How-To Guides](./how-to/)
 
@@ -16,6 +17,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 - [Add Encrypted Keys](./how-to/add-encrypted-keys.md) - Securely add private keys to your dotfiles
 - [Write Git Commits](./how-to/git-commits.md) - Follow conventional commit standards
+- [Verify Security Remediation](./how-to/verify-remediation.md) - Verify and update after security remediation
 
 ### 📚 [Reference](./reference/)
 
@@ -27,6 +29,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - [Shell Aliases & Functions](./reference/shell-aliases.md) - Complete shell aliases and functions reference
 - [All Keybindings](./reference/keybindings.md) - Comprehensive keybindings reference
 - [Conventional Commits Format](./reference/conventional-commits-format.md) - Commit message specification
+- [Remediation Technical Reference](./reference/remediation-details.md) - Technical details of security remediation
 
 ### 💡 [Explanation](./explanation/)
 
@@ -34,12 +37,15 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 - [Diátaxis Framework](./explanation/diataxis-framework.md) - Why and how this documentation is organized
 - [Daily-Driver Containers](./explanation/daily-driver-containers.md) - Understanding containerized development environments
+- [Security Remediation](./explanation/security-remediation.md) - Understanding the security remediation process
 
 ## Quick Navigation
 
 **I want to...**
 
 - **Learn the basics** → [Getting Started Guide](./getting-started/README.md)
+- **Check remediation status** → [Security Remediation Status](./getting-started/remediation-status.md)
+- **Verify the remediation** → [Verify Security Remediation](./how-to/verify-remediation.md)
 - **Look up a keybinding** → [Reference Documentation Hub](./reference/README.md)
 - **Find Neovim keybindings** → [Neovim Keybindings](./reference/nvim-keybindings.md)
 - **Find Niri keybindings** → [Niri Window Manager Keybindings](./reference/niri-keybindings.md)
@@ -48,6 +54,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - **Write a proper commit message** → [Write Git Commits](./how-to/git-commits.md)
 - **Understand the documentation structure** → [Diátaxis Framework](./explanation/diataxis-framework.md)
 - **Learn about containers** → [Daily-Driver Containers](./explanation/daily-driver-containers.md)
+- **Understand the remediation** → [Security Remediation](./explanation/security-remediation.md)
 
 ## Using the Agent System
 
@@ -81,4 +88,4 @@ See [Diátaxis Framework](./explanation/diataxis-framework.md) for detailed guid
 
 ## Last Updated
 
-October 29, 2025
+October 30, 2025
