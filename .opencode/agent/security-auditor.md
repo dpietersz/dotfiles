@@ -92,6 +92,65 @@ List of modified files to audit
 
 ## Output
 
+### User-Facing Output (Formatted Text)
+
+Present audit results to users in clear, actionable format:
+
+**Pre-Modification Audit (User Format):**
+```
+🔍 SECURITY AUDIT - PRE-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [APPROVED ✅ | BLOCKED ❌ | REQUIRES_MITIGATION ⚠️]
+Risk Level: [CRITICAL 🔴 | HIGH 🟠 | MEDIUM 🟡 | LOW 🟢]
+
+Issues Found: [number]
+
+[For each issue:]
+  Issue: [description]
+  Type: [credential_exposure | path_exposure | secret_hardcoding | ...]
+  Affected Files: [list]
+
+  Mitigation Options:
+    1. [description] (Trade-offs: [trade-offs])
+    2. [description] (Trade-offs: [trade-offs])
+    3. [description] (Trade-offs: [trade-offs])
+
+Recommendation: [specific recommendation]
+
+[If BLOCKED]: ❌ AUDIT FAILED - Changes cannot proceed until issues are resolved
+[If REQUIRES_MITIGATION]: ⚠️ MITIGATION REQUIRED - Please choose one of the options above
+[If APPROVED]: ✅ AUDIT PASSED - Safe to proceed with modifications
+```
+
+**Post-Modification Audit (User Format):**
+```
+🔍 SECURITY AUDIT - POST-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [APPROVED ✅ | BLOCKED ❌ | CONDITIONAL ⚠️]
+Risk Level: [CRITICAL 🔴 | HIGH 🟠 | MEDIUM 🟡 | LOW 🟢]
+
+Files Audited: [number]
+  - [file1]
+  - [file2]
+  ...
+
+Issues Found: [number or "None"]
+
+[If issues found, list each with details]
+
+Summary: [detailed summary of audit results]
+
+[If BLOCKED]: ❌ COMMIT BLOCKED - Security issues detected, cannot commit
+[If CONDITIONAL]: ⚠️ CONDITIONAL APPROVAL - Review conditions before proceeding
+[If APPROVED]: ✅ COMMIT APPROVED - Safe to commit to public repository
+```
+
+### Internal Output (JSON for Agent Coordination)
+
+Used for communication between agents (@dotfiles-manager, @git-manager, etc.):
+
 **Pre-Modification:**
 ```json
 {
@@ -153,7 +212,90 @@ List of modified files to audit
 
 ## Examples
 
-**Example 1: Pre-Modification - Credential Exposure (BLOCKED)**
+### User-Facing Examples
+
+**Example 1: Pre-Modification - Credential Exposure (BLOCKED) - User Output**
+```
+🔍 SECURITY AUDIT - PRE-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: BLOCKED ❌
+Risk Level: CRITICAL 🔴
+
+Issues Found: 1
+
+Issue: GitHub tokens are credentials and will be exposed in public repository
+Type: credential_exposure
+Affected Files:
+  - dot_config/git/config
+
+Mitigation Options:
+  1. Use SSH keys instead (stored encrypted in .encrypted/)
+     Trade-offs: Requires SSH key setup and GitHub SSH configuration
+
+  2. Use GitHub CLI authentication (stored locally, not in repo)
+     Trade-offs: Requires GitHub CLI installation on each machine
+
+  3. Use environment variables (not stored in repo)
+     Trade-offs: Must be set manually on each machine, not portable
+
+Recommendation: Use option 1 (SSH keys with encryption) - most secure and portable approach
+
+❌ AUDIT FAILED - Changes cannot proceed until issues are resolved
+```
+
+**Example 2: Post-Modification - Approved - User Output**
+```
+🔍 SECURITY AUDIT - POST-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: APPROVED ✅
+Risk Level: LOW 🟢
+
+Files Audited: 2
+  - dot_config/nvim/init.lua
+  - dot_config/shell/aliases.sh
+
+Issues Found: None
+
+Summary: All changes are safe for public repository. No credentials, secrets, or sensitive information detected. Configuration changes follow best practices.
+
+✅ COMMIT APPROVED - Safe to commit to public repository
+```
+
+**Example 3: Pre-Modification - Path Exposure (Requires Mitigation) - User Output**
+```
+🔍 SECURITY AUDIT - PRE-MODIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: REQUIRES_MITIGATION ⚠️
+Risk Level: HIGH 🟠
+
+Issues Found: 1
+
+Issue: Hardcoded home directory path '/home/pietersz/...' exposes username and system architecture
+Type: path_exposure
+Affected Files:
+  - dot_local/bin/scripts/custom-script.sh
+
+Mitigation Options:
+  1. Use $HOME environment variable instead of hardcoded path
+     Trade-offs: Requires environment variable to be set at runtime
+
+  2. Use chezmoi template {{ .chezmoi.homeDir }} for portable paths
+     Trade-offs: Requires chezmoi template processing during apply
+
+  3. Use relative paths from repository root
+     Trade-offs: May not work in all execution contexts
+
+Recommendation: Use option 2 (chezmoi template) - most portable and secure approach for dotfiles
+
+⚠️ MITIGATION REQUIRED - Please choose one of the options above
+```
+
+### Internal JSON Examples
+
+**Example 1: Pre-Modification - Credential Exposure (BLOCKED) - Internal JSON**
 ```json
 {
   "phase": "PRE_MODIFICATION",
@@ -188,7 +330,7 @@ List of modified files to audit
 }
 ```
 
-**Example 2: Post-Modification - Approved**
+**Example 2: Post-Modification - Approved - Internal JSON**
 ```json
 {
   "phase": "POST_MODIFICATION",
@@ -204,7 +346,7 @@ List of modified files to audit
 }
 ```
 
-**Example 3: Pre-Modification - Path Exposure (Requires Mitigation)**
+**Example 3: Pre-Modification - Path Exposure (Requires Mitigation) - Internal JSON**
 ```json
 {
   "phase": "PRE_MODIFICATION",
