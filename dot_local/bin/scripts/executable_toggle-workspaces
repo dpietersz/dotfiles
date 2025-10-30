@@ -3,44 +3,60 @@
 set -euo pipefail
 
 # Script: toggle-workspaces
-# Purpose: Move all named workspaces between monitors
-# Usage: toggle-workspaces [--to-monitor-right|--to-monitor-left]
+# Purpose: Move all named workspaces between monitors while preserving order and active workspace
+# Usage: toggle-workspaces [--to-lg|--to-laptop]
 #
-# This script moves all your named workspaces to the right or left monitor.
+# This script moves all your named workspaces to the LG monitor or laptop.
 # Useful for switching between laptop and external monitor setups.
 #
+# Features:
+#   - Preserves workspace order (Home, Work, Coding, Music)
+#   - Keeps the currently active workspace active after moving
+#   - Validates monitor count before execution
+#
 # Examples:
-#   toggle-workspaces --to-monitor-right   # Move workspaces to external monitor (LG)
-#   toggle-workspaces --to-monitor-left    # Move workspaces to laptop (eDP-1)
+#   toggle-workspaces --to-lg       # Move workspaces to LG monitor
+#   toggle-workspaces --to-laptop   # Move workspaces to laptop
 #
 # Add to niri keybindings:
-#   Mod+Shift+M hotkey-overlay-title="Move workspaces to LG: toggle-workspaces" { spawn "toggle-workspaces" "--to-monitor-right"; }
-#   Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop: toggle-workspaces" { spawn "toggle-workspaces" "--to-monitor-left"; }
+#   Mod+Shift+M hotkey-overlay-title="Move workspaces to LG: toggle-workspaces" { spawn "toggle-workspaces" "--to-lg"; }
+#   Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop: toggle-workspaces" { spawn "toggle-workspaces" "--to-laptop"; }
 
-# Your named workspaces
+# Your named workspaces in order
 WORKSPACES=("Home" "Work" "Coding" "Music")
 
-# Default direction (right = towards external monitor, left = towards laptop)
-DIRECTION="${1:---to-monitor-right}"
-
-# Function to move a workspace to a monitor
-move_workspace() {
-  local workspace=$1
-  local direction=$2
-  
-  # Focus the workspace first
-  niri msg action focus-workspace "$workspace"
-  
-  # Small delay to ensure focus is registered
-  sleep 0.1
-  
-  # Move the workspace to the specified monitor
-  niri msg action "move-workspace-$direction"
-}
+# Default direction
+DIRECTION="${1:---to-lg}"
 
 # Function to get current monitor count
 get_monitor_count() {
   niri msg outputs | grep -c "^Output"
+}
+
+# Function to get the currently active workspace
+get_active_workspace() {
+  niri msg workspaces | grep "^\s*\*" | grep -oP '"\K[^"]+' | head -1
+}
+
+# Function to get which monitor a workspace is on
+get_workspace_monitor() {
+  local workspace=$1
+  niri msg workspaces | grep -B 100 "\"$workspace\"" | grep "^Output" | tail -1 | sed 's/Output "\([^"]*\)".*/\1/'
+}
+
+# Function to move a workspace to a specific monitor
+move_workspace_to_monitor() {
+  local workspace=$1
+  local target_direction=$2  # "next" or "previous"
+  
+  # Focus the workspace first
+  niri msg action focus-workspace "$workspace"
+  
+  # Longer delay to ensure focus is properly registered
+  sleep 0.3
+  
+  # Move the workspace to the specified monitor
+  niri msg action "move-workspace-to-monitor-$target_direction"
 }
 
 # Main logic
@@ -55,23 +71,41 @@ main() {
   fi
   
   # Validate direction argument
-  if [[ ! "$DIRECTION" =~ ^--(to-monitor-(right|left))$ ]]; then
-    echo "Usage: toggle-workspaces [--to-monitor-right|--to-monitor-left]"
+  if [[ ! "$DIRECTION" =~ ^--(to-lg|to-laptop)$ ]]; then
+    echo "Usage: toggle-workspaces [--to-lg|--to-laptop]"
     echo ""
     echo "Examples:"
-    echo "  toggle-workspaces --to-monitor-right   # Move workspaces to external monitor (LG)"
-    echo "  toggle-workspaces --to-monitor-left    # Move workspaces to laptop (eDP-1)"
+    echo "  toggle-workspaces --to-lg       # Move workspaces to LG monitor"
+    echo "  toggle-workspaces --to-laptop   # Move workspaces to laptop"
     exit 1
   fi
   
-  # Extract the direction (right or left)
-  local dir_name
-  dir_name=$(echo "$DIRECTION" | sed 's/--to-monitor-//')
+  # Remember the currently active workspace
+  local active_workspace
+  active_workspace=$(get_active_workspace)
   
-  # Move each workspace
-  for workspace in "${WORKSPACES[@]}"; do
-    move_workspace "$workspace" "$dir_name"
+  # Map direction to niri command
+  # Monitor order: eDP-1 (laptop) is first, HDMI-A-2 (LG) is second
+  # "next" moves to the next monitor in the list (LG)
+  # "previous" moves to the previous monitor in the list (laptop)
+  local niri_direction
+  if [ "$DIRECTION" = "--to-lg" ]; then
+    niri_direction="next"
+  else
+    niri_direction="previous"
+  fi
+  
+  # Move each workspace to the target monitor in forward order
+  # We move them in forward order to maintain the correct sequence
+  for ((i=0; i<${#WORKSPACES[@]}; i++)); do
+    move_workspace_to_monitor "${WORKSPACES[$i]}" "$niri_direction"
   done
+  
+  # Restore the active workspace if it was one of our named workspaces
+  if [[ " ${WORKSPACES[@]} " =~ " ${active_workspace} " ]]; then
+    sleep 0.3
+    niri msg action focus-workspace "$active_workspace"
+  fi
 }
 
 main "$@"
