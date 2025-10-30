@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Script: toggle-workspaces
+# Purpose: Move all named workspaces between monitors
+# Usage: toggle-workspaces [--to-monitor-right|--to-monitor-left]
+#
+# This script moves all your named workspaces to the right or left monitor.
+# Useful for switching between laptop and external monitor setups.
+#
+# Examples:
+#   toggle-workspaces --to-monitor-right   # Move workspaces to external monitor (LG)
+#   toggle-workspaces --to-monitor-left    # Move workspaces to laptop (eDP-1)
+#
+# Add to niri keybindings:
+#   Mod+Shift+M hotkey-overlay-title="Move workspaces to LG: toggle-workspaces" { spawn "toggle-workspaces" "--to-monitor-right"; }
+#   Mod+Alt+M hotkey-overlay-title="Move workspaces to laptop: toggle-workspaces" { spawn "toggle-workspaces" "--to-monitor-left"; }
+
+# Your named workspaces
+WORKSPACES=("Home" "Work" "Coding" "Music")
+
+# Default direction (right = towards external monitor, left = towards laptop)
+DIRECTION="${1:---to-monitor-right}"
+
+# Function to move a workspace to a monitor
+move_workspace() {
+  local workspace=$1
+  local direction=$2
+  
+  # Focus the workspace first
+  niri msg action focus-workspace "$workspace"
+  
+  # Small delay to ensure focus is registered
+  sleep 0.1
+  
+  # Move the workspace to the specified monitor
+  niri msg action "move-workspace-$direction"
+}
+
+# Function to get current monitor count
+get_monitor_count() {
+  niri msg outputs | grep -c "^Output"
+}
+
+# Main logic
+main() {
+  # Check if we have at least 2 monitors
+  local monitor_count
+  monitor_count=$(get_monitor_count)
+  
+  if [ "$monitor_count" -lt 2 ]; then
+    echo "Error: At least 2 monitors required. Found: $monitor_count"
+    exit 1
+  fi
+  
+  # Validate direction argument
+  if [[ ! "$DIRECTION" =~ ^--(to-monitor-(right|left))$ ]]; then
+    echo "Usage: toggle-workspaces [--to-monitor-right|--to-monitor-left]"
+    echo ""
+    echo "Examples:"
+    echo "  toggle-workspaces --to-monitor-right   # Move workspaces to external monitor (LG)"
+    echo "  toggle-workspaces --to-monitor-left    # Move workspaces to laptop (eDP-1)"
+    exit 1
+  fi
+  
+  # Extract the direction (right or left)
+  local dir_name
+  dir_name=$(echo "$DIRECTION" | sed 's/--to-monitor-//')
+  
+  # Move each workspace
+  for workspace in "${WORKSPACES[@]}"; do
+    move_workspace "$workspace" "$dir_name"
+  done
+}
+
+main "$@"
