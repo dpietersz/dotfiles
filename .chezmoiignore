@@ -11,3 +11,4 @@ lazy-lock.json
 niri-dotfiles-example/
 dotfiles_gruvbox-example/
 .config/systemd/user/default.target.wants/
+.ssh/config
