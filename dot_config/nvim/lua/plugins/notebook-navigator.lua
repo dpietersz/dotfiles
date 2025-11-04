@@ -30,8 +30,7 @@ return {
       local nn = require("notebook-navigator")
       nn.setup({
         cell_markers = {
-          "# COMMAND ----------",
-          "# %%",
+          python = "# COMMAND ----------",
         },
         syntax_highlight = true,
         cell_highlight_group = "Folded",
@@ -50,7 +49,11 @@ return {
     },
     opts = function()
       local nn = require("notebook-navigator")
-      return nn.minihipatterns_spec()
+      return {
+        highlighters = {
+          cells = nn.minihipatterns_spec,
+        },
+      }
     end,
   },
 
