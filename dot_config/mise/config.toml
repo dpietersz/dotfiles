@@ -3,6 +3,7 @@
 age = "latest"
 bat = "latest"
 btop = "latest"
+bun = "latest"
 chezmoi = "latest"
 claude = "latest"
 direnv = "latest"
