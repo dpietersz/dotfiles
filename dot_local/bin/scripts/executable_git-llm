@@ -48,7 +48,7 @@ INSTRUCTIONS:
 - Each commit must follow conventional commit format (feat, fix, docs, style, refactor, perf, test, chore)
 - Keep titles under 72 characters
 - Provide detailed descriptions explaining the why and what
-- List the files affected by each commit
+- List the files affected by each commit (use exact file paths from the diff)
 - Return ONLY the JSON object, nothing else
 - Do not use markdown code fences
 - Do not add any text before or after the JSON
@@ -144,6 +144,27 @@ confirm_individual_commit() {
   fi
 }
 
+# Stage files for a specific commit
+stage_commit_files() {
+  local json_response="$1"
+  local commit_index="$2"
+  
+  # Get files for this commit
+  local files
+  files=$(echo "$json_response" | jq -r ".commits[$commit_index].files_affected[]")
+  
+  # Stage each file
+  while IFS= read -r file; do
+    if [[ -n "$file" ]]; then
+      if git add "$file" 2>/dev/null; then
+        printf "  Staged: %s\n" "$file"
+      else
+        printf "${YELLOW}  Warning: Could not stage %s${NC}\n" "$file" >&2
+      fi
+    fi
+  done <<< "$files"
+}
+
 # Execute commits
 execute_commits() {
   local json_response="$1"
@@ -165,6 +186,10 @@ execute_commits() {
     
     printf "\n"
     if confirm_individual_commit $((i + 1)) "$num_commits"; then
+      # Stage files for this commit
+      printf "${BLUE}Staging files for commit $((i + 1))...${NC}\n"
+      stage_commit_files "$json_response" "$i"
+      
       # Build commit message
       local commit_msg="$title"
       if [[ -n "$description" && "$description" != "null" ]]; then
@@ -173,7 +198,11 @@ execute_commits() {
 ${description}"
       fi
       
-      if git commit -m "$commit_msg"; then
+      # Check if there are staged changes
+      if git diff --cached --quiet; then
+        printf "${YELLOW}⚠ No changes staged for this commit${NC}\n"
+        ((skipped_count++))
+      elif git commit -m "$commit_msg"; then
         printf "${GREEN}✓ Commit $((i + 1)) successful${NC}\n"
         ((committed_count++))
       else
