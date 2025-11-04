@@ -3,8 +3,8 @@ return {
   {
     "GCBallesteros/NotebookNavigator.nvim",
     dependencies = {
-      "echasnovski/mini.hipatterns",
-      "echasnovski/mini.ai",
+      "nvim-mini/mini.hipatterns",
+      "nvim-mini/mini.ai",
     },
     event = "VeryLazy",
     ft = { "python", "jupyter" },
@@ -43,27 +43,27 @@ return {
 
   -- mini.hipatterns integration with NotebookNavigator
   {
-    "echasnovski/mini.hipatterns",
+    "nvim-mini/mini.hipatterns",
     event = "VeryLazy",
     dependencies = {
       "GCBallesteros/NotebookNavigator.nvim",
     },
-    config = function()
+    opts = function()
       local nn = require("notebook-navigator")
-      require("mini.hipatterns").setup(nn.minihipatterns_spec)
+      return nn.minihipatterns_spec
     end,
   },
 
   -- mini.ai integration with NotebookNavigator for cell textobjects
   {
-    "echasnovski/mini.ai",
+    "nvim-mini/mini.ai",
     event = "VeryLazy",
     dependencies = {
       "GCBallesteros/NotebookNavigator.nvim",
     },
-    config = function()
+    opts = function()
       local nn = require("notebook-navigator")
-      require("mini.ai").setup(nn.miniai_spec)
+      return nn.miniai_spec
     end,
   },
 }
