@@ -27,6 +27,15 @@ return {
       },
     },
     config = function()
+      -- Suppress NotebookNavigator REPL warning by redirecting vim.notify
+      local original_notify = vim.notify
+      vim.notify = function(msg, level, opts)
+        if msg:find("No supported REPLs available") then
+          return
+        end
+        return original_notify(msg, level, opts)
+      end
+
       local nn = require("notebook-navigator")
       nn.setup({
         cell_markers = {
@@ -37,6 +46,9 @@ return {
         repl_provider = "none",
         activate_hydra_keys = nil,
       })
+
+      -- Restore original vim.notify
+      vim.notify = original_notify
     end,
   },
 
