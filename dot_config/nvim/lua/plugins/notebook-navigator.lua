@@ -34,7 +34,7 @@ return {
         },
         syntax_highlight = true,
         cell_highlight_group = "Folded",
-        repl_provider = nil,
+        repl_provider = "none",
         activate_hydra_keys = nil,
       })
     end,
