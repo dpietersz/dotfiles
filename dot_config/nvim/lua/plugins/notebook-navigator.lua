@@ -50,7 +50,7 @@ return {
     },
     opts = function()
       local nn = require("notebook-navigator")
-      return nn.minihipatterns_spec
+      return nn.minihipatterns_spec()
     end,
   },
 
@@ -63,7 +63,7 @@ return {
     },
     opts = function()
       local nn = require("notebook-navigator")
-      return nn.miniai_spec
+      return nn.miniai_spec()
     end,
   },
 }
