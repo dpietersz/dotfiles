@@ -49,27 +49,43 @@ if command -v dagger >/dev/null; then
   export DAGGER_NO_NAG=1
 fi
 
+
 {{ if not .remote }}
 if command -v pass &>/dev/null; then
-   export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
-   export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
-   export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
-   export OPENAI_KEY="$OPENAI_API_KEY"
-   export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
-   export GEMINI_API_KEY="$(pass show Sites/google.com/api-key/gemini-pro-2-5)"
-   export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
-   export GOOGLE_API_KEY="$GEMINI_API_KEY"
-   export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
-   export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
-   export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
-   export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
-   export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+  export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
+  export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
+  export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
+  export OPENAI_KEY="$OPENAI_API_KEY"
+  export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
+  export GEMINI_API_KEY="$(pass show Sites/google.com/api-key/gemini-pro-2-5)"
+  export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
+  export GOOGLE_API_KEY="$GEMINI_API_KEY"
+  export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
+  export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
+  export REPLICATE_API_TOKEN="$(pass show Sites/replicate.com/api-token)" # For AI images/videos
+  export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
+  export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+  export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
 
-   # GitHub authentication: Use SSH keys instead of token caching
-   # SSH is configured in ~/.ssh/config for github.com
-   # For new machines: ensure SSH key is added to ssh-agent before git operations
-   # If needed, manually add key: ssh-add ~/.ssh/id_ed25519
+  # GitHub authentication: Use SSH keys instead of token caching
+  # SSH is configured in ~/.ssh/config for github.com
+  # For new machines: ensure SSH key is added to ssh-agent before git operations
+  # If needed, manually add key: ssh-add ~/.ssh/id_ed25519
+
+  # ========== PAI Configuration ==========
+  # Where PAI is installed (change this to YOUR path!)
+  export PAI_DIR="$PROJECTS/pai"
+
+  # Your home directory (this is automatic)
+  export PAI_HOME="$HOME"
+
+  # (Optional) Your AI assistant's name
+  export DA="DANTE"  # Dynamic Agent Network & Task Engine (Emphasizes the network of agents and its primary job as the engine for task execution.)
+
+  # (Optional) Display color for your AI
+    export DA_COLOR="blue"  # Options: purple, blue, green, cyan, red, yellow
+
 else
-   echo "Install pass to load API keys securely."
+  echo "Install pass to load API keys securely."
 fi
 {{ end }}
