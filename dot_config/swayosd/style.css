@@ -10,7 +10,7 @@ window#osd {
   border-radius: 12px;
   border: 2px solid rgba(139, 176, 208, 0.4);
   padding: 16px 24px;
-  margin: 50px 0 auto 0;  /* Position at top with margin */
+  margin: 50px 0 0 0;  /* Position at top with margin */
   min-width: 250px;
   min-height: 80px;
 }

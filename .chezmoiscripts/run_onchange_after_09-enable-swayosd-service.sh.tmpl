@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# ------------------ Enable swayosd systemd service ------------------
+# This script enables the swayosd systemd user service after the service file
+# has been deployed by chezmoi. It only runs if swayosd is installed.
+
+{{- if .remote }}
+echo "[swayosd-service] Skipping: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+# Only proceed if swayosd is installed
+if ! command -v swayosd >/dev/null 2>&1; then
+  echo "[swayosd-service] swayosd not installed, skipping service enablement."
+  exit 0
+fi
+
+# Check if service file exists
+SERVICE_FILE="$HOME/.config/systemd/user/swayosd.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+  echo "[swayosd-service] Service file not found at $SERVICE_FILE"
+  exit 0
+fi
+
+echo "[swayosd-service] Enabling and starting swayosd systemd service..."
+
+# Reload systemd user daemon to pick up the new service file
+systemctl --user daemon-reload
+
+# Enable the service (creates the symlink in default.target.wants/)
+systemctl --user enable swayosd.service
+
+# Start the service if not already running
+if ! systemctl --user is-active --quiet swayosd.service; then
+  systemctl --user start swayosd.service
+  echo "[swayosd-service] Service started."
+else
+  echo "[swayosd-service] Service already running."
+fi
+
+echo "[swayosd-service] Done. Status:"
+systemctl --user status swayosd.service --no-pager || true
+
