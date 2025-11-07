@@ -9,8 +9,9 @@ set -euo pipefail
 wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-
 
 # Display volume OSD via SwayOSD (if available)
+# Use -0 to display current volume without changing it
 if command -v swayosd-client &> /dev/null; then
-  swayosd-client --output-volume
+  swayosd-client --output-volume=-0
 fi
 
 # Play volume change sound in background
