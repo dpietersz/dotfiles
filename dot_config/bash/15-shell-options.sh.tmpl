@@ -8,7 +8,7 @@ export KEYSEQTIMEOUT=1
 
 # Initialize direnv if available (mise will be initialized in 20-tools.sh)
 if command -v direnv >/dev/null 2>&1; then
-  source <(direnv hook bash)
+  eval "$(direnv hook bash)"
 fi
 
 {{ if not .remote -}}

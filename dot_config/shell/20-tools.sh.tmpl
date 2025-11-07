@@ -30,7 +30,7 @@ fi
 
 # activate mise
 if command -v mise >/dev/null; then
-  source <(mise activate $CURRENT_SHELL)
+  eval "$(mise activate $CURRENT_SHELL)"
 fi
 
 # enable the starship prompt

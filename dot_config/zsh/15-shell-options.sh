@@ -20,5 +20,5 @@ autoload -Uz compinit && compinit
 
 # Initialize direnv if available (mise will be initialized in 20-tools.sh)
 if command -v direnv >/dev/null 2>&1; then
-  source <(direnv hook zsh)
+  eval "$(direnv hook zsh)"
 fi
