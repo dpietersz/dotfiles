@@ -1,0 +1,36 @@
+#!/bin/bash
+{{- if not .remote }}
+# SwayOSD CSS fix hash: {{ include "dot_config/swayosd/style.css" | sha256sum }}
+
+set -euo pipefail
+
+# Script: Fix SwayOSD CSS deployment
+# Purpose: Remove old broken CSS file to allow chezmoi to deploy new minimal CSS
+# Lifecycle: Runs when SwayOSD CSS file changes
+
+# Check if swayosd is installed
+if ! command -v swayosd-server >/dev/null 2>&1; then
+  echo "[swayosd] SwayOSD not installed, skipping CSS fix"
+  exit 0
+fi
+
+echo "[swayosd] Fixing SwayOSD CSS deployment..."
+
+# Remove old CSS file if it exists (allows chezmoi to deploy new one)
+CSS_FILE="$HOME/.config/swayosd/style.css"
+if [ -f "$CSS_FILE" ]; then
+  echo "[swayosd] Removing old CSS file: $CSS_FILE"
+  rm -f "$CSS_FILE"
+fi
+
+# Kill swayosd-server if running to allow it to restart with new CSS
+if pgrep -x swayosd-server >/dev/null 2>&1; then
+  echo "[swayosd] Restarting swayosd-server..."
+  pkill -x swayosd-server || true
+  sleep 1
+  # swayosd-server will be restarted by systemd or on next use
+fi
+
+echo "[swayosd] CSS fix completed successfully"
+
+{{- end }}

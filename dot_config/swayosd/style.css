@@ -1,266 +1,44 @@
-/* SwayOSD Style Configuration
- * Gruvbox/Nord themed OSD for volume, brightness, and microphone indicators
+/* SwayOSD Style Configuration - Minimal GTK CSS
  * 
- * This file customizes the appearance of the SwayOSD on-screen display.
+ * This file provides basic styling for SwayOSD.
  * SwayOSD will load this style on startup automatically.
  */
 
-/* ============================================================================
- * Color Scheme (Gruvbox Dark + Nord)
- * ============================================================================ */
-
-/* Define CSS variables for consistent theming */
-:root {
-  /* Gruvbox Dark Colors */
-  --bg-dark: #282828;
-  --bg-light: #3c3836;
-  --fg-light: #ebdbb2;
-  --fg-faded: #a89985;
-  
-  /* Nord Colors */
-  --nord-bg: #2e3440;
-  --nord-light: #d8dee9;
-  --nord-frost-1: #8fbcbb;
-  --nord-frost-2: #88c0d0;
-  --nord-frost-3: #81a1c1;
-  --nord-frost-4: #5e81ac;
-  --nord-aurora-red: #bf616a;
-  --nord-aurora-orange: #d08770;
-  --nord-aurora-yellow: #ebcb8b;
-  --nord-aurora-green: #a3be8c;
-  
-  /* Accent Colors */
-  --accent-volume: #88c0d0;      /* Nord Frost 2 - Blue */
-  --accent-mute: #bf616a;        /* Nord Aurora Red */
-  --accent-brightness: #ebcb8b;  /* Nord Aurora Yellow */
-  --accent-mic: #a3be8c;         /* Nord Aurora Green */
-}
-
-/* ============================================================================
- * Main OSD Window Styling
- * ============================================================================ */
-
+/* Main OSD window */
 window#osd {
-  /* Window appearance */
-  background-color: rgba(40, 40, 40, 0.92);  /* Gruvbox dark with transparency */
+  background-color: rgba(40, 40, 40, 0.92);
   border-radius: 12px;
-  border: 2px solid rgba(139, 176, 208, 0.4);  /* Subtle Nord frost border */
-  
-  /* Position: top-center (handled by SwayOSD internally)
-   * The OSD will appear at the top-center of the screen by default
-   * Duration: 2000ms (2 seconds) - set via swayosd-client or server config
-   */
-  
-  /* Padding and spacing */
+  border: 2px solid rgba(139, 176, 208, 0.4);
   padding: 16px 24px;
-  margin: 20px 0 0 0;  /* Top margin for top-center positioning */
-}
-
-/* ============================================================================
- * Container and Layout
- * ============================================================================ */
-
-window#osd > #container {
-  margin: 0;
-  padding: 0;
-  spacing: 12px;
-}
-
-/* ============================================================================
- * Text Labels (Volume %, Brightness %, etc.)
- * ============================================================================ */
-
-window#osd label {
-  color: #ebdbb2;  /* Gruvbox light text */
-  font-family: "Cantarell", "Monospace", sans-serif;
-  font-size: 14px;
-  font-weight: bold;
-  margin: 0;
-  padding: 0;
-}
-
-/* ============================================================================
- * Progress Bars (Volume, Brightness indicators)
- * ============================================================================ */
-
-window#osd progressbar {
-  /* Overall progress bar styling */
-  min-height: 8px;
-  min-width: 200px;
-  border-radius: 4px;
-  background-color: transparent;
-  border: none;
-  margin: 4px 0;
-}
-
-window#osd progressbar trough {
-  /* Background track of progress bar */
-  min-height: 8px;
-  border-radius: 4px;
-  background-color: rgba(139, 176, 208, 0.25);  /* Nord frost with transparency */
-  border: none;
-}
-
-window#osd progressbar progress {
-  /* Filled portion of progress bar */
-  min-height: 8px;
-  border-radius: 4px;
-  background-color: #88c0d0;  /* Nord Frost 2 - Blue */
-  border: none;
-}
-
-/* ============================================================================
- * Icons (Volume, Brightness, Microphone icons)
- * ============================================================================ */
-
-window#osd image {
-  color: #88c0d0;  /* Nord Frost 2 - Blue for icons */
-  margin: 0;
-  padding: 0;
-  min-width: 32px;
-  min-height: 32px;
-}
-
-/* Muted state styling */
-window#osd image:disabled {
-  color: #bf616a;  /* Nord Aurora Red for muted */
-  opacity: 0.8;
-}
-
-/* ============================================================================
- * Volume Indicator Specific Styling
- * ============================================================================ */
-
-/* Volume label (e.g., "Volume: 75%") */
-window#osd label.volume {
-  color: #88c0d0;  /* Nord Frost 2 - Blue */
-}
-
-/* Volume progress bar */
-window#osd progressbar.volume progress {
-  background-color: #88c0d0;  /* Nord Frost 2 - Blue */
-}
-
-/* ============================================================================
- * Mute Indicator Specific Styling
- * ============================================================================ */
-
-/* Mute label and icon */
-window#osd label.mute,
-window#osd image.mute {
-  color: #bf616a;  /* Nord Aurora Red */
-}
-
-/* Muted state */
-window#osd label.mute:disabled,
-window#osd image.mute:disabled {
-  color: #a89985;  /* Gruvbox faded - indicates muted */
-  opacity: 0.6;
-}
-
-/* ============================================================================
- * Microphone Indicator Specific Styling
- * ============================================================================ */
-
-/* Microphone label and icon */
-window#osd label.microphone,
-window#osd image.microphone {
-  color: #a3be8c;  /* Nord Aurora Green */
-}
-
-/* Microphone muted state */
-window#osd label.microphone:disabled,
-window#osd image.microphone:disabled {
-  color: #bf616a;  /* Nord Aurora Red - indicates mic is muted */
-  opacity: 0.8;
-}
-
-/* ============================================================================
- * Brightness Indicator Specific Styling
- * ============================================================================ */
-
-/* Brightness label and icon */
-window#osd label.brightness,
-window#osd image.brightness {
-  color: #ebcb8b;  /* Nord Aurora Yellow */
-}
-
-/* Brightness progress bar */
-window#osd progressbar.brightness progress {
-  background-color: #ebcb8b;  /* Nord Aurora Yellow */
-}
-
-/* ============================================================================
- * Caps Lock Indicator (if used)
- * ============================================================================ */
-
-window#osd label.capslock,
-window#osd image.capslock {
-  color: #d08770;  /* Nord Aurora Orange */
-}
-
-window#osd label.capslock:disabled {
-  color: #a89985;  /* Gruvbox faded */
-  opacity: 0.6;
-}
-
-/* ============================================================================
- * Disabled/Inactive States
- * ============================================================================ */
-
-window#osd progressbar:disabled,
-window#osd image:disabled {
-  opacity: 0.5;
-}
-
-/* ============================================================================
- * Animation and Transitions
- * ============================================================================ */
-
-/* Smooth transitions for state changes */
-window#osd,
-window#osd label,
-window#osd image,
-window#osd progressbar {
-  transition: all 150ms ease-out;
-}
-
-/* ============================================================================
- * Responsive Sizing
- * ============================================================================ */
-
-/* Ensure proper sizing for different screen densities */
-window#osd {
+  margin: 20px 0 0 0;
   min-width: 250px;
   min-height: 80px;
 }
 
-/* ============================================================================
- * Notes
- * ============================================================================ */
+/* Text labels */
+window#osd label {
+  color: #ebdbb2;
+  font-family: "Cantarell", sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+}
 
-/* 
- * TIMEOUT CONFIGURATION:
- * The OSD display timeout (2000ms / 2 seconds) is configured via:
- * 1. SwayOSD server configuration (if available)
- * 2. Command-line arguments to swayosd-client
- * 3. Hardcoded in SwayOSD source (default is typically 1-2 seconds)
- * 
- * To set timeout in niri keybindings, you would use:
- *   swayosd-client --output-volume raise --timeout 2000
- * 
- * POSITION CONFIGURATION:
- * The OSD position (top-center) is controlled by:
- * 1. SwayOSD internal positioning logic (typically centers on primary monitor)
- * 2. The margin property in this CSS file
- * 3. Window manager positioning (Niri/Sway)
- * 
- * USAGE WITH NIRI:
- * Add to niri config.kdl keybindings:
- *   XF86AudioRaiseVolume { spawn "swayosd-client" "--output-volume" "raise"; }
- *   XF86AudioLowerVolume { spawn "swayosd-client" "--output-volume" "lower"; }
- *   XF86AudioMute { spawn "swayosd-client" "--output-volume" "mute-toggle"; }
- *   XF86AudioMicMute { spawn "swayosd-client" "--input-volume" "mute-toggle"; }
- *   XF86MonBrightnessUp { spawn "swayosd-client" "--brightness" "raise"; }
- *   XF86MonBrightnessDown { spawn "swayosd-client" "--brightness" "lower"; }
- */
+/* Progress bars */
+window#osd progressbar trough {
+  background-color: rgba(139, 176, 208, 0.25);
+  border-radius: 4px;
+  min-height: 8px;
+}
+
+window#osd progressbar progress {
+  background-color: #88c0d0;
+  border-radius: 4px;
+  min-height: 8px;
+}
+
+/* Icons */
+window#osd image {
+  color: #88c0d0;
+  min-width: 32px;
+  min-height: 32px;
+}
