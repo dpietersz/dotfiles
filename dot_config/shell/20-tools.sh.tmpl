@@ -57,10 +57,10 @@ fi
 # fi
 
 # zoxide - smarter cd command
-# Skipped due to process substitution in generated output
-# if command -v zoxide >/dev/null; then
-#   eval "$(zoxide init $CURRENT_SHELL)"
-# fi
+# Initialize zoxide but remove completion section (uses process substitution incompatible with macOS)
+if command -v zoxide >/dev/null; then
+  eval "$(zoxide init $CURRENT_SHELL | sed '/^# Load completions/,$d')"
+fi
 
 # bat - better cat with syntax highlighting
 if command -v bat >/dev/null; then
