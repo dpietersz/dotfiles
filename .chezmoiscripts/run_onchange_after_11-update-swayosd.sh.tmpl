@@ -1,0 +1,62 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+
+set -euo pipefail
+
+# Update SwayOSD to latest version from celestelove/SwayOSD COPR
+# This script runs when the SwayOSD installation script changes
+
+# Check if swayosd is installed
+if ! command -v swayosd >/dev/null 2>&1; then
+  echo "[swayosd] SwayOSD not installed, skipping update"
+  exit 0
+fi
+
+echo "[swayosd] Checking for SwayOSD updates..."
+
+# Get current version
+CURRENT_VERSION=$(swayosd --version 2>/dev/null || echo "unknown")
+echo "[swayosd] Current version: $CURRENT_VERSION"
+
+# Enable COPR repository for SwayOSD
+echo "[swayosd] Enabling COPR repository (celestelove/SwayOSD)..."
+sudo dnf copr enable -y celestelove/SwayOSD
+
+# Refresh metadata
+echo "[swayosd] Refreshing package metadata..."
+sudo rpm-ostree refresh-md --force
+
+# Update swayosd based on system type
+if command -v rpm-ostree >/dev/null 2>&1; then
+  # Bluefin (rpm-ostree)
+  echo "[swayosd] Bluefin detected (rpm-ostree). Updating swayosd..."
+  if ! sudo rpm-ostree upgrade swayosd; then
+    echo "[swayosd] NOTE: rpm-ostree upgrade failed. If layering is locked, set 'LockLayering=false' in /etc/rpm-ostreed.conf and reboot."
+    exit 0
+  fi
+  echo "[swayosd] ✓ SwayOSD update staged successfully"
+  echo "[swayosd] ⚠️  A reboot is required to apply changes"
+  echo "[swayosd] Run: systemctl reboot"
+else
+  # Regular Fedora (dnf)
+  echo "[swayosd] Fedora detected (dnf). Updating swayosd..."
+  sudo dnf upgrade -y swayosd
+  echo "[swayosd] ✓ SwayOSD updated successfully"
+  
+  # Restart the service
+  echo "[swayosd] Restarting swayosd.service..."
+  systemctl --user restart swayosd.service
+  
+  # Verify the new version
+  NEW_VERSION=$(swayosd --version 2>/dev/null || echo "unknown")
+  echo "[swayosd] New version: $NEW_VERSION"
+fi
+
+{{- else }}
+echo "[swayosd] SwayOSD update is only supported on Bluefin and Fedora"
+exit 0
+
+{{- end }}
+{{- end }}
