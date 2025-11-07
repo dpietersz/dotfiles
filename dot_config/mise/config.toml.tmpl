@@ -2,7 +2,9 @@
 [tools]
 age = "latest"
 bat = "latest"
+{{- if not .isMacOS }}
 btop = "latest"
+{{- end }}
 bun = "latest"
 chezmoi = "latest"
 claude = "latest"
@@ -16,7 +18,9 @@ gemini = "latest"
 go = "latest"
 gitui = "latest"
 lazygit = "latest"
+{{- if not .isMacOS }}
 navi = "latest"
+{{- end }}
 neovim = "0.11.4"
 node = "22.21.0"
 opencode = "latest"
