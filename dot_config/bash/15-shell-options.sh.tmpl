@@ -6,7 +6,10 @@ set -o vi
 # Make ESC key more responsive in vi mode
 export KEYSEQTIMEOUT=1
 
-source <(direnv hook bash)
+# Initialize direnv if available (mise will be initialized in 20-tools.sh)
+if command -v direnv >/dev/null 2>&1; then
+  source <(direnv hook bash)
+fi
 
 {{ if not .remote -}}
 source <(ssh-agent -s) > /dev/null 2>&1

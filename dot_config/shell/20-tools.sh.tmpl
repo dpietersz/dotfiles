@@ -17,8 +17,14 @@ if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
 fi
 {{- end}}
 
-# Homebrew - enable if found on Linux
-if [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+# Homebrew - enable if found
+# macOS: Homebrew is typically at /usr/local/bin/brew or /opt/homebrew/bin/brew
+# Linux: Homebrew is typically at /home/linuxbrew/.linuxbrew/bin/brew
+if [ -f /usr/local/bin/brew ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+elif [ -f /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
   source <(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 fi
 
