@@ -10,8 +10,9 @@ wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-
 
 # Display volume OSD via SwayOSD (if available)
 # Use -0 to display current volume without changing it
+# Position at top-center of screen
 if command -v swayosd-client &> /dev/null; then
-  swayosd-client --output-volume=-0
+  swayosd-client --output-volume=-0 --anchor top --gravity center
 fi
 
 # Play volume change sound in background
