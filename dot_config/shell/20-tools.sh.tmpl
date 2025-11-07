@@ -35,37 +35,37 @@ fi
 
 # enable the starship prompt
 if command -v starship >/dev/null; then
-  source <(starship init $CURRENT_SHELL)
+  eval "$(starship init $CURRENT_SHELL)"
 fi
 
 # fzf - fuzzy finder with key bindings and completion
 if command -v fzf >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    source <(fzf --bash)
+    eval "$(fzf --bash)"
   elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    source <(fzf --zsh)
+    eval "$(fzf --zsh)"
   fi
 fi
 
 # kubectl - Kubernetes CLI completion
 if command -v kubectl >/dev/null; then
-  source <(kubectl completion $CURRENT_SHELL)
+  eval "$(kubectl completion $CURRENT_SHELL)"
 fi
 
 # flux - GitOps toolkit completion
 if command -v flux >/dev/null; then
-  source <(flux completion $CURRENT_SHELL)
+  eval "$(flux completion $CURRENT_SHELL)"
 fi
 
 # zoxide - smarter cd command
 if command -v zoxide >/dev/null; then
-  source <(zoxide init $CURRENT_SHELL)
+  eval "$(zoxide init $CURRENT_SHELL)"
 fi
 
 # bat - better cat with syntax highlighting
 if command -v bat >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    source <(bat --completion bash)
+    eval "$(bat --completion bash)"
   fi
   # zsh: bat completion is typically installed via package manager
 fi
@@ -73,7 +73,7 @@ fi
 # chezmoi - dotfile manager
 if command -v chezmoi >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    source <(chezmoi completion bash)
+    eval "$(chezmoi completion bash)"
   fi
   # zsh: chezmoi completion is typically installed via package manager
 fi
@@ -102,7 +102,7 @@ fi
 # uv - Python package installer
 if command -v uv >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    source <(uv generate-shell-completion bash)
+    eval "$(uv generate-shell-completion bash)"
   fi
   # zsh: uv completion is typically installed via package manager
 fi
@@ -110,7 +110,7 @@ fi
 # npm - Node package manager (from node)
 if command -v npm >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    source <(npm completion)
+    eval "$(npm completion)"
   fi
   # zsh: npm completion is typically installed via package manager or use zsh-completions
 fi
