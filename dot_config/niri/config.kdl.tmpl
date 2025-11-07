@@ -38,8 +38,8 @@ binds {
     // Volume keys work even when the session is locked
     XF86AudioRaiseVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_up.sh"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_down.sh"; }
-     XF86AudioMute        allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --output-volume=+0 --anchor top --gravity center || true"; }
-     XF86AudioMicMute     allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --input-volume=+0 --anchor top --gravity center || true"; }
+     XF86AudioMute        allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --output-volume=+0 || true"; }
+     XF86AudioMicMute     allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --input-volume=+0 || true"; }
 
     // Media player controls
     XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
