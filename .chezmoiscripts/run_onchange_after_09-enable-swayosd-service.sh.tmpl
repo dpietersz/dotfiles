@@ -6,8 +6,8 @@ set -euo pipefail
 # This script enables the swayosd systemd user service after the service file
 # has been deployed by chezmoi. It only runs if swayosd is installed.
 
-{{- if .remote }}
-echo "[swayosd-service] Skipping: remote environment (.remote=true)."
+{{- if or .remote .isMacOS }}
+echo "[swayosd-service] Skipping: {{ if .remote }}remote environment (.remote=true){{ else }}macOS{{ end }}"
 exit 0
 {{- end }}
 

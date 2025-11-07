@@ -1,5 +1,9 @@
 #!/bin/bash
-{{- if not .remote }}
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS
+exit 0
+{{- end }}
+
 # SwayOSD CSS fix hash: {{ include "dot_config/swayosd/style.css" | sha256sum }}
 
 set -euo pipefail
@@ -32,5 +36,3 @@ if pgrep -x swayosd-server >/dev/null 2>&1; then
 fi
 
 echo "[swayosd] CSS fix completed successfully"
-
-{{- end }}
