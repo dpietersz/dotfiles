@@ -7,9 +7,9 @@
     // "custom/gpu",  "custom/weather","sway/window", "custom/gpu",  "custom/media",  
     // Choose the order of the modules
 
-    "modules-left": ["clock#time", "custom/arrow1", "systemd-failed-units", "backlight", "custom/arrow2", "idle_inhibitor", "custom/arrow3",  "mpris"],
+    "modules-left": ["clock#time", "custom/arrow1", "battery", "custom/arrow2", "idle_inhibitor", "custom/arrow3", "mpris"],
     "modules-center": ["custom/arrow4", "niri/workspaces", "custom/arrow5"],
-    "modules-right": ["custom/arrow6", "battery", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7",  "temperature", "cpu", "custom/gpu", "custom/arrow8", "bluetooth", "network", "pulseaudio","tray"],
+    "modules-right": ["custom/arrow6", "custom/power-profiles", "custom/cpugovernor", "custom/arrow7", "temperature", "cpu", "custom/gpu", "custom/arrow8", "bluetooth", "network", "pulseaudio", "tray"],
 
     // TODO: Add more gruvbox arrows in other colors (orange, yellow) with matching background colors for modules
 
@@ -251,10 +251,9 @@
     },
 
     "custom/arrow10": {
-        "format": "",
-        "tooltip": false
-    } 
-    },
+         "format": "",
+         "tooltip": false
+     },
      "custom/power-profiles": {
          "format": "{icon}",
          "interval": 5,
