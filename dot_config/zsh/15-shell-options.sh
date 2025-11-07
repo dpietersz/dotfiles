@@ -18,4 +18,7 @@ fpath+=(~/.zsh/completion)
 # Initialize completion system
 autoload -Uz compinit && compinit
 
-source <(direnv hook zsh)
+# Initialize direnv if available (mise will be initialized in 20-tools.sh)
+if command -v direnv >/dev/null 2>&1; then
+  source <(direnv hook zsh)
+fi
