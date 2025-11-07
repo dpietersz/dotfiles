@@ -5,22 +5,22 @@ exit 0
 
 set -euo pipefail
 
-echo "🔐 Configuring GPG to use pinentry-mac..."
+echo "🔐 Configuring GPG to use terminal-based pinentry..."
 
 # Create GPG config directory if it doesn't exist
 mkdir -p "$HOME/.gnupg"
 
-# Configure GPG to use pinentry-mac
+# Configure GPG to use terminal-based pinentry
 GPG_AGENT_CONF="$HOME/.gnupg/gpg-agent.conf"
 
-# Check if pinentry-mac is installed
-if ! command -v pinentry-mac >/dev/null 2>&1; then
-  echo "❌ Error: pinentry-mac is not installed"
+# Check if pinentry is installed
+if ! command -v pinentry >/dev/null 2>&1; then
+  echo "❌ Error: pinentry is not installed"
   exit 1
 fi
 
-# Get the path to pinentry-mac
-PINENTRY_PATH=$(which pinentry-mac)
+# Get the path to pinentry
+PINENTRY_PATH=$(which pinentry)
 
 # Update or create gpg-agent.conf with pinentry-mac
 if [ -f "$GPG_AGENT_CONF" ]; then
@@ -37,5 +37,5 @@ chmod 600 "$GPG_AGENT_CONF"
 # Reload gpg-agent to apply changes
 gpg-connect-agent reloadagent /bye &>/dev/null || true
 
-echo "✅ GPG configured to use pinentry-mac"
+echo "✅ GPG configured to use terminal-based pinentry"
 echo "   Pinentry program: $PINENTRY_PATH"
