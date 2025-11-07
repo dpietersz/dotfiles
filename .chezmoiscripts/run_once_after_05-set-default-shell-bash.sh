@@ -1,6 +1,6 @@
 #!/bin/bash
-{{- if or .remote .isMacOS }}
-# Skip on remote environments or macOS
+{{- if .remote }}
+# Skip on remote environments
 exit 0
 {{- end }}
 
@@ -16,6 +16,23 @@ fi
 
 # Get the path to bash
 BASH_PATH=$(which bash)
+
+{{- if .isMacOS }}
+# macOS: Use chsh to change default shell
+CURRENT_SHELL=$(dscl . -read ~/ UserShell | awk '{print $2}')
+if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
+  echo "bash is already the default shell"
+  exit 0
+fi
+
+echo "Setting bash as default shell..."
+chsh -s "$BASH_PATH"
+
+echo "✓ bash set as default shell"
+echo "⚠️  You need to log out and log back in for the change to take effect"
+
+{{- else }}
+# Linux: Use usermod and getent
 
 # Check if bash is already in /etc/shells
 if ! grep -q "^${BASH_PATH}$" /etc/shells 2>/dev/null; then
@@ -36,3 +53,5 @@ sudo usermod -s "$BASH_PATH" "$USER"
 
 echo "✓ bash set as default shell"
 echo "⚠️  You need to log out and log back in for the change to take effect"
+
+{{- end }}
