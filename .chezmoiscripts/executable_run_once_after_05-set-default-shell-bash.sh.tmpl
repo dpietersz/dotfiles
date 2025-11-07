@@ -19,14 +19,25 @@ BASH_PATH=$(which bash)
 
 {{- if .isMacOS }}
 # macOS: Use chsh to change default shell
-CURRENT_SHELL=$(dscl . -read ~/ UserShell | awk '{print $2}')
+# Note: chsh requires password input, so we use -s with the bash path
+CURRENT_SHELL=$(dscl . -read ~/ UserShell 2>/dev/null | awk '{print $2}' || echo "")
 if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
   echo "bash is already the default shell"
   exit 0
 fi
 
 echo "Setting bash as default shell..."
-chsh -s "$BASH_PATH"
+# Use chsh with the bash path - this will prompt for password
+# If running non-interactively, the user will need to run this manually
+if [ -t 0 ]; then
+  # Interactive shell - prompt for password
+  chsh -s "$BASH_PATH"
+else
+  # Non-interactive - provide instructions
+  echo "⚠️  Running in non-interactive mode. To set bash as default shell, run:"
+  echo "    chsh -s $BASH_PATH"
+  exit 0
+fi
 
 echo "✓ bash set as default shell"
 echo "⚠️  You need to log out and log back in for the change to take effect"
