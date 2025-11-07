@@ -41,9 +41,14 @@ fi
 # fzf - fuzzy finder with key bindings and completion
 if command -v fzf >/dev/null; then
   if [ "$CURRENT_SHELL" = "bash" ]; then
-    eval "$(fzf --bash)"
+    # Use a temporary file to avoid process substitution issues on macOS
+    _fzf_setup="$(mktemp)"
+    fzf --bash > "$_fzf_setup" 2>/dev/null && source "$_fzf_setup"
+    rm -f "$_fzf_setup"
   elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    eval "$(fzf --zsh)"
+    _fzf_setup="$(mktemp)"
+    fzf --zsh > "$_fzf_setup" 2>/dev/null && source "$_fzf_setup"
+    rm -f "$_fzf_setup"
   fi
 fi
 
