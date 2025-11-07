@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Install SwayOSD on Fedora/Bluefin
 # SwayOSD: On-screen display for Wayland compositors (volume, brightness, etc.)
-# Reference: https://copr.fedorainfracloud.org/coprs/swyayd/SwayOSD/
+# Reference: https://copr.fedorainfracloud.org/coprs/markupstart/SwayOSD/
 #
 # - Skips on remote environments (per .chezmoi.toml.tmpl data.remote)
 # - On Bluefin (rpm-ostree): Enables COPR repo and layers swayosd
@@ -27,8 +27,8 @@ OS="{{ .chezmoi.os }}"
 ID="{{ .chezmoi.osRelease.id }}"
 
 # Enable COPR repository for SwayOSD
-echo "[swayosd] Enabling COPR repository (swyayd/SwayOSD)..."
-sudo dnf copr enable -y swyayd/SwayOSD
+echo "[swayosd] Enabling COPR repository (markupstart/SwayOSD)..."
+sudo dnf copr enable -y markupstart/SwayOSD
 
 # Refresh metadata
 echo "[swayosd] Refreshing package metadata..."
