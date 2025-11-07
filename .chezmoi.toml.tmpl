@@ -1,7 +1,7 @@
-{{- $isBluefin := contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bluefin\"" -}}
+{{- $isBluefin := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bluefin\"") -}}
 {{- $remote := and (not $isBluefin) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $containerName := output "hostname" | trim -}}
-{{- $hardwareModel := output "cat" "/sys/class/dmi/id/product_name" | trim -}}
+{{- $hardwareModel := (and (stat "/sys/class/dmi/id/product_name") (output "cat" "/sys/class/dmi/id/product_name" | trim)) | default "" -}}
 
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
