@@ -13,21 +13,21 @@ fi
 
 echo "📦 Installing Homebrew packages..."
 
-# Core tools (required for decryption and other early steps)
-echo "Installing core tools..."
-brew install age gnupg mise pass pinentry-mac
-
-# Development tools
-echo "Installing development tools..."
-brew install ghostty kitty zed vscodium
-
-# Taps for casks
+# Add taps first
 echo "Adding Homebrew taps..."
 brew tap nikitabobko/tap
 brew tap amar1729/formulae
 
+# Core tools (formulas - required for decryption and other early steps)
+echo "Installing core tools (formulas)..."
+brew install age gnupg mise pass pinentry-mac
+
+# Development tools (formulas)
+echo "Installing development tools (formulas)..."
+brew install ghostty kitty zed vscodium
+
 # Applications (casks)
-echo "Installing applications..."
+echo "Installing applications (casks)..."
 brew install --cask \
   nikitabobko/tap/aerospace \
   raycast \
