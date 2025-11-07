@@ -22,20 +22,39 @@ fi
 # Get the path to pinentry
 PINENTRY_PATH=$(which pinentry)
 
-# Update or create gpg-agent.conf with pinentry-mac
+# Kill any running gpg-agent to clear old configuration
+echo "Stopping gpg-agent to clear old configuration..."
+gpg-connect-agent killagent /bye &>/dev/null || true
+sleep 1
+
+# Update or create gpg-agent.conf with pinentry
 if [ -f "$GPG_AGENT_CONF" ]; then
   # Remove existing pinentry-program line if it exists
   sed -i '' '/^pinentry-program/d' "$GPG_AGENT_CONF"
+else
+  # Create new config file
+  touch "$GPG_AGENT_CONF"
 fi
 
-# Add pinentry-mac configuration
+# Add pinentry configuration
 echo "pinentry-program $PINENTRY_PATH" >> "$GPG_AGENT_CONF"
+
+# Add cache settings for better UX
+if ! grep -q "^default-cache-ttl" "$GPG_AGENT_CONF"; then
+  echo "default-cache-ttl 3600" >> "$GPG_AGENT_CONF"
+fi
+
+if ! grep -q "^max-cache-ttl" "$GPG_AGENT_CONF"; then
+  echo "max-cache-ttl 7200" >> "$GPG_AGENT_CONF"
+fi
 
 # Ensure proper permissions
 chmod 600 "$GPG_AGENT_CONF"
 
 # Reload gpg-agent to apply changes
+echo "Reloading gpg-agent with new configuration..."
 gpg-connect-agent reloadagent /bye &>/dev/null || true
 
 echo "✅ GPG configured to use terminal-based pinentry"
 echo "   Pinentry program: $PINENTRY_PATH"
+echo "   Config file: $GPG_AGENT_CONF"
