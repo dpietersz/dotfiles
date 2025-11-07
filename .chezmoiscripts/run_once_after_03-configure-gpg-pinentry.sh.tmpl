@@ -1,0 +1,41 @@
+#!/bin/bash
+{{- if not .isMacOS }}
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+echo "🔐 Configuring GPG to use pinentry-mac..."
+
+# Create GPG config directory if it doesn't exist
+mkdir -p "$HOME/.gnupg"
+
+# Configure GPG to use pinentry-mac
+GPG_AGENT_CONF="$HOME/.gnupg/gpg-agent.conf"
+
+# Check if pinentry-mac is installed
+if ! command -v pinentry-mac >/dev/null 2>&1; then
+  echo "❌ Error: pinentry-mac is not installed"
+  exit 1
+fi
+
+# Get the path to pinentry-mac
+PINENTRY_PATH=$(which pinentry-mac)
+
+# Update or create gpg-agent.conf with pinentry-mac
+if [ -f "$GPG_AGENT_CONF" ]; then
+  # Remove existing pinentry-program line if it exists
+  sed -i '' '/^pinentry-program/d' "$GPG_AGENT_CONF"
+fi
+
+# Add pinentry-mac configuration
+echo "pinentry-program $PINENTRY_PATH" >> "$GPG_AGENT_CONF"
+
+# Ensure proper permissions
+chmod 600 "$GPG_AGENT_CONF"
+
+# Reload gpg-agent to apply changes
+gpg-connect-agent reloadagent /bye &>/dev/null || true
+
+echo "✅ GPG configured to use pinentry-mac"
+echo "   Pinentry program: $PINENTRY_PATH"
