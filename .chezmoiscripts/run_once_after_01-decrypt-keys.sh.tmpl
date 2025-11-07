@@ -12,8 +12,14 @@ if [ -f "$HOME/.ssh/id_ed25519" ] && gpg --list-secret-keys {{ .gpgKeyId }} &>/d
     exit 0
 fi
 
-# Find mise (same pattern as your packages script)
+{{- if .isMacOS }}
+# macOS: Use Homebrew's age directly
+AGE_CMD="age"
+{{- else }}
+# Linux: Use mise to manage age
 MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+AGE_CMD="$MISE_BIN_PATH exec age -- age"
+{{- end }}
 
 # Prompt for passphrase
 echo ""
@@ -25,8 +31,8 @@ echo ""
 echo "🔓 Decrypting SSH keys..."
 mkdir -p "$HOME/.ssh"
 
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" > "$HOME/.ssh/id_ed25519"
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" > "$HOME/.ssh/id_ed25519.pub"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" > "$HOME/.ssh/id_ed25519"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" > "$HOME/.ssh/id_ed25519.pub"
 
 chmod 600 "$HOME/.ssh/id_ed25519"
 chmod 644 "$HOME/.ssh/id_ed25519.pub"
@@ -35,7 +41,7 @@ echo "✅ SSH keys installed"
 
 # Decrypt and import GPG key
 echo "🔓 Decrypting GPG key..."
-GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
+GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
 
 echo "$GPG_KEY" | gpg --import --batch
 
@@ -63,10 +69,10 @@ echo "🔓 Decrypting Cosign keys..."
 mkdir -p "$HOME/.ssh"
 
 # Private Cosign key
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.key.age" > "$HOME/.ssh/cosign.key"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.key.age" > "$HOME/.ssh/cosign.key"
 
 # Public Cosign key
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.pub.age" > "$HOME/.ssh/cosign.pub"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/cosign.pub.age" > "$HOME/.ssh/cosign.pub"
 
 # Set proper permissions
 chmod 600 "$HOME/.ssh/cosign.key"
@@ -78,10 +84,10 @@ echo "✅ Cosign keys installed"
 echo "🔓 Decrypting Azure HVS Keys..."
 mkdir -p "$HOME/.ssh"
 
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].age" > "$HOME/.ssh/[REDACTED_AZURE_KEY]"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].age" > "$HOME/.ssh/[REDACTED_AZURE_KEY]"
 
 # If public key exists
-echo "$DOTFILES_PASSPHRASE" | $MISE_BIN_PATH exec age -- age -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].pub.age" > "$HOME/.ssh/[REDACTED_AZURE_KEY].pub"
+echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/[REDACTED_AZURE_KEY].pub.age" > "$HOME/.ssh/[REDACTED_AZURE_KEY].pub"
 
 # Set proper permissions
 chmod 600 "$HOME/.ssh/[REDACTED_AZURE_KEY]"
