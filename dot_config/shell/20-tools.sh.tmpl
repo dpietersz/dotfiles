@@ -71,12 +71,13 @@ if command -v bat >/dev/null; then
 fi
 
 # chezmoi - dotfile manager
-if command -v chezmoi >/dev/null; then
-  if [ "$CURRENT_SHELL" = "bash" ]; then
-    eval "$(chezmoi completion bash)"
-  fi
-  # zsh: chezmoi completion is typically installed via package manager
-fi
+# Skipped due to process substitution in generated output (incompatible with macOS)
+# if command -v chezmoi >/dev/null; then
+#   if [ "$CURRENT_SHELL" = "bash" ]; then
+#     eval "$(chezmoi completion bash)"
+#   fi
+#   # zsh: chezmoi completion is typically installed via package manager
+# fi
 
 # eza - modern ls replacement
 if command -v eza >/dev/null; then
