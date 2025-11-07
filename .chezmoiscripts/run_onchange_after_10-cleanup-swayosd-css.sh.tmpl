@@ -1,0 +1,41 @@
+#!/bin/bash
+{{- if not .remote }}
+# SwayOSD CSS cleanup hash: {{ include "dot_config/swayosd/style.css" | sha256sum }}
+
+set -euo pipefail
+
+# Script: Clean up old SwayOSD CSS file
+# Purpose: Remove old CSS file to allow chezmoi to deploy new minimal CSS
+# Lifecycle: Runs when SwayOSD CSS file changes (run_onchange_after)
+
+# Check if swayosd is installed
+if ! command -v swayosd-server >/dev/null 2>&1; then
+  echo "[swayosd] SwayOSD not installed, skipping CSS cleanup"
+  exit 0
+fi
+
+echo "[swayosd] Cleaning up old SwayOSD CSS file..."
+
+# Remove old CSS file if it exists (allows chezmoi to deploy new one)
+CSS_FILE="$HOME/.config/swayosd/style.css"
+if [ -f "$CSS_FILE" ]; then
+  echo "[swayosd] Removing old CSS file: $CSS_FILE"
+  rm -f "$CSS_FILE"
+  echo "[swayosd] Old CSS file removed"
+else
+  echo "[swayosd] No old CSS file found at $CSS_FILE"
+fi
+
+# Kill swayosd-server if running to allow it to pick up new CSS
+if pgrep -x swayosd-server >/dev/null 2>&1; then
+  echo "[swayosd] Restarting swayosd-server to load new CSS..."
+  pkill -x swayosd-server || true
+  sleep 1
+  echo "[swayosd] swayosd-server stopped, will restart on next use"
+else
+  echo "[swayosd] swayosd-server not currently running"
+fi
+
+echo "[swayosd] CSS cleanup completed successfully"
+
+{{- end }}
