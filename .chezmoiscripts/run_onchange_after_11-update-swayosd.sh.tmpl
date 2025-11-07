@@ -1,7 +1,7 @@
 #!/bin/bash
 {{- if not .remote }}
 
-{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+{{- if or (eq (get .chezmoi.osRelease "id" "") "bluefin") (eq (get .chezmoi.osRelease "id" "") "fedora") }}
 
 set -euo pipefail
 

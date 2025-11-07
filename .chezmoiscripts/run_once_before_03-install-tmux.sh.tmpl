@@ -24,7 +24,7 @@ else
   exit 1
 fi
 
-{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+{{- else if eq (get .chezmoi.osRelease "id" "") "bluefin" }}
 
 # Bluefin - tmux is usually pre-installed, but install if missing
 echo "Installing tmux via rpm-ostree..."
@@ -33,32 +33,32 @@ sudo rpm-ostree refresh-md
 
 echo "Installing tmux..."
 sudo rpm-ostree install tmux || {
-  # If installation fails due to package already requested, that's OK
-  if sudo rpm-ostree status | grep -q "tmux"; then
-    echo "tmux is already pending installation"
-    echo "⚠️  A reboot is required to apply changes"
-    echo "Run: systemctl reboot"
-    exit 0
-  else
-    # Real error, propagate it
-    exit 1
-  fi
+   # If installation fails due to package already requested, that's OK
+   if sudo rpm-ostree status | grep -q "tmux"; then
+     echo "tmux is already pending installation"
+     echo "⚠️  A reboot is required to apply changes"
+     echo "Run: systemctl reboot"
+     exit 0
+   else
+     # Real error, propagate it
+     exit 1
+   fi
 }
 
 echo "✓ tmux installed successfully"
 echo "⚠️  A reboot is required to apply changes"
 echo "Run: systemctl reboot"
 
-{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+{{- else if or (eq (get .chezmoi.osRelease "id" "") "fedora") (eq (get .chezmoi.osRelease "idLike" "") "fedora") }}
 
 # Regular Fedora - use dnf
 if command -v dnf >/dev/null 2>&1; then
-  echo "Installing tmux via dnf..."
-  sudo dnf install -y tmux
-  echo "✓ tmux installed successfully"
+   echo "Installing tmux via dnf..."
+   sudo dnf install -y tmux
+   echo "✓ tmux installed successfully"
 fi
 
-{{- else if or (eq .chezmoi.osRelease.id "ubuntu") (eq .chezmoi.osRelease.id "debian") }}
+{{- else if or (eq (get .chezmoi.osRelease "id" "") "ubuntu") (eq (get .chezmoi.osRelease "id" "") "debian") }}
 
 # Ubuntu/Debian - use apt
 if command -v apt >/dev/null 2>&1; then

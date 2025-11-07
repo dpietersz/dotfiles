@@ -1,7 +1,7 @@
 #!/bin/bash
 {{- if not .remote }}
 
-{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+{{- if or (eq (get .chezmoi.osRelease "id" "") "bluefin") (eq (get .chezmoi.osRelease "id" "") "fedora") }}
 
 set -euo pipefail
 
@@ -17,15 +17,15 @@ set -euo pipefail
 
 # Check if swayosd is already installed
 if command -v swayosd >/dev/null 2>&1; then
-  echo "[swayosd] Already installed: $(swayosd --version 2>/dev/null || echo 'version unknown')"
-  exit 0
+   echo "[swayosd] Already installed: $(swayosd --version 2>/dev/null || echo 'version unknown')"
+   exit 0
 fi
 
 echo "[swayosd] Installing SwayOSD..."
 
 # Get OS and distro info
 OS="{{ .chezmoi.os }}"
-ID="{{ .chezmoi.osRelease.id }}"
+ID="{{ get .chezmoi.osRelease "id" "" }}"
 
 # Enable COPR repository for SwayOSD (celestelove/SwayOSD has latest version)
 echo "[swayosd] Enabling COPR repository (celestelove/SwayOSD)..."

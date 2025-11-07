@@ -12,12 +12,12 @@ fi
 # macOS - Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-{{- else if eq .chezmoi.osRelease.id "bazzite" "bluefin" }}
+{{- else if or (eq (get .chezmoi.osRelease "id" "") "bazzite") (eq (get .chezmoi.osRelease "id" "") "bluefin") }}
 # Fedora Atomic (Bluefin/Bazzite) - Usually pre-installed
 echo "Homebrew should be pre-installed on Bluefin/Bazzite"
 echo "If missing, manually install from: https://brew.sh"
 
-{{- else if or (eq .chezmoi.osRelease.id "fedora" "centos") (eq .chezmoi.osRelease.idLike "fedora") (eq .chezmoi.osRelease.id "arch" "manjaro" "void" "ubuntu" "debian") }}
+{{- else if or (or (eq (get .chezmoi.osRelease "id" "") "fedora") (eq (get .chezmoi.osRelease "id" "") "centos")) (or (eq (get .chezmoi.osRelease "idLike" "") "fedora") (or (eq (get .chezmoi.osRelease "id" "") "arch") (or (eq (get .chezmoi.osRelease "id" "") "manjaro") (or (eq (get .chezmoi.osRelease "id" "") "void") (or (eq (get .chezmoi.osRelease "id" "") "ubuntu") (eq (get .chezmoi.osRelease "id" "") "debian")))))) }}
 # Linux - Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 

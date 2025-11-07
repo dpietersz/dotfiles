@@ -9,19 +9,19 @@ else
   echo "Homebrew not installed. Download from: https://sw.kovidgoyal.net/kitty/binary/"
 fi
 
-{{- else if eq .chezmoi.osRelease.id "bluefin" }}
+{{- else if eq (get .chezmoi.osRelease "id" "") "bluefin" }}
 set -euo pipefail
 
 # Check if kitty is already installed
 if command -v kitty >/dev/null 2>&1; then
-  echo "Kitty is already installed"
-  exit 0
+   echo "Kitty is already installed"
+   exit 0
 fi
 
 # Clean up old ghostty COPR repository if it exists
 if [ -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo ]; then
-  echo "Removing old Ghostty COPR repository..."
-  sudo rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
+   echo "Removing old Ghostty COPR repository..."
+   sudo rm -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
 fi
 
 echo "Installing Kitty terminal..."
@@ -35,7 +35,7 @@ echo "✓ Kitty installed successfully"
 echo "⚠️  A reboot is required to apply changes"
 echo "Run: systemctl reboot"
 
-{{- else if or (eq .chezmoi.osRelease.id "fedora") (eq .chezmoi.osRelease.idLike "fedora") }}
+{{- else if or (eq (get .chezmoi.osRelease "id" "") "fedora") (eq (get .chezmoi.osRelease "idLike" "") "fedora") }}
 if command -v dnf >/dev/null; then
   sudo dnf install -y kitty
 fi
