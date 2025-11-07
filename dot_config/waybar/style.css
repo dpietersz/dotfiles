@@ -398,8 +398,8 @@
     padding-right: 0.2em;
 }
 #battery {
-    background: @font_dark_alternative;
-    color: @font_gruv_normal;
+     background: @bluetint;
+     color: @font_gruv_normal;
 }
 #custom-power-profiles {
     background: @bg;
