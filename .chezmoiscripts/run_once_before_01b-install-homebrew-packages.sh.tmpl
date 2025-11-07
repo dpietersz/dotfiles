@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euo pipefail
+
+{{- if not .isMacOS }}
+exit 0
+{{- end }}
+
+# Install Homebrew packages on macOS
+if ! command -v brew >/dev/null; then
+  echo "Homebrew not installed. Skipping package installation."
+  exit 1
+fi
+
+echo "📦 Installing Homebrew packages..."
+
+# Core tools (required for decryption and other early steps)
+echo "Installing core tools..."
+brew install age
+
+# Development tools
+echo "Installing development tools..."
+brew install ghostty zed vscodium
+
+# Taps for casks
+echo "Adding Homebrew taps..."
+brew tap nikitabobko/tap
+
+# Applications (casks)
+echo "Installing applications..."
+brew install --cask \
+  nikitabobko/tap/aerospace \
+  raycast \
+  textexpander \
+  cleanmymac \
+  arq \
+  zen \
+  bruno \
+  polypane
+
+echo "✅ Homebrew packages installed successfully"
