@@ -3,6 +3,9 @@
 // Auto-start waybar
 spawn-at-startup "waybar"
 
+// Auto-start SwayOSD for volume and brightness OSD feedback
+spawn-at-startup "swayosd-server"
+
 workspace "Coding"
 workspace "Media"
 workspace "Work"
@@ -35,8 +38,8 @@ binds {
     // Volume keys work even when the session is locked
     XF86AudioRaiseVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_up.sh"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn "bash" "-c" "$HOME/.config/niri/scripts/volume_down.sh"; }
-    XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
-    XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    XF86AudioMute        allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --output-volume || true"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --input-volume || true"; }
 
     // Media player controls
     XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
@@ -183,8 +186,8 @@ binds {
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 
-     // === Workspace Management ===
-     Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "/var/home/pietersz/.local/bin/scripts/toggle-workspaces --to-lg"; }
+      // === Workspace Management ===
+      Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "$HOME/.local/bin/scripts/toggle-workspaces --to-lg"; }
 
 }
 

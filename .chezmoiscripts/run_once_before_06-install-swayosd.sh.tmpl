@@ -1,0 +1,60 @@
+#!/bin/bash
+{{- if not .remote }}
+
+{{- if or (eq .chezmoi.osRelease.id "bluefin") (eq .chezmoi.osRelease.id "fedora") }}
+
+set -euo pipefail
+
+# Install SwayOSD on Fedora/Bluefin
+# SwayOSD: On-screen display for Wayland compositors (volume, brightness, etc.)
+# Reference: https://copr.fedorainfracloud.org/coprs/swyayd/SwayOSD/
+#
+# - Skips on remote environments (per .chezmoi.toml.tmpl data.remote)
+# - On Bluefin (rpm-ostree): Enables COPR repo and layers swayosd
+# - On Fedora (dnf): Enables COPR repo and installs swayosd
+# - Prompts for reboot on Bluefin if installation succeeds
+
+# Check if swayosd is already installed
+if command -v swayosd >/dev/null 2>&1; then
+  echo "[swayosd] Already installed: $(swayosd --version 2>/dev/null || echo 'version unknown')"
+  exit 0
+fi
+
+echo "[swayosd] Installing SwayOSD..."
+
+# Get OS and distro info
+OS="{{ .chezmoi.os }}"
+ID="{{ .chezmoi.osRelease.id }}"
+
+# Enable COPR repository for SwayOSD
+echo "[swayosd] Enabling COPR repository (swyayd/SwayOSD)..."
+sudo dnf copr enable -y swyayd/SwayOSD
+
+# Refresh metadata
+echo "[swayosd] Refreshing package metadata..."
+sudo rpm-ostree refresh-md --force
+
+# Install swayosd based on system type
+if command -v rpm-ostree >/dev/null 2>&1; then
+  # Bluefin (rpm-ostree)
+  echo "[swayosd] Bluefin detected (rpm-ostree). Layering swayosd..."
+  if ! sudo rpm-ostree install -y swayosd; then
+    echo "[swayosd] NOTE: rpm-ostree install failed. If layering is locked, set 'LockLayering=false' in /etc/rpm-ostreed.conf and reboot."
+    exit 0
+  fi
+  echo "[swayosd] ✓ SwayOSD install staged successfully"
+  echo "[swayosd] ⚠️  A reboot is required to apply changes"
+  echo "[swayosd] Run: systemctl reboot"
+else
+  # Regular Fedora (dnf)
+  echo "[swayosd] Fedora detected (dnf). Installing swayosd..."
+  sudo dnf install -y swayosd
+  echo "[swayosd] ✓ SwayOSD installed successfully"
+fi
+
+{{- else }}
+echo "[swayosd] SwayOSD installation is only supported on Bluefin and Fedora"
+exit 0
+
+{{- end }}
+{{- end }}
