@@ -1,0 +1,64 @@
+# SwayOSD Configuration
+# 
+# This configuration file controls SwayOSD behavior and appearance.
+# SwayOSD will load this file from ~/.config/swayosd/config.toml if present.
+
+# ============================================================================
+# Display Settings
+# ============================================================================
+
+[display]
+# OSD display timeout in milliseconds (2000ms = 2 seconds)
+timeout = 2000
+
+# Position of the OSD on screen
+# Options: "top-left", "top-center", "top-right", 
+#          "center-left", "center", "center-right",
+#          "bottom-left", "bottom-center", "bottom-right"
+position = "top-center"
+
+# Monitor to display OSD on (if multiple monitors)
+# Leave empty to show on all monitors or primary monitor
+monitor = ""
+
+# Enable/disable OSD display
+enabled = true
+
+# ============================================================================
+# Volume Settings
+# ============================================================================
+
+[volume]
+# Enable volume OSD
+enabled = true
+
+# Maximum volume percentage (100 = 100%, 150 = 150%, etc.)
+max_volume = 100
+
+# Volume increment/decrement step (in percentage points)
+step = 5
+
+# ============================================================================
+# Brightness Settings
+# ============================================================================
+
+[brightness]
+# Enable brightness OSD
+enabled = true
+
+# Brightness increment/decrement step (in percentage points)
+step = 5
+
+# ============================================================================
+# Keyboard Lock Settings
+# ============================================================================
+
+[keyboard]
+# Enable caps lock indicator
+caps_lock_enabled = true
+
+# Enable num lock indicator
+num_lock_enabled = true
+
+# Enable scroll lock indicator
+scroll_lock_enabled = true
