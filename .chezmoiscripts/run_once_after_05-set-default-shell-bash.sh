@@ -1,5 +1,8 @@
 #!/bin/bash
-#{{- if not .remote }}
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS
+exit 0
+{{- end }}
 
 set -euo pipefail
 
@@ -33,5 +36,3 @@ sudo usermod -s "$BASH_PATH" "$USER"
 
 echo "✓ bash set as default shell"
 echo "⚠️  You need to log out and log back in for the change to take effect"
-
-#{{- end }}
