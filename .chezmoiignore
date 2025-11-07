@@ -1,3 +1,11 @@
+{{- if .isMacOS }}
+# Exclude Wayland/Linux-specific configs on macOS
+.config/niri/
+.config/waybar/
+.config/swayosd/
+.config/systemd/
+{{- end }}
+
 .oh-my-zsh/cache/*
 **/*.zwc
 setup
