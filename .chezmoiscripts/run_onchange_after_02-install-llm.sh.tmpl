@@ -1,5 +1,9 @@
 #!/bin/bash
-{{- if not .remote }}
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS (installed via Homebrew)
+exit 0
+{{- end }}
+
 # llm installation hash: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 
 set -euo pipefail
@@ -10,7 +14,7 @@ if command -v llm >/dev/null 2>&1; then
   exit 0
 fi
 
-# Install llm via uv (managed by mise on all platforms)
+# Install llm via uv (managed by mise on Linux)
 MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
 
 if [ -x "$MISE_BIN_PATH" ]; then
@@ -21,5 +25,3 @@ else
   echo "Error: mise not found. Cannot install llm."
   exit 1
 fi
-
-{{- end }}
