@@ -1,4 +1,4 @@
-{{- if not (lookPath "mise") -}}
+{{- if and (not (lookPath "mise")) (not .isMacOS) -}}
 [".local/bin/mise"]
 type = "file"
 executable = true
