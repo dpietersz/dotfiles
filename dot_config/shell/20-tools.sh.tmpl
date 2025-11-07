@@ -45,19 +45,22 @@ fi
 # Skipping automatic initialization due to compatibility issues with process substitution
 
 # kubectl - Kubernetes CLI completion
-if command -v kubectl >/dev/null; then
-  eval "$(kubectl completion $CURRENT_SHELL)"
-fi
+# Skipped due to process substitution in generated output
+# if command -v kubectl >/dev/null; then
+#   eval "$(kubectl completion $CURRENT_SHELL)"
+# fi
 
 # flux - GitOps toolkit completion
-if command -v flux >/dev/null; then
-  eval "$(flux completion $CURRENT_SHELL)"
-fi
+# Skipped due to process substitution in generated output
+# if command -v flux >/dev/null; then
+#   eval "$(flux completion $CURRENT_SHELL)"
+# fi
 
 # zoxide - smarter cd command
-if command -v zoxide >/dev/null; then
-  eval "$(zoxide init $CURRENT_SHELL)"
-fi
+# Skipped due to process substitution in generated output
+# if command -v zoxide >/dev/null; then
+#   eval "$(zoxide init $CURRENT_SHELL)"
+# fi
 
 # bat - better cat with syntax highlighting
 if command -v bat >/dev/null; then
