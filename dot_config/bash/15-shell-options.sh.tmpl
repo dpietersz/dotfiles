@@ -6,6 +6,18 @@ set -o vi
 # Make ESC key more responsive in vi mode
 export KEYSEQTIMEOUT=1
 
+# Initialize bash-completion if available
+# On macOS: installed via Homebrew at /usr/local/etc/profile.d/bash_completion.sh or /opt/homebrew/etc/profile.d/bash_completion.sh
+# On Linux: typically at /usr/share/bash-completion/bash_completion
+# Security: Validate file exists and is not world-writable before sourcing
+if [ -f /usr/local/etc/profile.d/bash_completion.sh ] && [ ! -w /usr/local/etc/profile.d/bash_completion.sh ]; then
+  source /usr/local/etc/profile.d/bash_completion.sh
+elif [ -f /opt/homebrew/etc/profile.d/bash_completion.sh ] && [ ! -w /opt/homebrew/etc/profile.d/bash_completion.sh ]; then
+  source /opt/homebrew/etc/profile.d/bash_completion.sh
+elif [ -f /usr/share/bash-completion/bash_completion ] && [ ! -w /usr/share/bash-completion/bash_completion ]; then
+  source /usr/share/bash-completion/bash_completion
+fi
+
 # Initialize direnv if available (mise will be initialized in 20-tools.sh)
 if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook bash)"
