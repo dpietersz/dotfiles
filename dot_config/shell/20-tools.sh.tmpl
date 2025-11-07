@@ -39,18 +39,10 @@ if command -v starship >/dev/null; then
 fi
 
 # fzf - fuzzy finder with key bindings and completion
-if command -v fzf >/dev/null; then
-  if [ "$CURRENT_SHELL" = "bash" ]; then
-    # Use a temporary file to avoid process substitution issues on macOS
-    _fzf_setup="$(mktemp)"
-    fzf --bash > "$_fzf_setup" 2>/dev/null && source "$_fzf_setup"
-    rm -f "$_fzf_setup"
-  elif [ "$CURRENT_SHELL" = "zsh" ]; then
-    _fzf_setup="$(mktemp)"
-    fzf --zsh > "$_fzf_setup" 2>/dev/null && source "$_fzf_setup"
-    rm -f "$_fzf_setup"
-  fi
-fi
+# Note: fzf is installed via Homebrew on macOS
+# To enable fzf integration, run: $(brew --prefix)/opt/fzf/install
+# Or manually add: eval "$(fzf --bash)" for bash or eval "$(fzf --zsh)" for zsh
+# Skipping automatic initialization due to compatibility issues with process substitution
 
 # kubectl - Kubernetes CLI completion
 if command -v kubectl >/dev/null; then
