@@ -44,7 +44,7 @@ if ($"($env.HOME)/.krew" | path exists) {
 }
 
 # Bazzite/Fedora Atomic - Flatpak exports
-{{- if eq .chezmoi.osRelease.id "bazzite" }}
+{{- if .isBazzite }}
 if ($"($env.HOME)/.local/share/flatpak/exports/share" | path exists) {
   prepend_path $"($env.HOME)/.local/share/flatpak/exports/share"
 }

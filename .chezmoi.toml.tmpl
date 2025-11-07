@@ -1,5 +1,6 @@
 {{- $isMacOS := eq .chezmoi.os "darwin" -}}
 {{- $isBluefin := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bluefin\"") -}}
+{{- $isBazzite := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bazzite\"") -}}
 {{- $isFedora := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "ID=\"fedora\"") -}}
 {{- $remote := and (not $isBluefin) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $containerName := output "hostname" | trim -}}
@@ -11,6 +12,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
   remote = {{ if $remote }}true{{ else }}false{{ end }}
   isMacOS = {{ if $isMacOS }}true{{ else }}false{{ end }}
   isBluefin = {{ if $isBluefin }}true{{ else }}false{{ end }}
+  isBazzite = {{ if $isBazzite }}true{{ else }}false{{ end }}
   isFedora = {{ if $isFedora }}true{{ else }}false{{ end }}
   gpgKeyId = "207F38BA91AB8330DBF08766B4320995C8E1D17D"
   hardwareModel = {{ $hardwareModel | quote }}

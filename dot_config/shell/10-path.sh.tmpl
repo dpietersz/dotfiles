@@ -21,7 +21,7 @@ if [[ -d $HOME/.krew ]]; then
 fi
 
 # Bazzite/Fedora Atomic - Flatpak exports
-{{ if eq .chezmoi.osRelease.id "bazzite" -}}
+{{ if .isBazzite -}}
 if [[ -d $HOME/.local/share/flatpak/exports/share ]]; then
   prepend_path "$HOME/.local/share/flatpak/exports/share"
 fi
