@@ -2,12 +2,24 @@
 
 set -euo pipefail
 
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS
+exit 0
+{{- end }}
+
 # Install superfile
 bash -c "$(curl -sLo- https://superfile.dev/install.sh)"
 
 # Install mcp-hub to persistent user directory (works on Bluefin/atomic systems)
 # - Uses ~/.local/share/npm instead of /usr/local (which is immutable on Bluefin)
 # - ~/.local/share/npm/bin is in PATH (configured in dot_config/shell/10-path.sh.tmpl)
+
+# Check if npm is available
+if ! command -v npm >/dev/null 2>&1; then
+  echo "[mcp-hub] npm not found, skipping installation"
+  exit 0
+fi
+
 echo "[mcp-hub] Installing to ~/.local/share/npm..."
 npm install --prefix "$HOME/.local/share/npm" --no-save mcp-hub@latest
 
