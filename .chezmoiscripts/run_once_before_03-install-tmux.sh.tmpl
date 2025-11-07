@@ -24,7 +24,7 @@ else
   exit 1
 fi
 
-{{- else if eq (get .chezmoi.osRelease "id" "") "bluefin" }}
+{{- else if .isBluefin }}
 
 # Bluefin - tmux is usually pre-installed, but install if missing
 echo "Installing tmux via rpm-ostree..."
@@ -49,7 +49,7 @@ echo "✓ tmux installed successfully"
 echo "⚠️  A reboot is required to apply changes"
 echo "Run: systemctl reboot"
 
-{{- else if or (eq (get .chezmoi.osRelease "id" "") "fedora") (eq (get .chezmoi.osRelease "idLike" "") "fedora") }}
+{{- else if .isFedora }}
 
 # Regular Fedora - use dnf
 if command -v dnf >/dev/null 2>&1; then
@@ -58,7 +58,7 @@ if command -v dnf >/dev/null 2>&1; then
    echo "✓ tmux installed successfully"
 fi
 
-{{- else if or (eq (get .chezmoi.osRelease "id" "") "ubuntu") (eq (get .chezmoi.osRelease "id" "") "debian") }}
+{{- else if eq .chezmoi.os "linux" }}
 
 # Ubuntu/Debian - use apt
 if command -v apt >/dev/null 2>&1; then

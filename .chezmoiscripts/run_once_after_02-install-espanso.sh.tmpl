@@ -24,7 +24,9 @@ if command -v espanso >/dev/null 2>&1; then
 fi
 
 OS="{{ .chezmoi.os }}"
-ID="{{ get .chezmoi.osRelease "id" "" }}"
+IS_MACOS="{{ .isMacOS }}"
+IS_BLUEFIN="{{ .isBluefin }}"
+IS_FEDORA="{{ .isFedora }}"
 SESSION_TYPE="${XDG_SESSION_TYPE:-}"
 
 case "$OS" in

@@ -24,7 +24,7 @@ else
   exit 1
 fi
 
-{{- else if or (eq (get .chezmoi.osRelease "id" "") "bluefin") (eq (get .chezmoi.osRelease "id" "") "fedora") }}
+{{- else if or .isBluefin .isFedora }}
 
 # Bluefin/Fedora - use Homebrew if available, otherwise use rpm-ostree
 if command -v brew >/dev/null 2>&1; then
