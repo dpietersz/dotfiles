@@ -19,7 +19,6 @@ BASH_PATH=$(which bash)
 
 {{- if .isMacOS }}
 # macOS: Use chsh to change default shell
-# Note: chsh requires password input, so we use -s with the bash path
 CURRENT_SHELL=$(dscl . -read ~/ UserShell 2>/dev/null | awk '{print $2}' || echo "")
 if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
   echo "bash is already the default shell"
@@ -27,29 +26,29 @@ if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
 fi
 
 echo "Setting bash as default shell..."
-# Use chsh with the bash path - this will prompt for password
-# If running non-interactively, the user will need to run this manually
+
+# Try interactive chsh first if we have a terminal
 if [ -t 0 ]; then
   # Interactive shell - prompt for password
   chsh -s "$BASH_PATH"
+  echo "✓ bash set as default shell"
+  echo "⚠️  You need to log out and log back in for the change to take effect"
 else
-  # Non-interactive - provide instructions
-  echo "⚠️  Running in non-interactive mode. To set bash as default shell, run:"
-  echo "    chsh -s $BASH_PATH"
-  exit 0
+  # Non-interactive mode - try sudo -n first, then provide instructions
+  if sudo -n chsh -s "$BASH_PATH" 2>/dev/null; then
+    echo "✓ bash set as default shell"
+    echo "⚠️  You need to log out and log back in for the change to take effect"
+  else
+    echo "⚠️  Could not set bash as default shell automatically."
+    echo "To set bash as default shell, run one of:"
+    echo "    chsh -s $BASH_PATH"
+    echo "    sudo chsh -s $BASH_PATH"
+    exit 0
+  fi
 fi
-
-echo "✓ bash set as default shell"
-echo "⚠️  You need to log out and log back in for the change to take effect"
 
 {{- else }}
-# Linux: Use usermod and getent
-
-# Check if bash is already in /etc/shells
-if ! grep -q "^${BASH_PATH}$" /etc/shells 2>/dev/null; then
-  echo "Adding bash to /etc/shells..."
-  echo "$BASH_PATH" | sudo tee -a /etc/shells >/dev/null
-fi
+# Linux: Use chsh or usermod
 
 # Check if bash is already the default shell
 CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
@@ -58,9 +57,35 @@ if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
   exit 0
 fi
 
-# Set bash as default shell
-echo "Setting bash as default shell..."
-sudo usermod -s "$BASH_PATH" "$USER"
+# Try to use chsh first (doesn't require sudo, but needs password)
+if command -v chsh >/dev/null 2>&1; then
+  echo "Setting bash as default shell..."
+  if [ -t 0 ]; then
+    # Interactive - prompt for password
+    chsh -s "$BASH_PATH"
+  else
+    # Non-interactive - provide instructions
+    echo "⚠️  Running in non-interactive mode. To set bash as default shell, run:"
+    echo "    chsh -s $BASH_PATH"
+    exit 0
+  fi
+else
+  # Fallback to usermod (requires sudo)
+  echo "Setting bash as default shell..."
+  if ! grep -q "^${BASH_PATH}$" /etc/shells 2>/dev/null; then
+    echo "Adding bash to /etc/shells..."
+    echo "$BASH_PATH" | sudo tee -a /etc/shells >/dev/null
+  fi
+  
+  # Try to run usermod with sudo
+  if sudo -n usermod -s "$BASH_PATH" "$USER" 2>/dev/null; then
+    echo "✓ bash set as default shell"
+  else
+    echo "⚠️  Could not set bash as default shell. To do so manually, run:"
+    echo "    sudo usermod -s $BASH_PATH $USER"
+    exit 0
+  fi
+fi
 
 echo "✓ bash set as default shell"
 echo "⚠️  You need to log out and log back in for the change to take effect"
