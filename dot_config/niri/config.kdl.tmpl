@@ -40,13 +40,17 @@ binds {
      XF86AudioMute        allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --output-volume=+0 || true"; }
      XF86AudioMicMute     allow-when-locked=true { spawn "bash" "-c" "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; command -v swayosd-client &>/dev/null && swayosd-client --input-volume=+0 || true"; }
 
-    // Media player controls
-    XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
-    XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
-    XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
-    XF86AudioPrev  allow-when-locked=true { spawn "playerctl" "previous"; }
+     // Media player controls
+     XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
+     XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
+     XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+     XF86AudioPrev  allow-when-locked=true { spawn "playerctl" "previous"; }
 
-    // === Window Management ===
+     // === Wireless Controls ===
+     XF86Bluetooth hotkey-overlay-title="Toggle Bluetooth" { spawn "bash" "-c" "$HOME/.config/niri/scripts/bluetooth_toggle.sh"; }
+     XF86WLAN hotkey-overlay-title="Toggle WiFi" { spawn "bash" "-c" "$HOME/.config/niri/scripts/wifi_toggle.sh"; }
+
+     // === Window Management ===
     Mod+Q repeat=false { close-window; }
     Mod+Alt+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
