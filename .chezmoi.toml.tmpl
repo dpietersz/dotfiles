@@ -8,10 +8,10 @@
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
-  remote = {{ $remote }}
-  isMacOS = {{ $isMacOS }}
-  isBluefin = {{ $isBluefin }}
-  isFedora = {{ $isFedora }}
+  remote = {{ if $remote }}true{{ else }}false{{ end }}
+  isMacOS = {{ if $isMacOS }}true{{ else }}false{{ end }}
+  isBluefin = {{ if $isBluefin }}true{{ else }}false{{ end }}
+  isFedora = {{ if $isFedora }}true{{ else }}false{{ end }}
   gpgKeyId = "207F38BA91AB8330DBF08766B4320995C8E1D17D"
   hardwareModel = {{ $hardwareModel | quote }}
 
