@@ -33,7 +33,7 @@ scrollback-limit = 2000
 # ============================================================================
 
 # Set bash as the default shell for Ghostty on macOS
-shell = /bin/bash
+command = /bin/bash
 
 # Enable shell integration for bash
 shell-integration = bash
