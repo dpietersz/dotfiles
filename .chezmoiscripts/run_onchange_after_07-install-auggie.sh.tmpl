@@ -1,6 +1,10 @@
 #!/bin/bash
-{{- if not .remote }}
-# auggie installation hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS (installed via mise)
+exit 0
+{{- end }}
+
+# auggie installation hash: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 
 set -euo pipefail
 
@@ -34,5 +38,3 @@ else
   echo "[auggie] ✗ Installation failed: node_modules/.bin not found"
   exit 1
 fi
-
-{{- end }}
