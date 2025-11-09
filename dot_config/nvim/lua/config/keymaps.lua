@@ -88,3 +88,136 @@ vim.keymap.set("i", ",,", "<Esc>A,")
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+
+-- ============================================================================
+-- Second Brain Keybindings
+-- ============================================================================
+
+-- Quick access to today's daily note
+vim.keymap.set("n", "<leader>ndt", function()
+  local date = os.date("%Y-%m-%d")
+  local year = os.date("%Y")
+  local month = os.date("%Y-%m")
+  local file = string.format("%s/second-brain/daily/%s/%s/%s.md", os.getenv("HOME"), year, month, date)
+  vim.cmd("edit " .. file)
+end, { desc = "Today's daily note" })
+
+-- Create new atomic note with template
+vim.keymap.set("n", "<leader>nna", function()
+  local note_name = vim.fn.input("Note name (kebab-case): ")
+  if note_name ~= "" then
+    local file = string.format("%s/second-brain/notes/%s.md", os.getenv("HOME"), note_name)
+    vim.cmd("edit " .. file)
+    -- Insert template if file is new/empty
+    if vim.fn.filereadable(file) == 0 or vim.fn.getfsize(file) == 0 then
+      local date = os.date("%Y-%m-%d")
+      local template = {
+        "---",
+        "title: " .. note_name:gsub("-", " "):gsub("^%l", string.upper),
+        "created: " .. date,
+        "updated: " .. date,
+        "tags: #",
+        "status: seedling",
+        "confidence: medium",
+        "---",
+        "",
+        "# " .. note_name:gsub("-", " "):gsub("^%l", string.upper),
+        "",
+        "## Core Concept",
+        "",
+        "",
+        "",
+        "## Details",
+        "",
+        "",
+        "",
+        "## Related Concepts",
+        "",
+        "",
+        "",
+        "## Sources",
+        "",
+        "- Daily note: [[daily/" .. os.date("%Y/%Y-%m/%Y-%m-%d") .. "]]",
+        "",
+        "## Questions / TODOs",
+        "",
+        "- [ ] ",
+      }
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, template)
+      vim.cmd("normal! 5G$")
+    end
+  end
+end, { desc = "New atomic note" })
+
+-- Create new project note
+vim.keymap.set("n", "<leader>nnp", function()
+  local project_name = vim.fn.input("Project name (kebab-case): ")
+  if project_name ~= "" then
+    local file = string.format("%s/second-brain/projects/%s.md", os.getenv("HOME"), project_name)
+    vim.cmd("edit " .. file)
+  end
+end, { desc = "New project note" })
+
+-- Search Second Brain notes (via Telescope)
+vim.keymap.set("n", "<leader>nf", function()
+  require("telescope.builtin").find_files({
+    prompt_title = "Second Brain",
+    cwd = os.getenv("HOME") .. "/second-brain",
+  })
+end, { desc = "Find in Second Brain" })
+
+-- Grep Second Brain content
+vim.keymap.set("n", "<leader>ng", function()
+  require("telescope.builtin").live_grep({
+    prompt_title = "Search Second Brain",
+    cwd = os.getenv("HOME") .. "/second-brain",
+  })
+end, { desc = "Grep Second Brain" })
+
+-- Jump to note under cursor (follow wikilink)
+vim.keymap.set("n", "<leader>nl", function()
+  local line = vim.api.nvim_get_current_line()
+  local col = vim.api.nvim_win_get_cursor(0)[2]
+
+  -- Find wikilink pattern [[note-name]]
+  local link_start = line:sub(1, col):reverse():find("%]%]")
+  local link_end = line:sub(col + 1):find("%[%[")
+
+  if link_start and link_end then
+    link_start = col - link_start + 3
+    link_end = col + link_end - 2
+    local link = line:sub(link_start, link_end)
+
+    -- Handle daily note links like [[daily/2025/2025-11/2025-11-08]]
+    local file
+    if link:match("^daily/") then
+      file = string.format("%s/second-brain/%s.md", os.getenv("HOME"), link)
+    else
+      file = string.format("%s/second-brain/notes/%s.md", os.getenv("HOME"), link)
+    end
+
+    vim.cmd("edit " .. file)
+  else
+    print("No wikilink under cursor")
+  end
+end, { desc = "Follow wikilink" })
+
+-- Browse Second Brain with oil.nvim
+vim.keymap.set("n", "<leader>nb", function()
+  vim.cmd("edit " .. os.getenv("HOME") .. "/second-brain")
+end, { desc = "Browse Second Brain" })
+
+-- Quick access to weekly review
+vim.keymap.set("n", "<leader>nrw", function()
+  local year = os.date("%Y")
+  local week = os.date("%V")
+  local file = string.format("%s/second-brain/reviews/weekly/%s-W%s.md", os.getenv("HOME"), year, week)
+  vim.cmd("edit " .. file)
+end, { desc = "This week's review" })
+
+-- Quick access to monthly review
+vim.keymap.set("n", "<leader>nrm", function()
+  local year_month = os.date("%Y-%m")
+  local file = string.format("%s/second-brain/reviews/monthly/%s.md", os.getenv("HOME"), year_month)
+  vim.cmd("edit " .. file)
+end, { desc = "This month's review" })
