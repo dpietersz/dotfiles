@@ -57,7 +57,12 @@ fi
 
 
 {{ if not .remote }}
-if command -v pass &>/dev/null; then
+# Only load secrets via pass in interactive shells (requires GPG with TTY)
+# Non-interactive shells (like Claude Code, scripts) will skip this to avoid GPG errors
+if [[ $- == *i* ]] && command -v pass &>/dev/null; then
+  # Set GPG_TTY for proper pinentry behavior
+  export GPG_TTY=$(tty)
+
   export TAVILY_API_KEY="$(pass show Sites/tavily.com/api-key)"
   export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
   export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
@@ -77,21 +82,19 @@ if command -v pass &>/dev/null; then
   # SSH is configured in ~/.ssh/config for github.com
   # For new machines: ensure SSH key is added to ssh-agent before git operations
   # If needed, manually add key: ssh-add ~/.ssh/id_ed25519
-
-  # ========== PAI Configuration ==========
-  # Where PAI is installed (change this to YOUR path!)
-  export PAI_DIR="$PROJECTS/pai"
-
-  # Your home directory (this is automatic)
-  export PAI_HOME="$HOME"
-
-  # (Optional) Your AI assistant's name
-  export DA="DANTE"  # Dynamic Agent Network & Task Engine (Emphasizes the network of agents and its primary job as the engine for task execution.)
-
-  # (Optional) Display color for your AI
-    export DA_COLOR="blue"  # Options: purple, blue, green, cyan, red, yellow
-
-else
-  echo "Install pass to load API keys securely."
 fi
 {{ end }}
+
+# ========== PAI Configuration ==========
+# These don't require secrets, so safe for non-interactive shells
+# Where PAI is installed (change this to YOUR path!)
+export PAI_DIR="$PROJECTS/pai"
+
+# Your home directory (this is automatic)
+export PAI_HOME="$HOME"
+
+# (Optional) Your AI assistant's name
+export DA="DANTE"  # Dynamic Agent Network & Task Engine (Emphasizes the network of agents and its primary job as the engine for task execution.)
+
+# (Optional) Display color for your AI
+export DA_COLOR="blue"  # Options: purple, blue, green, cyan, red, yellow
