@@ -23,7 +23,12 @@ matches:
   # But matches can also be dynamic:
 
   - trigger: "#btw"
-    replace: "NL001876948B91"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "pass show Personal/btw"
 
   # Print the current date
   - trigger: ":date"
