@@ -22,6 +22,9 @@ matches:
 
   # But matches can also be dynamic:
 
+  - trigger: "#btw"
+    replace: "NL001876948B91"
+
   # Print the current date
   - trigger: ":date"
     replace: "{{mydate}}"
