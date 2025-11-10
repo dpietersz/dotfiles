@@ -38,4 +38,3 @@ command = /bin/bash
 # Enable shell integration for bash
 shell-integration = bash
 
-keybind = shift+enter=text:\x1b\r

@@ -182,6 +182,12 @@ automatically-unhide-macos-hidden-apps = false
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
     alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
+    # Move workspace to monitors (vim-style)
+    alt-ctrl-h = 'move-workspace-to-monitor left'
+    alt-ctrl-j = 'move-workspace-to-monitor down'
+    alt-ctrl-k = 'move-workspace-to-monitor up'
+    alt-ctrl-l = 'move-workspace-to-monitor right'
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
     alt-shift-semicolon = 'mode service'
 
