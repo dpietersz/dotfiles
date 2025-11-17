@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-{{- if not .remote }}
+{{- if and (not .remote) (eq .chezmoi.os "linux") }}
 
 # Only run if custom user-dirs.dirs is configured
 if ! grep -q "dev/Desktop" "$HOME/.config/user-dirs.dirs" 2>/dev/null; then
