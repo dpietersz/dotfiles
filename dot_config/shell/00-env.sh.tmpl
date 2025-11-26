@@ -72,6 +72,7 @@ if [[ $- == *i* ]] && command -v pass &>/dev/null; then
   export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
   export GOOGLE_API_KEY="$GEMINI_API_KEY"
   export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
+  export ELEVENLABS_API_KEY="$(pass show Sites/elevenlabs.com/api-key/pai)"
   export DEEPSEEK_API_KEY="$(pass show Sites/deepseek.com/api-key/aider)"
   export REPLICATE_API_TOKEN="$(pass show Sites/replicate.com/api-token)" # For AI images/videos
   export DOCSFETCHER_API_KEY="$(pass show Sites/surpassion.xyz/api-key/fetchdoc)"
@@ -88,13 +89,5 @@ fi
 # ========== PAI Configuration ==========
 # These don't require secrets, so safe for non-interactive shells
 # Where PAI is installed (change this to YOUR path!)
-export PAI_DIR="$PROJECTS/pai"
+export ENGINEER_NAME="Dimitri"
 
-# Your home directory (this is automatic)
-export PAI_HOME="$HOME"
-
-# (Optional) Your AI assistant's name
-export DA="DANTE"  # Dynamic Agent Network & Task Engine (Emphasizes the network of agents and its primary job as the engine for task execution.)
-
-# (Optional) Display color for your AI
-export DA_COLOR="blue"  # Options: purple, blue, green, cyan, red, yellow

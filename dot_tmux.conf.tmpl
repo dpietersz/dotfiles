@@ -26,6 +26,9 @@ set -g status on
 set -g base-index 1
 setw -g pane-base-index 1
 
+# allow programs to rename windows
+set -g allow-rename on
+
 # reload configuration
 bind-key -r r source-file ~/.tmux.conf
 
