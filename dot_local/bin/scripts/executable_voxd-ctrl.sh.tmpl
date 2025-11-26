@@ -1,0 +1,92 @@
+#!/bin/bash
+# VOXD Control Script (Toggle & Language Switch)
+# Usage: voxd-ctrl.sh [toggle|lang <code: en|nl>]
+
+set -e
+
+ACTION="$1"
+LANG_ARG="$2"
+
+# Sound files (standard Freedesktop/Fedora paths)
+SOUND_TOGGLE="/usr/share/sounds/freedesktop/stereo/power-plug.oga"
+SOUND_SWITCH="/usr/share/sounds/freedesktop/stereo/power-plug.oga"
+
+# Function to play sound
+play_sound() {
+    local sound="$1"
+    if command -v pw-play >/dev/null 2>&1 && [ -f "$sound" ]; then
+        pw-play "$sound" &
+    elif command -v paplay >/dev/null 2>&1 && [ -f "$sound" ]; then
+        paplay "$sound" &
+    fi
+}
+
+# Function for OSD/Notification
+show_osd() {
+    local title="$1"
+    local msg="$2"
+    # use notify-send with synchronous hint to act like an OSD (replace previous notification)
+    notify-send -h string:x-canonical-private-synchronous:voxd -t 2000 "$title" "$msg"
+}
+
+ensure_voxd_running() {
+    if ! pgrep -f "python.*voxd" >/dev/null; then
+        export PATH="/usr/bin:$PATH"
+        # Inject keys just in case (though they are in 00-env.sh, niri spawn needs them?)
+        # Better to source the start-voxd script or just set them if missing.
+        # But start-voxd.sh has them hardcoded via chezmoi. Let's use start-voxd.sh logic here.
+        
+        # We need the keys. I'll include them here via template for robustness.
+        export OPENAI_API_KEY="{{ pass "Sites/openai.com/api-keys/neovim" }}"
+        export ANTHROPIC_API_KEY="{{ pass "Sites/anthropic.com/PAT/neovim" }}"
+        nohup voxd --tray --lang auto >/dev/null 2>&1 &
+        sleep 1
+    fi
+}
+
+case "$ACTION" in
+    toggle)
+        ensure_voxd_running
+        play_sound "$SOUND_TOGGLE"
+        # Toggle recording
+        export PATH="/usr/bin:$PATH"
+        voxd --trigger-record
+        # We don't know the state (Rec ON/OFF), so just generic OSD
+        show_osd "VOXD" "Recording Toggled"
+        ;;
+    lang)
+        if [ -z "$LANG_ARG" ]; then
+            echo "Usage: $0 lang <en|nl>"
+            exit 1
+        fi
+        
+        # Kill existing
+        pkill -f "python.*voxd" || true
+        while pgrep -f "python.*voxd" >/dev/null; do sleep 0.1; done
+
+        # Start new
+        export PATH="/usr/bin:$PATH"
+        # Inject keys just in case (though they are in 00-env.sh, niri spawn needs them?)
+        # Better to source the start-voxd script or just set them if missing.
+        # But start-voxd.sh has them hardcoded via chezmoi. Let's use start-voxd.sh logic here.
+        
+        # We need the keys. I'll include them here via template for robustness.
+        export OPENAI_API_KEY="{{ pass "Sites/openai.com/api-keys/neovim" }}"
+        export ANTHROPIC_API_KEY="{{ pass "Sites/anthropic.com/PAT/neovim" }}"
+
+        if [ "$LANG_ARG" == "nl" ]; then
+            nohup voxd --tray --lang nl >/tmp/voxd-switch.log 2>&1 &
+            MSG="Dutch (NL)"
+        else
+            nohup voxd --tray --lang auto >/tmp/voxd-switch.log 2>&1 &
+            MSG="English (Auto)"
+        fi
+        
+        play_sound "$SOUND_SWITCH"
+        show_osd "VOXD Language" "$MSG"
+        ;;
+    *)
+        echo "Unknown action: $ACTION"
+        exit 1
+        ;;
+esac

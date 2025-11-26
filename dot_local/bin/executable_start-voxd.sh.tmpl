@@ -1,0 +1,12 @@
+#!/bin/bash
+# Wrapper to start voxd with API keys injected from pass via chezmoi
+# This file contains secrets, ensure it has restrictive permissions (0700)
+
+export OPENAI_API_KEY="{{ pass "Sites/openai.com/api-keys/neovim" }}"
+export ANTHROPIC_API_KEY="{{ pass "Sites/anthropic.com/PAT/neovim" }}"
+
+# Prepend /usr/bin to PATH to ensure system python3 is found before mise's python
+export PATH="/usr/bin:$PATH"
+
+# Start voxd in tray mode
+exec voxd --tray > /tmp/voxd-startup.log 2>&1

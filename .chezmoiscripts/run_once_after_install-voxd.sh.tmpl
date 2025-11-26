@@ -1,0 +1,101 @@
+#!/bin/bash
+{{- if or .remote .isMacOS }}
+# Skip on remote environments or macOS
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# Detect system type (Atomic/OSTree vs Standard)
+IS_OSTREE=false
+if command -v rpm-ostree >/dev/null 2>&1 && [ -e /run/ostree-booted ]; then
+    IS_OSTREE=true
+fi
+
+# Install ydotool if missing
+if ! command -v ydotool >/dev/null 2>&1; then
+    echo "[voxd] Installing ydotool..."
+    if [ "$IS_OSTREE" = true ]; then
+        if ! sudo rpm-ostree install -y ydotool; then
+             echo "[voxd] Warning: Failed to layer ydotool. It might be pending."
+        fi
+    else
+        sudo dnf install -y ydotool
+    fi
+fi
+
+# Install python dependencies (platformdirs, PyQt6, etc.) if missing
+REQUIRED_PKGS="python3-platformdirs python3-pyqt6 python3-psutil python3-requests python3-pyyaml python3-tqdm python3-pyperclip"
+
+# Check if any package is missing
+MISSING_PKGS=""
+for pkg in $REQUIRED_PKGS; do
+    if ! rpm -q "$pkg" >/dev/null 2>&1; then
+        MISSING_PKGS="$MISSING_PKGS $pkg"
+    fi
+done
+
+if [ -n "$MISSING_PKGS" ]; then
+    echo "[voxd] Installing python dependencies:$MISSING_PKGS..."
+    if [ "$IS_OSTREE" = true ]; then
+        if ! sudo rpm-ostree install -y $MISSING_PKGS; then
+             echo "[voxd] Warning: Failed to layer python dependencies. It might be pending."
+        fi
+    else
+        sudo dnf install -y $MISSING_PKGS
+    fi
+fi
+
+# Add user to input group (for ydotool)
+if ! groups "$USER" | grep -q "\binput\b"; then
+    echo "[voxd] Adding user to 'input' group..."
+    sudo usermod -aG input "$USER" || true
+    echo "[voxd] User added to input group. Relogin required."
+fi
+
+# --- Download Whisper Model ---
+# Detect hardware model
+hardware_model=$(cat /sys/class/dmi/id/product_name 2>/dev/null | tr -d '\0' | xargs)
+WHISPER_MODEL=""
+
+if [[ "$hardware_model" == "21G2CTO1WW" ]]; then
+    WHISPER_MODEL="large-v3"
+else
+    WHISPER_MODEL="medium"
+fi
+
+echo "[voxd] Checking for Whisper model: $WHISPER_MODEL..."
+MODEL_FILE="$HOME/.local/share/voxd/models/ggml-$WHISPER_MODEL.bin"
+
+if [ ! -f "$MODEL_FILE" ]; then
+    echo "[voxd] Downloading Whisper model: $WHISPER_MODEL..."
+    mkdir -p "$HOME/.local/share/voxd/models"
+    
+    # URL for whisper.cpp models
+    MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-$WHISPER_MODEL.bin"
+    
+    if curl -L -o "$MODEL_FILE" "$MODEL_URL"; then
+        echo "[voxd] Whisper model $WHISPER_MODEL installed successfully."
+    else
+        echo "[voxd] Error: Failed to download model from $MODEL_URL"
+        rm -f "$MODEL_FILE"
+    fi
+else
+    echo "[voxd] Whisper model $WHISPER_MODEL already installed."
+fi
+
+# --- First-run Setup (ydotool, etc.) ---
+# The voxd wrapper script handles some first-run setup (ydotool service, etc.)
+echo "[voxd] Running first-run setup..."
+# Ensure voxd itself uses system python path for setup
+export PATH="/usr/bin:$PATH"
+voxd --setup || true
+
+# Check if voxd is already installed *after* dependencies and setup are handled
+if command -v voxd >/dev/null 2>&1; then
+  echo "[voxd] VOXD package already installed, ensuring configuration is complete."
+  # If already installed, we still need to exit successfully after setup
+  exit 0
+fi
+
+# If voxd was not installed yet, proceed with package installation

@@ -1,0 +1,37 @@
+#!/bin/bash
+{{- if .remote }}
+# Skip on remote environments
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# Check if swaync is already installed
+if command -v swaync >/dev/null 2>&1; then
+  echo "[swaync] Already installed."
+  exit 0
+fi
+
+echo "[swaync] Installing Sway Notification Center..."
+
+# Detect system type
+if command -v rpm-ostree >/dev/null 2>&1 && [ -e /run/ostree-booted ]; then
+    # Atomic/Bluefin
+    echo "[swaync] Atomic system detected."
+    if ! sudo rpm-ostree install -y swaync; then
+        echo "[swaync] Failed to install swaync via rpm-ostree. It might be pending."
+    fi
+    echo "[swaync] SwayNC staged. Reboot required."
+    echo "⚠️  A reboot is required to apply changes."
+    echo "Run: systemctl reboot"
+
+elif command -v dnf >/dev/null 2>&1; then
+    # Standard Fedora
+    echo "[swaync] Standard Fedora detected."
+    sudo dnf install -y swaync
+    echo "[swaync] SwayNC installed successfully."
+
+else
+    echo "[swaync] Installation not supported on this OS (no rpm-ostree or dnf found)."
+    exit 1
+fi

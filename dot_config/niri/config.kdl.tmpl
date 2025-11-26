@@ -3,6 +3,12 @@
 // Auto-start waybar
 spawn-at-startup "waybar"
 
+// Auto-start VOXD (Voice Control Daemon)
+spawn-at-startup "/home/pietersz/.local/bin/start-voxd.sh"
+
+// Auto-start Notification Daemon
+spawn-at-startup "swaync"
+
 // SwayOSD is managed via systemd service (dot_config/systemd/user/swayosd.service)
 
 workspace "Coding"
@@ -32,6 +38,11 @@ binds {
      Mod+Shift+Space hotkey-overlay-title="Lock bar: waybar" { spawn "bash" "-c" "$HOME/.config/niri/scripts/lock-waybar.sh"; }
      XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
      Mod+B hotkey-overlay-title="Open Zen Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /opt/zen-browser-bin/zen-bin"; }
+
+    // === VOXD Voice Control ===
+    Ctrl+Space hotkey-overlay-title="VOXD: Toggle Recording" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh toggle"; }
+    Ctrl+Mod+E hotkey-overlay-title="VOXD: Switch to English" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh lang en"; }
+    Ctrl+Mod+D hotkey-overlay-title="VOXD: Switch to Dutch" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh lang nl"; }
 
     // === Volume & Media Controls ===
     // Volume keys work even when the session is locked
