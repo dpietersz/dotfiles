@@ -1,6 +1,6 @@
 #!/bin/bash
-{{- if .remote }}
-# Skip on remote environments
+{{- if or .remote (not (or .isBluefin .isFedora)) }}
+# Skip on remote environments and non-Fedora/Bluefin systems (e.g., macOS)
 exit 0
 {{- end }}
 
@@ -32,6 +32,6 @@ elif command -v dnf >/dev/null 2>&1; then
     echo "[swaync] SwayNC installed successfully."
 
 else
-    echo "[swaync] Installation not supported on this OS (no rpm-ostree or dnf found)."
-    exit 1
+    echo "[swaync] Skipping: no rpm-ostree or dnf found."
+    exit 0
 fi
