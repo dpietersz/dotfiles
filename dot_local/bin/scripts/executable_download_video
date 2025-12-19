@@ -1,0 +1,107 @@
+#!/bin/bash
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Check dependencies
+check_deps() {
+  local missing=()
+  command -v yt-dlp &>/dev/null || missing+=("yt-dlp")
+  command -v ffmpeg &>/dev/null || missing+=("ffmpeg")
+
+  if [ ${#missing[@]} -ne 0 ]; then
+    echo -e "${RED}Error: Missing dependencies: ${missing[*]}${NC}"
+    echo "Install with: brew install ${missing[*]}"
+    exit 1
+  fi
+}
+
+# Extract m3u8 URL from segment URL or use as-is
+extract_m3u8_url() {
+  local url="$1"
+
+  # If URL contains .m3u8/seg- pattern, extract the base m3u8 URL
+  if [[ "$url" =~ (.+\.m3u8)/seg- ]]; then
+    echo "${BASH_REMATCH[1]}"
+  # If URL already ends with .m3u8, use as-is
+  elif [[ "$url" =~ \.m3u8$ ]]; then
+    echo "$url"
+  else
+    echo "$url"
+  fi
+}
+
+# Sanitize filename
+sanitize_filename() {
+  echo "$1" | sed 's/[\/\\:*?"<>|]/-/g' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//'
+}
+
+# Main
+main() {
+  check_deps
+
+  # Get URL
+  local input_url="${1:-}"
+  if [ -z "$input_url" ]; then
+    read -p "Enter URL (m3u8 or segment URL): " input_url
+  fi
+
+  if [ -z "$input_url" ]; then
+    echo -e "${RED}Error: No URL provided${NC}"
+    exit 1
+  fi
+
+  # Extract m3u8 URL
+  local m3u8_url
+  m3u8_url=$(extract_m3u8_url "$input_url")
+
+  echo -e "${YELLOW}M3U8 URL: ${m3u8_url}${NC}"
+
+  # Get title
+  read -p "Enter video title: " title
+  if [ -z "$title" ]; then
+    echo -e "${RED}Error: No title provided${NC}"
+    exit 1
+  fi
+
+  local filename
+  filename=$(sanitize_filename "$title")
+  local temp_file="/tmp/${filename}_$$.ts"
+  local output_file="${filename}.mp4"
+
+  echo ""
+  echo -e "${GREEN}Downloading: ${title}${NC}"
+  echo ""
+
+  # Download with yt-dlp
+  yt-dlp "$m3u8_url" \
+    --no-warnings \
+    --progress \
+    -o "$temp_file"
+
+  echo ""
+  echo -e "${YELLOW}Converting to MP4...${NC}"
+
+  # Remux to proper MP4
+  ffmpeg -i "$temp_file" \
+    -c copy \
+    -movflags +faststart \
+    -loglevel warning \
+    -stats \
+    -y \
+    "$output_file"
+
+  # Cleanup
+  rm -f "$temp_file"
+
+  echo ""
+  echo -e "${GREEN}✓ Done: ${output_file}${NC}"
+  echo -e "  Size: $(du -h "$output_file" | cut -f1)"
+}
+
+main "$@"
