@@ -24,18 +24,29 @@ brew install age gnupg mise pass pinentry
 
 # Development tools (formulas)
 echo "Installing development tools (formulas)..."
-brew install ghostty kitty zed vscodium browserpass espanso llm tailscale
+brew install ghostty kitty zed vscodium browserpass espanso llm tailscale tldr
+
+# Docker tools (formulas)
+echo "Installing Docker tools (formulas)..."
+brew install colima docker docker-compose docker-buildx docker-credential-helper
 
 # Applications (casks)
 echo "Installing applications (casks)..."
 brew install --cask \
   nikitabobko/tap/aerospace \
-  raycast \
-  cleanmymac \
   arq \
-  zen \
   bruno \
+  cleanmymac \
+  displaylink \
+  granola \
+  legcord \
+  microsoft-azure-storage-explorer \
+  microsoft-teams \
   polypane \
-  tailscale
+  rapidapi \
+  raycast \
+  superwhisper \
+  tailscale \
+  zen
 
 echo "✅ Homebrew packages installed successfully"
