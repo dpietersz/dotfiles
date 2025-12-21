@@ -1,32 +1,34 @@
 {
-  // OpenCode Configuration for Second Brain Agent System
-  // This file configures the primary agent and all subagents for managing
-  // your personal knowledge system using atomic notes and Zettelkasten method.
+  // OpenCode Global Configuration
+  // 
+  // This file configures plugins, providers, and models for OpenCode.
+  // Agents are defined in agent/*.md files (markdown with YAML frontmatter)
+  // Commands are defined in command/*.md files (markdown with YAML frontmatter)
   //
-  // Documentation: https://opencode.ai/docs/agents/
-  // Agent definitions: See .opencode/agent/*.md files
-  // Commands: See .opencode/command/*.md files
+  // Documentation: https://opencode.ai/docs/
+  // Oh My OpenCode: https://github.com/code-yeongyu/oh-my-opencode
 
   "$schema": "https://opencode.ai/config.json",
 
   // Plugins for enhanced functionality
+  // Note: OpenCode caches resolved versions. To update plugins, run:
+  // rm -rf ~/.cache/opencode/node_modules ~/.cache/opencode/bun.lock
   "plugin": [
     "oh-my-opencode",
-    "opencode-antigravity-auth@1.1.2",
-    "opencode-openai-codex-auth@4.1.1"
+    "opencode-skills",
+    "opencode-antigravity-auth",
+    "opencode-openai-codex-auth",
+    "@franlol/opencode-md-table-formatter"
   ],
 
-  // Provider configuration for Antigravity OAuth models
+  // Provider configuration
   "provider": {
+    // Google/Gemini models via Antigravity OAuth
+    // Claude models are accessed directly via Anthropic (Claude Max subscription)
     "google": {
       "models": {
         "gemini-3-pro-high": {
           "name": "Gemini 3 Pro High (Antigravity)",
-          "limit": { "context": 1048576, "output": 65535 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        "gemini-3-pro-low": {
-          "name": "Gemini 3 Pro Low (Antigravity)",
           "limit": { "context": 1048576, "output": 65535 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
         },
@@ -39,30 +41,11 @@
           "name": "Gemini 2.5 Flash (Antigravity)",
           "limit": { "context": 1048576, "output": 65536 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        "claude-sonnet-4-5": {
-          "name": "Claude Sonnet 4.5 (Antigravity)",
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        "claude-sonnet-4-5-thinking": {
-          "name": "Claude Sonnet 4.5 Thinking (Antigravity)",
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        "claude-opus-4-5-thinking": {
-          "name": "Claude Opus 4.5 Thinking (Antigravity)",
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        "gpt-oss-120b-medium": {
-          "name": "GPT-OSS 120B Medium (Antigravity)",
-          "limit": { "context": 131072, "output": 32768 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
         }
       }
     },
     "openai": {
+      // Default options for OpenAI models via ChatGPT Plus OAuth
       "options": {
         "reasoningEffort": "medium",
         "reasoningSummary": "auto",
@@ -70,19 +53,9 @@
         "include": ["reasoning.encrypted_content"],
         "store": false
       },
+      // Most used models - trimmed from 22 to 8 for cleaner selection
       "models": {
-        "gpt-5.2-none": {
-          "name": "GPT 5.2 None (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "none", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.2-low": {
-          "name": "GPT 5.2 Low (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "low", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
+        // GPT 5.2 - Latest model, best for complex reasoning (Oracle agent default)
         "gpt-5.2-medium": {
           "name": "GPT 5.2 Medium (OAuth)",
           "limit": { "context": 272000, "output": 128000 },
@@ -95,18 +68,7 @@
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "options": { "reasoningEffort": "high", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
         },
-        "gpt-5.2-xhigh": {
-          "name": "GPT 5.2 Extra High (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "xhigh", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.2-codex-low": {
-          "name": "GPT 5.2 Codex Low (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "low", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
+        // GPT 5.2 Codex - Optimized for coding tasks
         "gpt-5.2-codex-medium": {
           "name": "GPT 5.2 Codex Medium (OAuth)",
           "limit": { "context": 272000, "output": 128000 },
@@ -119,78 +81,21 @@
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "options": { "reasoningEffort": "high", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
         },
-        "gpt-5.2-codex-xhigh": {
-          "name": "GPT 5.2 Codex Extra High (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "xhigh", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-codex-max-low": {
-          "name": "GPT 5.1 Codex Max Low (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "low", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-codex-max-medium": {
-          "name": "GPT 5.1 Codex Max Medium (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "medium", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
+        // GPT 5.1 Codex Max - Large context, long-horizon builds
         "gpt-5.1-codex-max-high": {
           "name": "GPT 5.1 Codex Max High (OAuth)",
           "limit": { "context": 272000, "output": 128000 },
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "options": { "reasoningEffort": "high", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
         },
-        "gpt-5.1-codex-max-xhigh": {
-          "name": "GPT 5.1 Codex Max Extra High (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "xhigh", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-codex-low": {
-          "name": "GPT 5.1 Codex Low (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "low", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-codex-medium": {
-          "name": "GPT 5.1 Codex Medium (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "medium", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
+        // GPT 5.1 Codex - Standard coding model
         "gpt-5.1-codex-high": {
           "name": "GPT 5.1 Codex High (OAuth)",
           "limit": { "context": 272000, "output": 128000 },
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "options": { "reasoningEffort": "high", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
         },
-        "gpt-5.1-codex-mini-medium": {
-          "name": "GPT 5.1 Codex Mini Medium (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "medium", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-codex-mini-high": {
-          "name": "GPT 5.1 Codex Mini High (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "high", "reasoningSummary": "detailed", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-none": {
-          "name": "GPT 5.1 None (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "none", "reasoningSummary": "auto", "textVerbosity": "medium", "include": ["reasoning.encrypted_content"], "store": false }
-        },
-        "gpt-5.1-low": {
-          "name": "GPT 5.1 Low (OAuth)",
-          "limit": { "context": 272000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "options": { "reasoningEffort": "low", "reasoningSummary": "auto", "textVerbosity": "low", "include": ["reasoning.encrypted_content"], "store": false }
-        },
+        // GPT 5.1 - General purpose, fast responses
         "gpt-5.1-medium": {
           "name": "GPT 5.1 Medium (OAuth)",
           "limit": { "context": 272000, "output": 128000 },
@@ -207,251 +112,7 @@
     }
   },
 
-  // Agent definitions - primary agent and specialized subagents
-  "agent": {
-    // PRIMARY AGENT: Orchestrates the entire second brain system
-    // See: .opencode/agent/second-brain.md for full system prompt
-    "second-brain": {
-      "description": "Orchestrates atomic note-taking, linking, and knowledge graph management for your personal knowledge system",
-      "mode": "primary",
-      // Temperature: 0.4 = balanced between focused guidance and creative thinking
-      "temperature": 0.4,
-      // Tools: Full access for orchestration and coordination
-      "tools": {
-        "read": true,      // Read notes and system files
-        "edit": true,      // Create and update notes
-        "bash": true       // Execute commands for file operations
-      },
-      // Permissions: Allow all operations without prompts for smooth workflow
-      "permission": {
-        "edit": "allow",   // Create/update notes without asking
-        "bash": "allow"    // Execute bash commands without asking
-      }
-    },
-
-    // SUBAGENT 1: Clarification through Socratic questioning
-    // Temperature: 0.5 = balanced for thoughtful questions
-    // See: .opencode/agent/note-clarifier.md
-    "note-clarifier": {
-      "description": "Asks deep questions to refine and clarify fleeting notes into coherent ideas",
-      "mode": "subagent",
-      "temperature": 0.5,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 2: Note structuring and formatting
-    // Temperature: 0.3 = focused on consistency
-    // See: .opencode/agent/note-processor.md
-    "note-processor": {
-      "description": "Converts clarified fleeting notes into permanent atomic notes with proper structure",
-      "mode": "subagent",
-      "temperature": 0.3,
-      "tools": {
-        "read": true,
-        "edit": true,
-        "bash": true
-      },
-      "permission": {
-        "edit": "allow",
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 3: Connection discovery
-    // Temperature: 0.4 = balanced for finding meaningful links
-    // See: .opencode/agent/link-strategist.md
-    "link-strategist": {
-      "description": "Identifies meaningful connections between notes and suggests strategic linking",
-      "mode": "subagent",
-      "temperature": 0.4,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 4: Quality validation
-    // Temperature: 0.2 = very focused on standards
-    // See: .opencode/agent/quality-checker.md
-    "quality-checker": {
-      "description": "Validates notes against guidelines and suggests improvements before finalizing",
-      "mode": "subagent",
-      "temperature": 0.2,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 5: Map of Content creation
-    // Temperature: 0.4 = balanced for organization
-    // See: .opencode/agent/moc-architect.md
-    "moc-architect": {
-      "description": "Creates and maintains Maps of Content that organize and reveal patterns in your knowledge graph",
-      "mode": "subagent",
-      "temperature": 0.4,
-      "tools": {
-        "read": true,
-        "edit": true,
-        "bash": true
-      },
-      "permission": {
-        "edit": "allow",
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 6: Naming consistency
-    // Temperature: 0.2 = very focused on standards
-    // See: .opencode/agent/naming-specialist.md
-    "naming-specialist": {
-      "description": "Ensures proper naming conventions, IDs, and identification across your knowledge system",
-      "mode": "subagent",
-      "temperature": 0.2,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 7: Review process guidance
-    // Temperature: 0.3 = focused on consistency
-    // See: .opencode/agent/review-coordinator.md
-    "review-coordinator": {
-      "description": "Guides daily, weekly, and monthly review workflows to maintain and evolve your knowledge system",
-      "mode": "subagent",
-      "temperature": 0.3,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 8: Pitfall prevention
-    // Temperature: 0.3 = focused on consistency
-    // See: .opencode/agent/pitfall-detector.md
-    "pitfall-detector": {
-      "description": "Identifies and helps prevent common pitfalls in atomic note-taking and knowledge management",
-      "mode": "subagent",
-      "temperature": 0.3,
-      "tools": {
-        "read": true,
-        "bash": true
-      },
-      "permission": {
-        "bash": "allow"
-      }
-    },
-
-    // SUBAGENT 9: Inbox processor and workflow router
-    // Temperature: 0.4 = balanced for intelligent routing
-    // See: .opencode/agent/inbox-processor.md
-    "inbox-processor": {
-      "description": "Intelligently processes inbox notes one-by-one, assessing maturity and routing to appropriate workflow",
-      "mode": "subagent",
-      "temperature": 0.4,
-      "tools": {
-        "read": true,
-        "edit": true,
-        "bash": true
-      },
-      "permission": {
-        "edit": "allow",
-        "bash": "allow"
-      }
-    }
-  },
-
-  // Quick commands for common workflows
-  // Usage: /command-name in OpenCode
-  // See: .opencode/command/*.md for full command definitions
-  "command": {
-    // REVIEW WORKFLOWS
-    "daily-review": {
-      "description": "Process inbox and create permanent notes from fleeting captures (5-10 minutes)",
-      "agent": "review-coordinator",
-      "template": "Guide me through a daily review. I want to process my fleeting notes from yesterday and convert 1-2 to permanent notes. Help me identify connections and clean up my inbox."
-    },
-    "weekly-review": {
-      "description": "Link recent notes, update MOCs, and identify emerging clusters (30-60 minutes)",
-      "agent": "review-coordinator",
-      "template": "Guide me through a weekly review. I want to link notes created this week, update my MOCs, identify emerging clusters, and connect any orphan notes."
-    },
-    "monthly-review": {
-      "description": "Audit system, refine structure, and archive completed projects (1-2 hours)",
-      "agent": "review-coordinator",
-      "template": "Guide me through a monthly review. I want to audit orphan notes, refine MOC structure, archive completed projects, and plan next month's focus areas."
-    },
-
-    // NOTE CREATION WORKFLOWS
-    "create-fleeting": {
-      "description": "Capture a new fleeting note with guided clarification",
-      "agent": "note-clarifier",
-      "template": "I have a new idea I want to capture as a fleeting note. Please ask me clarifying questions to help me articulate it clearly before I write it down."
-    },
-    "process-fleeting": {
-      "description": "Convert a fleeting note to a permanent atomic note",
-      "agent": "note-processor",
-      "template": "I have a fleeting note I want to convert to a permanent note. Please help me structure it properly with title, explanation, connections, and references."
-    },
-    "validate-note": {
-      "description": "Check note quality and suggest improvements",
-      "agent": "quality-checker",
-      "template": "Please validate this note against the atomic note guidelines. Check structure, content quality, naming, and linking. Propose any improvements with reasoning."
-    },
-
-    // LINKING & ORGANIZATION WORKFLOWS
-    "find-links": {
-      "description": "Identify meaningful connections for a note",
-      "agent": "link-strategist",
-      "template": "I've created a new note and want to find meaningful connections to existing notes. Please analyze my note and suggest strategic links with explanations."
-    },
-    "create-moc": {
-      "description": "Create a new Map of Content for organizing related notes",
-      "agent": "moc-architect",
-      "template": "I think I need a Map of Content for a topic. Please analyze my existing notes, identify clusters, and propose a MOC structure with organization and groupings."
-    },
-    "find-orphans": {
-      "description": "Identify unlinked notes and suggest connections",
-      "agent": "link-strategist",
-      "template": "Please find orphan notes in my system (notes with no connections) and suggest meaningful links to connect them to the rest of my knowledge graph."
-    },
-
-    // INBOX PROCESSING WORKFLOW
-    "process-inbox": {
-      "description": "Process inbox notes one-by-one with intelligent workflow routing",
-      "agent": "inbox-processor",
-      "template": "I want to process my inbox. Please go through each note one-by-one, assess its maturity level, and help me decide what to do with it. Ask me questions along the way about what the purpose is and where to stop. Route each note through the appropriate workflow based on its current state."
-    },
-
-    // MAINTENANCE WORKFLOWS
-    "check-pitfalls": {
-      "description": "Scan for common pitfalls and suggest preventions",
-      "agent": "pitfall-detector",
-      "template": "Please analyze my notes for common pitfalls like scope creep, weak connections, or inconsistent naming. Identify issues and suggest how to fix them."
-    },
-    "fix-naming": {
-      "description": "Audit and fix naming conventions and IDs",
-      "agent": "naming-specialist",
-      "template": "Please audit my notes for naming consistency. Check IDs, titles, file names, aliases, and tags. Propose any changes needed to maintain system integrity."
-    }
-  }
+  // Agents are loaded from agent/*.md files (markdown with YAML frontmatter)
+  // Commands are loaded from command/*.md files (markdown with YAML frontmatter)
+  // No need to define them here - the markdown files are the authoritative source
 }
