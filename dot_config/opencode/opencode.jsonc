@@ -14,7 +14,6 @@
   // Note: OpenCode caches resolved versions. To update plugins, run:
   // rm -rf ~/.cache/opencode/node_modules ~/.cache/opencode/bun.lock
   "plugin": [
-    "opencode-skills",
     "opencode-antigravity-auth",
     "opencode-openai-codex-auth",
     "@franlol/opencode-md-table-formatter"
