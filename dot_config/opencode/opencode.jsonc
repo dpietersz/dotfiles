@@ -128,11 +128,14 @@
     },
     // BrightData - Advanced web scraping with CAPTCHA bypass
     // Used by: research skill retrieve workflow
-    // Requires BRIGHTDATA_API_TOKEN environment variable
     // Free tier: 5,000 requests/month (search_engine, scrape_as_markdown)
+    // Run locally via npx - requires API_TOKEN env var
     "brightdata": {
-      "type": "remote",
-      "url": "https://mcp.brightdata.com/sse?token=${BRIGHTDATA_API_TOKEN}"
+      "type": "local",
+      "command": ["npx", "-y", "@brightdata/mcp"],
+      "environment": {
+        "API_TOKEN": "{env:BRIGHTDATA_API_TOKEN}"
+      }
     }
   },
 
