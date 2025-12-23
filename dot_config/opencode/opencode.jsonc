@@ -14,7 +14,6 @@
   // Note: OpenCode caches resolved versions. To update plugins, run:
   // rm -rf ~/.cache/opencode/node_modules ~/.cache/opencode/bun.lock
   "plugin": [
-    "oh-my-opencode",
     "opencode-skills",
     "opencode-antigravity-auth",
     "opencode-openai-codex-auth",
@@ -112,7 +111,33 @@
     }
   },
 
+  // MCP Servers for research and development tools
+  // These provide external capabilities for the research and dev-research skills
+  "mcp": {
+    // Context7 - Official documentation lookup for libraries
+    // Used by: librarian agent, research skill
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    // grep.app - Fast GitHub code search across millions of repos
+    // Used by: librarian agent, explore agent
+    "grep_app": {
+      "type": "remote",
+      "url": "https://mcp.grep.app"
+    },
+    // BrightData - Advanced web scraping with CAPTCHA bypass
+    // Used by: research skill retrieve workflow
+    // Requires BRIGHTDATA_API_TOKEN environment variable
+    // Free tier: 5,000 requests/month (search_engine, scrape_as_markdown)
+    "brightdata": {
+      "type": "remote",
+      "url": "https://mcp.brightdata.com/sse?token=${BRIGHTDATA_API_TOKEN}"
+    }
+  },
+
   // Agents are loaded from agent/*.md files (markdown with YAML frontmatter)
   // Commands are loaded from command/*.md files (markdown with YAML frontmatter)
+  // Skills are loaded from skill/*/SKILL.md files
   // No need to define them here - the markdown files are the authoritative source
 }
