@@ -125,8 +125,8 @@
       "type": "remote",
       "url": "https://mcp.grep.app"
     },
-    // BrightData - Advanced web scraping with CAPTCHA bypass
-    // Used by: research skill retrieve workflow
+    // BrightData - Advanced web scraping with CAPTCHA bypass (Layer 2 fallback)
+    // Used by: research skill retrieve workflow when Crawl4AI fails
     // Free tier: 5,000 requests/month (search_engine, scrape_as_markdown)
     // Run locally via npx - requires API_TOKEN env var
     "brightdata": {
@@ -136,6 +136,12 @@
         "API_TOKEN": "{env:BRIGHTDATA_API_TOKEN}"
       }
     }
+    // Crawl4AI - Self-hosted web scraping with JS rendering (Layer 1.5)
+    // Used by: research skill retrieve workflow (primary scraper)
+    // Accessed via REST API (curl), not MCP - see workflows/retrieve.md
+    // Base URL: https://crawl4ai.pietersz.me
+    // Docs: https://crawl4ai.pietersz.me/docs
+    // Requires: CRAWL4AI_API_TOKEN env var
   },
 
   // Agents are loaded from agent/*.md files (markdown with YAML frontmatter)

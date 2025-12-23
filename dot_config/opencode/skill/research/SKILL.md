@@ -33,6 +33,7 @@ This skill uses API keys from your environment:
 |---------|---------------------|--------|
 | Perplexity Research | `PERPLEXITY_API_KEY` | ~/.bashrc |
 | Fabric Patterns | `FABRIC_API_KEY` | ~/.bashrc |
+| Crawl4AI Scraping | `CRAWL4AI_API_TOKEN` | ~/.bashrc |
 | BrightData Scraping | `BRIGHTDATA_API_TOKEN` | ~/.bashrc |
 
 **Works without API keys:**
@@ -131,21 +132,29 @@ The following subagents are available for research:
 
 ## Intelligent Content Retrieval
 
-### Two-Layer Escalation System
+### Three-Layer Escalation System
 
 **Layer 1: Built-in Tools (Try First - FREE)**
 - WebFetch - Standard web content fetching
 - WebSearch - Search engine queries
 - When to use: Default for all content retrieval
 
+**Layer 1.5: Crawl4AI API (requires CRAWL4AI_API_TOKEN)**
+- Self-hosted at https://crawl4ai.pietersz.me
+- Fast JavaScript rendering via headless browser
+- Markdown output optimized for LLMs
+- Batch crawling up to 100 URLs
+- When to use: JS-heavy sites, Layer 1 returns incomplete content
+
 **Layer 2: BrightData MCP (requires BRIGHTDATA_API_TOKEN)**
 - CAPTCHA solving via Scraping Browser
-- Advanced JavaScript rendering
-- When to use: Bot detection blocking, CAPTCHA protection
+- Residential proxy network
+- When to use: Bot detection blocking, CAPTCHA protection (last resort)
 
 **Critical Rules:**
 - Always try simplest approach first (Layer 1)
-- Escalate only when previous layer fails
+- Escalate to Crawl4AI before BrightData
+- Use BrightData only for CAPTCHA/bot detection
 - Document which layers were used and why
 
 ---
@@ -217,7 +226,7 @@ curl -X POST https://fabric.pietersz.me/youtube/transcript \
 | Claude Research | `workflows/claude-research.md` | None (FREE) |
 | Perplexity Research | `workflows/perplexity-research.md` | PERPLEXITY_API_KEY |
 | Gemini Research | `workflows/gemini-research.md` | None (uses OpenCode) |
-| Content Retrieval | `workflows/retrieve.md` | Optional: BRIGHTDATA_API_KEY |
+| Content Retrieval | `workflows/retrieve.md` | Optional: CRAWL4AI_API_TOKEN, BRIGHTDATA_API_TOKEN |
 | YouTube Extraction | `workflows/youtube-extraction.md` | FABRIC_API_KEY |
 | Fabric Patterns | `workflows/fabric.md` | FABRIC_API_KEY |
 | Knowledge Extraction | `workflows/extract-knowledge.md` | None |
