@@ -72,7 +72,7 @@ Examples: "use gemini to research X", "gemini research on Y"
 **When user indicates difficulty accessing content:**
 Examples: "can't get this content", "site is blocking me", "CAPTCHA blocking"
 → **LOAD:** `workflows/retrieve.md`
-→ **EXECUTE:** Escalation through layers (WebFetch → BrightData MCP)
+→ **EXECUTE:** Intelligent retrieval (Crawl4AI preferred → BrightData for CAPTCHA)
 
 **When user provides YouTube URL:**
 Examples: "get this youtube video", "extract from youtube URL"
@@ -132,19 +132,20 @@ The following subagents are available for research:
 
 ## Intelligent Content Retrieval
 
-### Three-Layer Escalation System
+### Three-Layer System (Crawl4AI Preferred)
 
-**Layer 1: Built-in Tools (Try First - FREE)**
-- WebFetch - Standard web content fetching
-- WebSearch - Search engine queries
-- When to use: Default for all content retrieval
-
-**Layer 1.5: Crawl4AI API (requires CRAWL4AI_API_TOKEN)**
+**Layer 1.5: Crawl4AI API - PREFERRED (requires CRAWL4AI_API_TOKEN)**
 - Self-hosted at https://crawl4ai.pietersz.me
-- Fast JavaScript rendering via headless browser
-- Markdown output optimized for LLMs
+- **Sanitized, LLM-optimized markdown output**
+- Full JavaScript rendering via headless browser
 - Batch crawling up to 100 URLs
-- When to use: JS-heavy sites, Layer 1 returns incomplete content
+- No rate limits (self-hosted), fast, free
+- **When to use: DEFAULT for most content retrieval**
+
+**Layer 1: Built-in Tools (Speed-Only Option - FREE)**
+- WebFetch - Basic web content fetching
+- WebSearch - Search engine queries
+- **When to use: ONLY for trivial one-off fetches where speed matters more than quality**
 
 **Layer 2: BrightData MCP (requires BRIGHTDATA_API_TOKEN)**
 - CAPTCHA solving via Scraping Browser
@@ -152,8 +153,8 @@ The following subagents are available for research:
 - When to use: Bot detection blocking, CAPTCHA protection (last resort)
 
 **Critical Rules:**
-- Always try simplest approach first (Layer 1)
-- Escalate to Crawl4AI before BrightData
+- **Prefer Crawl4AI (Layer 1.5) for most requests** - better quality, sanitized output
+- Use Layer 1 only when speed is critical and quality doesn't matter
 - Use BrightData only for CAPTCHA/bot detection
 - Document which layers were used and why
 

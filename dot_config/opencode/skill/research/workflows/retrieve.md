@@ -1,59 +1,63 @@
 ---
-description: Intelligent three-layer content retrieval system for DIFFICULT content retrieval. Uses built-in tools (WebFetch), Crawl4AI API (JS rendering), and BrightData MCP (CAPTCHA handling). USE ONLY WHEN user indicates difficulty accessing content.
+description: Intelligent content retrieval system with Crawl4AI as the PREFERRED option. Crawl4AI provides sanitized, LLM-optimized markdown. WebFetch only for trivial speed-critical fetches. BrightData for CAPTCHA/bot detection only.
 globs: ""
 alwaysApply: false
 ---
 
 # Retrieve Workflow
 
-Intelligent multi-layer content retrieval system for DIFFICULT content retrieval.
+Intelligent content retrieval system with **Crawl4AI as the preferred option** for quality content extraction.
 
 ## When to Use This Workflow
 
-**USE this workflow when user indicates difficulty:**
-- "I can't get this content"
-- "Having trouble retrieving this"
-- "Site is blocking me"
-- "Protected site" / "CloudFlare protected"
-- "Keeps giving me CAPTCHA"
-- "Won't let me scrape this"
-- "Bot detection blocking me"
-- "Rate limited when trying to get this"
-- "Page content is incomplete" / "JavaScript not rendering"
+**USE this workflow for any content retrieval:**
+- User wants content from a URL
+- User needs clean, sanitized markdown
+- User wants LLM-ready content
+- User needs batch scraping
+- User indicates difficulty accessing content
 
-**DO NOT use this workflow for simple requests:**
-- "Read this page" → Use WebFetch directly
-- "Get content from [URL]" → Use WebFetch directly
-- "What does this site say" → Use WebFetch directly
+**Use Crawl4AI (Layer 1.5) by default for:**
+- "Get content from [URL]" → Crawl4AI for sanitized markdown
+- "Read this page" → Crawl4AI for clean output
+- "Scrape this site" → Crawl4AI for LLM-optimized content
+- "Get these 5 URLs" → Crawl4AI batch endpoint
 
-**Simple rule:** Only activate when user signals DIFFICULTY, not for routine content requests.
+**Use WebFetch (Layer 1) ONLY for:**
+- Trivial one-off fetches where speed is critical
+- Quick checks where quality doesn't matter
+- Simple HTML pages with no JS
+
+**Simple rule:** Prefer Crawl4AI for quality. Use WebFetch only when speed matters more than quality.
 
 ---
 
-## Three-Layer Escalation Strategy
+## Three-Layer Strategy (Crawl4AI Preferred)
 
 ```
-Layer 1: Built-in Tools (Fast, Simple, FREE)
-   ↓ (If incomplete content or fails)
-Layer 1.5: Crawl4AI API (Self-hosted, JS rendering, fast)
+Layer 1.5: Crawl4AI API (PREFERRED - Sanitized, LLM-optimized, fast)
    ↓ (If blocked, CAPTCHA, or fails)
 Layer 2: BrightData MCP (CAPTCHA handling, residential proxies)
+
+Layer 1: Built-in Tools (Speed-only option for trivial cases)
 ```
 
 ### Decision Tree: Which Layer to Use?
 
-**Start with Layer 1 (Built-in) if:**
-- Simple public webpage
-- No known bot detection
-- Standard HTML content
-- Quick one-off fetch
-
-**Use Layer 1.5 (Crawl4AI) if:**
-- Layer 1 returns incomplete/broken content
+**START with Layer 1.5 (Crawl4AI) - DEFAULT CHOICE:**
+- **Any content retrieval request** (this is the default)
+- Need sanitized, clean markdown output
+- Want LLM-optimized content
 - JavaScript-heavy site (SPA, React, Vue, etc.)
-- Need markdown output optimized for LLMs
 - Batch crawling multiple URLs (up to 100)
 - Need specific content filtering (fit, raw, bm25)
+- Quality matters more than raw speed
+
+**Use Layer 1 (Built-in) ONLY if:**
+- Trivial one-off fetch where speed is critical
+- Quick check where quality doesn't matter
+- Simple static HTML with no JS
+- You explicitly don't need sanitized output
 
 **Use Layer 2 (BrightData) if:**
 - Layer 1.5 blocked or failed
@@ -65,11 +69,32 @@ Layer 2: BrightData MCP (CAPTCHA handling, residential proxies)
 
 ---
 
-## Layer 1: Built-in Tools
+## Layer 1.5: Crawl4AI API (PREFERRED)
+
+### Why Crawl4AI is the Default Choice
+
+**Key Benefits:**
+- **Sanitized markdown** - Clean, boilerplate-free output
+- **LLM-optimized** - Content structured for AI consumption
+- **JavaScript rendering** - Full headless browser support
+- **Batch operations** - Up to 100 URLs in one request
+- **Self-hosted** - No rate limits, fast, free
+- **Content filtering** - fit, raw, bm25, llm options
+
+**Use Crawl4AI for:**
+- Any content retrieval where quality matters
+- JavaScript-heavy sites (SPA, React, Vue)
+- Batch scraping multiple URLs
+- Research and analysis tasks
+- Building content corpora
+
+---
+
+## Layer 1: Built-in Tools (Speed-Only Option)
 
 ### WebFetch Tool
 
-**Best for:** Simple HTML pages, public content, one-off fetches
+**Best for:** Trivial fetches where speed matters more than quality
 
 **Usage:**
 ```
@@ -78,13 +103,16 @@ Use WebFetch tool with:
 - prompt: "Extract the main article content and author name"
 ```
 
-**When it fails:**
-- Returns error about blocked request
-- Gets rate-limited (429 status)
-- Receives CAPTCHA challenge
-- Returns empty/broken content
-- JavaScript content not rendered
-→ **Escalate to Layer 1.5 (Crawl4AI)**
+**When to use:**
+- Quick one-off check (don't need clean output)
+- Speed is critical, quality doesn't matter
+- Simple static HTML page
+
+**When NOT to use (prefer Crawl4AI instead):**
+- Need sanitized, clean markdown
+- JavaScript content needs rendering
+- Quality of output matters
+- Batch operations needed
 
 ### WebSearch Tool
 
@@ -104,7 +132,7 @@ Use WebSearch tool with:
 
 ---
 
-## Layer 1.5: Crawl4AI API
+## Crawl4AI API Details
 
 ### Prerequisites
 
@@ -112,13 +140,14 @@ Use WebSearch tool with:
 - Self-hosted at: https://crawl4ai.pietersz.me
 - API Documentation: https://crawl4ai.pietersz.me/docs
 
-### /md Endpoint (Primary Use Case)
+### /md Endpoint (Primary Use Case - DEFAULT)
 
-**Best for:** Getting clean markdown from any URL with JS rendering
+**Best for:** Getting clean, sanitized markdown from any URL
 
 **Key Features:**
+- **Sanitized output** - Removes boilerplate, ads, navigation
+- **LLM-optimized** - Markdown structured for AI consumption
 - Headless browser with full JavaScript execution
-- Markdown output optimized for LLM consumption
 - Content filtering options (fit, raw, bm25, llm)
 - Fast response times (self-hosted)
 - No rate limits (self-hosted)
@@ -285,24 +314,34 @@ Use mcp__brightdata__search_engine_batch with:
 
 ## Complete Retrieval Workflow
 
-### Example: Retrieve Article Content
+### Example: Retrieve Article Content (Standard Case)
 
 **User request:** "Get me the content from https://example.com/article"
 
 **Execution:**
 
 ```
-Step 1: Try Layer 1 (Built-in) first
-→ WebFetch url="https://example.com/article" prompt="Extract the main article content"
-
-Step 2: If Layer 1 returns incomplete content (JS not rendered):
+Step 1: Use Crawl4AI (preferred - sanitized, LLM-optimized output)
 → curl -X POST https://crawl4ai.pietersz.me/md \
     -H "Authorization: Bearer $CRAWL4AI_API_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"url": "https://example.com/article"}'
 
-Step 3: If Layer 1.5 fails (blocked/CAPTCHA):
+Step 2: If Crawl4AI fails (blocked/CAPTCHA):
 → mcp__brightdata__scrape_as_markdown url="https://example.com/article"
+```
+
+### Example: Quick Check (Speed-Critical)
+
+**User request:** "Quickly check if this page mentions Python"
+
+**Execution:**
+
+```
+Step 1: Use WebFetch (speed matters, quality doesn't)
+→ WebFetch url="https://example.com/page" prompt="Does this page mention Python?"
+
+Note: Only use WebFetch when speed is critical and you don't need clean output
 ```
 
 ### Example: Batch Scrape Multiple Pages
@@ -312,7 +351,7 @@ Step 3: If Layer 1.5 fails (blocked/CAPTCHA):
 **Execution:**
 
 ```
-Step 1: Try Layer 1.5 (Crawl4AI) batch endpoint:
+Step 1: Use Crawl4AI batch endpoint (preferred for batch operations):
 → curl -X POST https://crawl4ai.pietersz.me/crawl \
     -H "Authorization: Bearer $CRAWL4AI_API_TOKEN" \
     -H "Content-Type: application/json" \
@@ -329,17 +368,17 @@ Step 2: If any URLs fail, retry failed ones with Layer 2:
 **Execution:**
 
 ```
-Step 1: Try Layer 1 for search:
+Step 1: Use WebSearch for discovery:
 → WebSearch query="React 19 features documentation"
 → Extract URLs from results
 
-Step 2: Batch fetch with Layer 1.5 (Crawl4AI):
+Step 2: Use Crawl4AI for quality content extraction:
 → curl -X POST https://crawl4ai.pietersz.me/crawl \
     -H "Authorization: Bearer $CRAWL4AI_API_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"urls": ["url1", "url2", "url3", "url4", "url5"]}'
 
-Step 3: If any Layer 1.5 fetches fail, use Layer 2 batch:
+Step 3: If any Crawl4AI fetches fail, use Layer 2 batch:
 → mcp__brightdata__scrape_batch urls=[failed_urls]
 ```
 
@@ -350,7 +389,7 @@ Step 3: If any Layer 1.5 fetches fail, use Layer 2 batch:
 **Execution:**
 
 ```
-Step 1: Try Layer 1.5 first (might work for some protected sites):
+Step 1: Try Crawl4AI first (might work for some protected sites):
 → curl -X POST https://crawl4ai.pietersz.me/md \
     -H "Authorization: Bearer $CRAWL4AI_API_TOKEN" \
     -H "Content-Type: application/json" \
@@ -367,44 +406,38 @@ Step 2: If blocked, escalate to Layer 2:
 **Execution:**
 
 ```
-Step 1: Skip Layer 1 (known to fail on SPAs)
-→ Go directly to Layer 1.5
-
-Step 2: Use Crawl4AI with JS rendering:
+Step 1: Use Crawl4AI (perfect for JS-heavy sites):
 → curl -X POST https://crawl4ai.pietersz.me/md \
     -H "Authorization: Bearer $CRAWL4AI_API_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"url": "https://react-app.com/page", "f": "fit"}'
+
+Note: Crawl4AI handles JS rendering automatically - no need to try WebFetch first
 ```
 
 ---
 
 ## Layer Comparison Matrix
 
-| Feature | Layer 1 (Built-in) | Layer 1.5 (Crawl4AI) | Layer 2 (BrightData) |
-|---------|-------------------|----------------------|----------------------|
-| **Speed** | Fast (< 5s) | Fast (5-15s) | Medium (10-30s) |
-| **JavaScript Rendering** | Limited | Full | Full |
-| **Bot Detection Bypass** | No | Limited | Yes |
+| Feature | Layer 1.5 (Crawl4AI) **PREFERRED** | Layer 1 (Built-in) | Layer 2 (BrightData) |
+|---------|-----------------------------------|-------------------|----------------------|
+| **When to Use** | **DEFAULT for most requests** | Speed-only, trivial fetches | CAPTCHA/bot detection |
+| **Speed** | Fast (5-15s) | Fastest (< 5s) | Medium (10-30s) |
+| **Output Quality** | **Sanitized, LLM-optimized** | Raw, may include noise | Clean markdown |
+| **JavaScript Rendering** | Full | Limited | Full |
+| **Bot Detection Bypass** | Limited | No | Yes |
 | **CAPTCHA Handling** | No | No | Yes |
 | **Residential Proxies** | No | No | Yes |
-| **Batch Operations** | Manual | Up to 100 | Up to 10 |
-| **Search Integration** | Basic | No | Multi-engine |
-| **Markdown Output** | Yes | Yes (optimized) | Yes |
-| **Cost** | Free | Free (self-hosted) | Paid |
-| **Best For** | Simple pages | JS-heavy sites | Protected sites |
+| **Batch Operations** | Up to 100 | Manual | Up to 10 |
+| **Search Integration** | No | Basic | Multi-engine |
+| **Cost** | Free (self-hosted) | Free | Paid |
+| **Best For** | **Quality content extraction** | Quick checks | Protected sites |
 
 ---
 
 ## Error Handling & Escalation
 
-**Layer 1 Errors → Escalate to Layer 1.5:**
-- Empty or incomplete content
-- JavaScript content not rendered
-- Dynamic content missing
-- SPA/React/Vue pages
-
-**Layer 1.5 Errors → Escalate to Layer 2:**
+**Crawl4AI (Layer 1.5) Errors → Escalate to Layer 2:**
 - HTTP 403 (Forbidden)
 - HTTP 429 (Rate Limited)
 - CAPTCHA challenge detected
@@ -417,30 +450,34 @@ Step 2: Use Crawl4AI with JS rendering:
 - Requires manual intervention or login
 - Legal/ethical concerns with scraping
 
+**Note:** Since Crawl4AI is the default, you typically won't need to "escalate" from Layer 1. Only use Layer 1 (WebFetch) when you explicitly need speed over quality.
+
 ---
 
 ## Quick Reference Card
 
-**Start with Layer 1 (Built-in):**
-- Simple public webpages
-- Quick one-off fetches
-- Basic search queries
-
-**Use Layer 1.5 (Crawl4AI):**
+**START with Crawl4AI (Layer 1.5) - DEFAULT:**
+- **Any content retrieval request** (this is the default)
+- Need sanitized, clean markdown
+- Want LLM-optimized output
 - JavaScript-heavy sites (SPA, React, Vue)
-- Layer 1 returns incomplete content
-- Need batch crawling (up to 100 URLs)
-- Want LLM-optimized markdown
+- Batch crawling (up to 100 URLs)
+- Quality matters
 
-**Use Layer 2 (BrightData):**
-- Bot detection blocking Layer 1.5
+**Use WebFetch (Layer 1) ONLY for:**
+- Trivial one-off fetches (speed critical)
+- Quick checks where quality doesn't matter
+- Simple static HTML pages
+
+**Use BrightData (Layer 2) for:**
+- Bot detection blocking Crawl4AI
 - CAPTCHA protection
 - Need residential proxy network
 - Search engine results needed
 
 **Remember:**
-- Always try simplest approach first (Layer 1)
-- Crawl4AI before BrightData (Layer 1.5 before Layer 2)
+- **Crawl4AI is the preferred choice** - sanitized, LLM-ready output
+- WebFetch only when speed matters more than quality
 - BrightData is the last resort for CAPTCHA/bot detection
 - Document which layers were used and why
 
