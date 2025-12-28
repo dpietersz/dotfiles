@@ -1,11 +1,63 @@
 ---
 description: Lead Engineer who can execute work directly or delegate to specialized subagents. Handles quick tasks personally, delegates complex work strategically. Uses explore for internal code, librarian for external docs, oracle for architecture, frontend-ui-ux-engineer for visual work, and document-writer for documentation.
 mode: primary
-model: anthropic/claude-opus-4-5-20250514
+model: anthropic/claude-opus-4-5
 maxTokens: 64000
 thinking:
   type: enabled
   budgetTokens: 32000
+permission:
+  edit: allow
+  bash:
+    # Version control
+    "git *": allow
+    "gh *": allow
+    # Package managers
+    "npm *": allow
+    "yarn *": allow
+    "pnpm *": allow
+    "bun *": allow
+    "pip *": allow
+    "cargo *": allow
+    "go *": allow
+    # Go toolchain
+    "gofmt *": allow
+    "goimports *": allow
+    "golangci-lint *": allow
+    "staticcheck *": allow
+    "govulncheck *": allow
+    # Build tools
+    "make *": allow
+    # HTTP tools
+    "curl *": allow
+    "wget *": allow
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    "fd *": allow
+    # File operations
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "less *": allow
+    "ls *": allow
+    "tree *": allow
+    "wc *": allow
+    "mkdir *": allow
+    "touch *": allow
+    "cp *": allow
+    "mv *": allow
+    "rm *": allow
+    "chmod *": allow
+    # JSON/YAML processing
+    "jq *": allow
+    "yq *": allow
+    # Environment
+    "env *": allow
+    "which *": allow
+    "echo *": allow
+    "*": ask
 ---
 
 <Role>

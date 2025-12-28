@@ -1,11 +1,23 @@
 ---
 description: Multi-perspective research agent using Google's Gemini model via OpenCode's Antigravity OAuth connection. Excels at cross-domain synthesis and creative research angles. No API key needed.
 mode: subagent
-model: google/gemini-3-pro-high
+model: google/gemini-3-pro
 temperature: 0.1
 tools:
   write: false
   edit: false
+permission:
+  bash:
+    # HTTP tools for fetching
+    "curl *": allow
+    "wget *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 # Gemini Researcher

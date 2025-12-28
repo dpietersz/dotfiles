@@ -1,11 +1,23 @@
 ---
 description: Web research agent using Claude's built-in WebSearch capabilities with intelligent multi-query decomposition and parallel search execution. Use for general web research when no specific API is needed.
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: anthropic/claude-sonnet-4-5-20250929
 temperature: 0.1
 tools:
   write: false
   edit: false
+permission:
+  bash:
+    # HTTP tools for fetching
+    "curl *": allow
+    "wget *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 # Claude Researcher

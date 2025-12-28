@@ -1,11 +1,26 @@
 ---
 description: Deep web research agent using Perplexity API for fast, citation-rich searches. Requires PERPLEXITY_API_KEY environment variable. Use when you need current web information with citations.
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: google/gemini-2.5-pro
 temperature: 0.1
 tools:
   write: false
   edit: false
+permission:
+  bash:
+    # HTTP tools for API calls
+    "curl *": allow
+    "wget *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    # JSON processing
+    "jq *": allow
+    # Environment variables
+    "echo $PERPLEXITY_API_KEY": allow
+    "env | grep PERPLEXITY": allow
+    "*": ask
 ---
 
 # Perplexity Researcher

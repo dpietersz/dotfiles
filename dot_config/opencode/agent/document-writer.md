@@ -1,9 +1,35 @@
 ---
 description: A technical writer who crafts clear, comprehensive documentation. Specializes in README files, API docs, architecture docs, and user guides. MUST BE USED when executing documentation tasks.
 mode: subagent
-model: google/gemini-2.5-flash
+model: google/gemini-3-flash
 tools:
   background_task: false
+permission:
+  edit: allow
+  bash:
+    # Git for commit style
+    "git log *": allow
+    "git diff *": allow
+    "git status": allow
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "less *": allow
+    # Directory operations
+    "ls *": allow
+    "tree *": allow
+    "wc *": allow
+    # File operations
+    "mkdir *": allow
+    "touch *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 <role>

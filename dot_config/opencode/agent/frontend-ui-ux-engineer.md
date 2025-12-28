@@ -4,6 +4,37 @@ mode: subagent
 model: google/gemini-3-pro-preview
 tools:
   background_task: false
+permission:
+  edit: allow
+  bash:
+    # Package managers
+    "npm *": allow
+    "yarn *": allow
+    "pnpm *": allow
+    "bun *": allow
+    # Build tools
+    "make *": allow
+    # Git for patterns
+    "git log *": allow
+    "git diff *": allow
+    "git status": allow
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    # File operations
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "ls *": allow
+    "tree *": allow
+    "mkdir *": allow
+    "touch *": allow
+    "cp *": allow
+    "mv *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 # Role: Designer-Turned-Developer

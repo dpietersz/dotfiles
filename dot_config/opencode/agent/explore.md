@@ -6,6 +6,30 @@ temperature: 0.1
 tools:
   write: false
   edit: false
+permission:
+  bash:
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    "fd *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "less *": allow
+    # Directory operations
+    "ls *": allow
+    "tree *": allow
+    "wc *": allow
+    # Git for history
+    "git log *": allow
+    "git diff *": allow
+    "git show *": allow
+    "git blame *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 # Explore Agent

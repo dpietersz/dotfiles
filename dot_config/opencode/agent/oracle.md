@@ -8,6 +8,29 @@ tools:
   edit: false
 reasoningEffort: medium
 textVerbosity: high
+permission:
+  bash:
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "less *": allow
+    # Directory operations
+    "ls *": allow
+    "tree *": allow
+    "wc *": allow
+    # Git for context
+    "git log *": allow
+    "git diff *": allow
+    "git show *": allow
+    "git blame *": allow
+    # JSON processing
+    "jq *": allow
+    "*": ask
 ---
 
 # The Oracle

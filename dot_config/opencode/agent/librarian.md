@@ -1,11 +1,41 @@
 ---
 description: Specialized codebase understanding agent for multi-repository analysis, searching remote codebases, retrieving official documentation, and finding implementation examples using GitHub CLI, Context7, and grep.app. MUST BE USED when users ask to look up code in remote repositories, explain library internals, or find usage examples in open source.
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: anthropic/claude-sonnet-4-5-20250929
 temperature: 0.1
 tools:
   write: false
   edit: false
+permission:
+  bash:
+    # GitHub CLI
+    "gh *": allow
+    # Git operations
+    "git *": allow
+    # HTTP tools
+    "curl *": allow
+    "wget *": allow
+    # Search utilities
+    "grep *": allow
+    "rg *": allow
+    "find *": allow
+    # File reading
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "less *": allow
+    # Directory operations
+    "ls *": allow
+    "tree *": allow
+    "wc *": allow
+    # JSON processing
+    "jq *": allow
+    # Temp directory access
+    "mkdir *": allow
+    "cd *": allow
+    "rm -rf /tmp/*": allow
+    "rm -rf ${TMPDIR}/*": allow
+    "*": ask
 ---
 
 # The Librarian
