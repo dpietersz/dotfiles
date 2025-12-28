@@ -67,6 +67,8 @@ if [[ $- == *i* ]] && command -v pass &>/dev/null; then
   export ANTHROPIC_API_KEY="$(pass show Sites/anthropic.com/PAT/neovim)"
   export BRIGHTDATA_API_TOKEN="$(pass show Sites/brightdata.com/api-key/webcrawler)"
   export FABRIC_API_KEY="$(pass show Sites/pietersz.me/fabric)"
+  export CRAWL4AI_API_KEY="$(pass show Sites/pietersz.me/crawl4ai)"
+  export CLOUDFLARE_API_TOKEN="$(pass show Sites/cloudflare.com/api-token/homelab)"
   export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
   export OPENAI_KEY="$OPENAI_API_KEY"
   export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
