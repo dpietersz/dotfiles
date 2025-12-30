@@ -22,49 +22,19 @@
   // Provider configuration
   "provider": {
     // Google/Gemini models via Antigravity OAuth
-    // Claude models are accessed directly via Anthropic (Claude Max subscription)
-    "antigravity": {
-      "npm": "@ai-sdk/google",
+    // Authenticated via opencode-antigravity-auth plugin
+    // Use: opencode run -m google/gemini-3-flash -p "your prompt"
+    "google": {
       "models": {
-        // Gemini 3 Pro Preview - Latest reasoning model (Released: Nov 18, 2025)
-        "gemini-3-pro-preview": {
-          "id": "gemini-3-pro-preview",
-          "name": "Gemini 3 Pro Preview",
+        // Gemini 3 Pro - Latest reasoning model (Released: Nov 18, 2025)
+        "gemini-3-pro": {
+          "id": "gemini-3-pro",
+          "name": "Gemini 3 Pro",
           "release_date": "2025-11-18",
           "reasoning": true,
           "limit": { "context": 1000000, "output": 64000 },
           "cost": { "input": 2, "output": 12 },
           "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] }
-        },
-        "gemini-3-pro-preview-thinking-low": {
-          "id": "gemini-3-pro-preview",
-          "name": "Gemini 3 Pro Preview (Thinking - Low)",
-          "release_date": "2025-11-18",
-          "reasoning": true,
-          "limit": { "context": 1000000, "output": 64000 },
-          "cost": { "input": 2, "output": 12 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "low", "includeThoughts": true }
-        },
-        "gemini-3-pro-preview-thinking-medium": {
-          "id": "gemini-3-pro-preview",
-          "name": "Gemini 3 Pro Preview (Thinking - Medium)",
-          "release_date": "2025-11-18",
-          "reasoning": true,
-          "limit": { "context": 1000000, "output": 64000 },
-          "cost": { "input": 2, "output": 12 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "medium", "includeThoughts": true }
-        },
-        "gemini-3-pro-preview-thinking-high": {
-          "id": "gemini-3-pro-preview",
-          "name": "Gemini 3 Pro Preview (Thinking - High)",
-          "release_date": "2025-11-18",
-          "reasoning": true,
-          "limit": { "context": 1000000, "output": 64000 },
-          "cost": { "input": 2, "output": 12 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "high", "includeThoughts": true }
         },
         // Gemini 3 Flash - Latest fast model (Released: Dec 17, 2025)
         "gemini-3-flash": {
@@ -76,37 +46,7 @@
           "cost": { "input": 0.5, "output": 3 },
           "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] }
         },
-        "gemini-3-flash-thinking-low": {
-          "id": "gemini-3-flash",
-          "name": "Gemini 3 Flash (Thinking - Low)",
-          "release_date": "2025-12-17",
-          "reasoning": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "cost": { "input": 0.5, "output": 3 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "low", "includeThoughts": true }
-        },
-        "gemini-3-flash-thinking-medium": {
-          "id": "gemini-3-flash",
-          "name": "Gemini 3 Flash (Thinking - Medium)",
-          "release_date": "2025-12-17",
-          "reasoning": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "cost": { "input": 0.5, "output": 3 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "medium", "includeThoughts": true }
-        },
-        "gemini-3-flash-thinking-high": {
-          "id": "gemini-3-flash",
-          "name": "Gemini 3 Flash (Thinking - High)",
-          "release_date": "2025-12-17",
-          "reasoning": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "cost": { "input": 0.5, "output": 3 },
-          "modalities": { "input": ["text", "image", "video", "audio", "pdf"], "output": ["text"] },
-          "options": { "thinkingLevel": "high", "includeThoughts": true }
-        },
-        // Gemini 2.5 Flash - Reasoning model with thinking budget (Released: May 19, 2025)
+        // Gemini 2.5 Flash - Reasoning model (Released: May 19, 2025)
         "gemini-2.5-flash": {
           "id": "gemini-2.5-flash",
           "name": "Gemini 2.5 Flash",
@@ -115,16 +55,6 @@
           "limit": { "context": 1048576, "output": 65536 },
           "cost": { "input": 1.25, "output": 10 },
           "modalities": { "input": ["text", "image", "audio", "video", "pdf"], "output": ["text"] }
-        },
-        "gemini-2.5-flash-thinking": {
-          "id": "gemini-2.5-flash",
-          "name": "Gemini 2.5 Flash (Thinking)",
-          "release_date": "2025-05-19",
-          "reasoning": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "cost": { "input": 1.25, "output": 10 },
-          "modalities": { "input": ["text", "image", "audio", "video", "pdf"], "output": ["text"] },
-          "options": { "thinkingBudget": 8192, "includeThoughts": true }
         },
         // Gemini 2.5 Flash Lite - Fast, cost-effective model (Released: June 16, 2025)
         "gemini-2.5-flash-lite": {
