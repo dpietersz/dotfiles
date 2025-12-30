@@ -26,6 +26,13 @@ fi
 # Install Playwright browsers if not already installed
 if [ ! -d "$HOME/Library/Caches/ms-playwright" ]; then
   echo "[playwright-mcp-service] Installing Playwright browsers..."
+  INSTALL_DIR=/tmp/playwright-install
+  mkdir -p "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
+  if [ ! -f package.json ]; then
+    npm init -y >/dev/null 2>&1
+    npm install @playwright/test >/dev/null 2>&1
+  fi
   npx playwright install chromium
 fi
 
@@ -103,10 +110,23 @@ fi
 echo "[playwright-mcp-service] Ensuring Playwright browsers are installed..."
 distrobox enter playwright -- bash -c '
   export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+  
   # Fix permissions if needed (allow MCP to create browser profiles)
   sudo chmod -R 777 /opt/playwright-browsers 2>/dev/null || true
-  # Install/update chromium for the MCP server
-  npx playwright install chromium 2>/dev/null || true
+  
+  # Install chromium using a temp project (npx playwright install needs a project context)
+  INSTALL_DIR=/tmp/playwright-install
+  if [ ! -f "$INSTALL_DIR/package.json" ]; then
+    echo "Setting up Playwright install environment..."
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    npm init -y >/dev/null 2>&1
+    npm install @playwright/test >/dev/null 2>&1
+  fi
+  
+  cd "$INSTALL_DIR"
+  echo "Installing Chromium browser..."
+  npx playwright install chromium || echo "Browser install completed (or already installed)"
 '
 echo "[playwright-mcp-service] Playwright browsers ready."
 
