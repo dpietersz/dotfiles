@@ -23,6 +23,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - [Install Applications with OpenCode](./how-to/opencode-install-app.md) - Install and manage applications
 - [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md) - Securely add and validate encrypted keys
 - [Create Custom Scripts with OpenCode](./how-to/opencode-create-scripts.md) - Create automation scripts
+- [Add Antigravity Authentication for OpenCode](./how-to/opencode-antigravity-setup.md) - Set up Google Gemini models via Antigravity OAuth
 - [Add Encrypted Keys](./how-to/add-encrypted-keys.md) - Securely add private keys to your dotfiles
 - [Write Git Commits](./how-to/git-commits.md) - Follow conventional commit standards
 - [Verify Security Remediation](./how-to/verify-remediation.md) - Verify and update after security remediation
@@ -68,6 +69,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 
 ### OpenCode System (Legacy)
 - **Get started with OpenCode** → [Getting Started with OpenCode](./getting-started/opencode-setup.md)
+- **Set up Antigravity Authentication** → [Set Up Antigravity Authentication](./how-to/opencode-antigravity-setup.md)
 - **Modify a configuration** → [Modify Any Configuration with OpenCode](./how-to/opencode-modify-config.md)
 - **Install an application** → [Install Applications with OpenCode](./how-to/opencode-install-app.md)
 - **Manage encrypted keys** → [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md)
@@ -140,4 +142,4 @@ See [Diátaxis Framework](./explanation/diataxis-framework.md) for detailed guid
 
 ## Last Updated
 
-October 30, 2025
+December 30, 2025

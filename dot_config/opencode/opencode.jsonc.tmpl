@@ -23,7 +23,17 @@
   "provider": {
     // Google/Gemini models via Antigravity OAuth
     // Authenticated via opencode-antigravity-auth plugin
-    // Use: opencode run -m google/gemini-3-flash -p "your prompt"
+    // 
+    // IMPORTANT: When running `opencode auth login`:
+    //   1. Select "Google" → "OAuth with Google (Antigravity)"
+    //   2. Press ENTER to SKIP the Project ID (do NOT enter a project ID!)
+    //   3. Sign in via browser
+    // 
+    // If you enter a Project ID, you'll get 403/404 errors because it requires
+    // a Gemini Code Assist license. Skipping uses personal Antigravity quota.
+    //
+    // Model names below are Antigravity-specific (not standard Google API names).
+    // See: docs/how-to/opencode-antigravity-setup.md
     "google": {
       "models": {
         // Gemini 3 Pro - High thinking (best for complex reasoning, frontend, agentic coding)
