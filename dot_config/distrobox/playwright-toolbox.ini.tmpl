@@ -1,0 +1,37 @@
+# Distrobox configuration for Playwright MCP server
+# This container runs the Playwright MCP server for browser automation
+
+[playwright-toolbox]
+# Container name
+container_name=playwright
+
+# Container image
+image=ghcr.io/dpietersz/playwright-toolbox:latest
+
+# Use podman as the container manager
+container_manager=podman
+
+# Mount home directory
+home_mount_path=$HOME
+
+# Additional mount paths (optional)
+# mount_paths=/mnt/data:/mnt/data
+
+# Privileged mode (not needed for headless browsers)
+privileged=false
+
+# Init system
+init=true
+
+# Pull image every time (force latest image)
+pull=true
+
+# Additional packages to install on first run (optional)
+# additional_packages=
+
+# Init hooks - runs inside the container after setup
+# init_hooks="${HOME}/.local/bin/scripts/playwright-setup.sh"
+
+# Additional environment variables
+# The PLAYWRIGHT_BROWSERS_PATH is set in the container image
+# extra_flags=--env VAR=value

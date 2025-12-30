@@ -15,9 +15,10 @@ DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
 distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/browser-toolbox.ini" --replace
 distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/data-toolbox.ini" --replace
 distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/notetaking-toolbox.ini" --replace
+distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" --replace
 
 echo "✓ Toolbox containers created successfully"
-distrobox list | grep -E "daily-driver-(arch|fedora)" || true
+distrobox list
 
 {{- end }}
 

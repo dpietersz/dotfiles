@@ -2,12 +2,78 @@
 
 set -euo pipefail
 
-# ------------------ Enable playwright-mcp systemd service ------------------
-# This script enables the playwright-mcp systemd user service after the service file
-# has been deployed by chezmoi. It requires distrobox and the playwright distrobox.
+# ------------------ Enable playwright-mcp service ------------------
+# This script enables the playwright-mcp service after chezmoi deployment.
+# - On Linux (Bluefin/Fedora): Uses systemd + distrobox
+# - On macOS: Uses launchd + native npx
+# - On remote: Skips entirely
 
 {{- if .remote }}
 echo "[playwright-mcp-service] Skipping: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+{{- if .isMacOS }}
+# ------------------ macOS: Use launchd ------------------
+echo "[playwright-mcp-service] macOS detected, using launchd..."
+
+# Check if node/npx is available
+if ! command -v npx >/dev/null 2>&1; then
+  echo "[playwright-mcp-service] npx not found, skipping. Install Node.js first."
+  exit 0
+fi
+
+# Install Playwright browsers if not already installed
+if [ ! -d "$HOME/Library/Caches/ms-playwright" ]; then
+  echo "[playwright-mcp-service] Installing Playwright browsers..."
+  npx playwright install chromium
+fi
+
+# Create launchd plist for playwright-mcp
+PLIST_FILE="$HOME/Library/LaunchAgents/com.playwright.mcp.plist"
+mkdir -p "$HOME/Library/LaunchAgents"
+
+cat > "$PLIST_FILE" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.playwright.mcp</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/npx</string>
+        <string>@playwright/mcp@latest</string>
+        <string>--headless</string>
+        <string>--port</string>
+        <string>8931</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/playwright-mcp.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/playwright-mcp.err</string>
+</dict>
+</plist>
+EOF
+
+# Load the launchd service
+launchctl unload "$PLIST_FILE" 2>/dev/null || true
+launchctl load "$PLIST_FILE"
+
+echo "[playwright-mcp-service] launchd service loaded."
+sleep 3
+
+# Verify the service is listening
+if lsof -i :8931 >/dev/null 2>&1; then
+  echo "[playwright-mcp-service] ✅ Playwright MCP is listening on http://localhost:8931/mcp"
+else
+  echo "[playwright-mcp-service] ⚠️  Warning: Service may not be listening. Check /tmp/playwright-mcp.log"
+fi
+
 exit 0
 {{- end }}
 
@@ -17,10 +83,17 @@ if ! command -v distrobox >/dev/null 2>&1; then
   exit 0
 fi
 
-# Check if playwright distrobox exists
+# Check if playwright distrobox exists, create if not
 if ! distrobox list | grep -q "playwright"; then
-  echo "[playwright-mcp-service] playwright distrobox not found, skipping service enablement."
-  exit 0
+  echo "[playwright-mcp-service] playwright distrobox not found, creating..."
+  DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
+  if [ -f "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" ]; then
+    distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini"
+    echo "[playwright-mcp-service] playwright distrobox created."
+  else
+    echo "[playwright-mcp-service] playwright-toolbox.ini not found, skipping."
+    exit 0
+  fi
 fi
 
 # Check if service file exists
