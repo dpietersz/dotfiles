@@ -231,14 +231,38 @@
       "environment": {
         "API_TOKEN": "{env:BRIGHTDATA_API_TOKEN}"
       }
+    },
+    // Brave Search MCP - Web search using Brave Search API
+    // Used by: research skill, explore agent
+    // Requires: BRAVE_API_KEY env var
+    "brave": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "environment": {
+        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
+      }
+    },
+    // Perplexity Search MCP - Real-time web search and reasoning using Perplexity API
+    // Used by: perplexity-researcher agent, research skill
+    // Requires: PERPLEXITY_API_KEY env var
+    "perplexity": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@perplexity-ai/mcp-server"],
+      "environment": {
+        "PERPLEXITY_API_KEY": "{env:PERPLEXITY_API_KEY}"
+      }
+    },
+    // Sequential Thinking MCP - Structured reasoning and problem-solving
+    // Used by: oracle agent, complex reasoning tasks
+    // No environment variables required
+    "sequential-thinking": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
-    // Crawl4AI - Self-hosted web scraping with JS rendering (Layer 1.5)
-    // Used by: research skill retrieve workflow (primary scraper)
-    // Accessed via REST API (curl), not MCP - see workflows/retrieve.md
-    // Base URL: https://crawl4ai.pietersz.me
-    // Docs: https://crawl4ai.pietersz.me/docs
-    // Requires: CRAWL4AI_API_TOKEN env var
-  },
+  }
 
   // Agents are loaded from agent/*.md files (markdown with YAML frontmatter)
   // Commands are loaded from command/*.md files (markdown with YAML frontmatter)
