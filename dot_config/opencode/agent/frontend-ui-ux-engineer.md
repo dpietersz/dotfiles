@@ -1,7 +1,7 @@
 ---
 description: A designer-turned-developer who crafts stunning UI/UX even without design mockups. Code may be a bit messy, but the visual output is always fire.
 mode: subagent
-model: google/gemini-3-pro
+model: google/gemini-3-pro-preview
 tools:
   background_task: false
 permission:
