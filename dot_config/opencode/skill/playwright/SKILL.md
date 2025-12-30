@@ -70,6 +70,21 @@ This system has Playwright installed in a distrobox container with browsers pre-
 → **LOAD:** `workflows/codegen.md`
 → **EXECUTE:** Use playwright-codegen CLI to record and generate code
 
+### Authentication Setup Workflow
+**Trigger:** "authentication setup", "login session", "storageState", "multi-role testing"
+→ **LOAD:** `workflows/auth.md`
+→ **EXECUTE:** Configure globalSetup, storageState, and multi-role authentication
+
+### Visual Regression Workflow
+**Trigger:** "visual regression", "screenshot comparison", "visual testing", "baseline"
+→ **LOAD:** `workflows/visual-regression.md`
+→ **EXECUTE:** Set up toHaveScreenshot(), masking, thresholds, and CI integration
+
+### E2E Testing Best Practices Workflow
+**Trigger:** "e2e testing", "test structure", "page objects", "fixtures", "CI/CD"
+→ **LOAD:** `workflows/e2e-testing.md`
+→ **EXECUTE:** Project structure, POM pattern, fixtures, parallel execution, debugging
+
 ---
 
 ## MCP Tools Reference
