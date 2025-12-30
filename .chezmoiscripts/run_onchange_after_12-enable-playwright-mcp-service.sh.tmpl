@@ -45,11 +45,19 @@ if [ ! -d "$HOME/Library/Caches/ms-playwright" ]; then
   npx playwright install chromium
 fi
 
+# Detect actual npx path (mise installs to dynamic location)
+NPX_PATH=$(command -v npx)
+if [ -z "$NPX_PATH" ]; then
+  echo "[playwright] npx not found, skipping."
+  exit 0
+fi
+echo "[playwright] Using npx at: $NPX_PATH"
+
 # Create launchd plist for playwright-mcp
 PLIST_FILE="$HOME/Library/LaunchAgents/com.playwright.mcp.plist"
 mkdir -p "$HOME/Library/LaunchAgents"
 
-cat > "$PLIST_FILE" << 'EOF'
+cat > "$PLIST_FILE" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -58,7 +66,7 @@ cat > "$PLIST_FILE" << 'EOF'
     <string>com.playwright.mcp</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/npx</string>
+        <string>$NPX_PATH</string>
         <string>@playwright/mcp@latest</string>
         <string>--headless</string>
         <string>--port</string>
