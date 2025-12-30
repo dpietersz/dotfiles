@@ -7,7 +7,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-ExecStart=/usr/bin/distrobox enter playwright -- env PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers npx @playwright/mcp@latest --headless --port 8931
+ExecStart=/usr/bin/distrobox enter playwright -- env PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers npx @playwright/mcp@latest --headless --browser chromium --port 8931
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal
