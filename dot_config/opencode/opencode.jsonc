@@ -10,6 +10,9 @@
 
   "$schema": "https://opencode.ai/config.json",
 
+  // Default model - Claude Opus 4.5 (latest)
+  "model": "anthropic/claude-opus-4-5-latest",
+
   // Plugins for enhanced functionality
   // Note: OpenCode caches resolved versions. To update plugins, run:
   // rm -rf ~/.cache/opencode/node_modules ~/.cache/opencode/bun.lock
