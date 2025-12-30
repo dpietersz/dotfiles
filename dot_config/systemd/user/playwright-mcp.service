@@ -1,0 +1,17 @@
+[Unit]
+Description=Playwright MCP Server
+Documentation=https://github.com/microsoft/playwright-mcp
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/distrobox enter playwright -- npx @playwright/mcp@latest --headless --port 8931
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=playwright-mcp
+
+[Install]
+WantedBy=default.target

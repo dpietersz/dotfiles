@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# ------------------ Enable playwright-mcp systemd service ------------------
+# This script enables the playwright-mcp systemd user service after the service file
+# has been deployed by chezmoi. It requires distrobox and the playwright distrobox.
+
+{{- if .remote }}
+echo "[playwright-mcp-service] Skipping: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+# Only proceed if distrobox is installed
+if ! command -v distrobox >/dev/null 2>&1; then
+  echo "[playwright-mcp-service] distrobox not installed, skipping service enablement."
+  exit 0
+fi
+
+# Check if playwright distrobox exists
+if ! distrobox list | grep -q "playwright"; then
+  echo "[playwright-mcp-service] playwright distrobox not found, skipping service enablement."
+  exit 0
+fi
+
+# Check if service file exists
+SERVICE_FILE="$HOME/.config/systemd/user/playwright-mcp.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+  echo "[playwright-mcp-service] Service file not found at $SERVICE_FILE"
+  exit 0
+fi
+
+echo "[playwright-mcp-service] Enabling and starting playwright-mcp systemd service..."
+
+# Reload systemd user daemon to pick up the new service file
+systemctl --user daemon-reload
+
+# Enable the service (creates the symlink in default.target.wants/)
+systemctl --user enable playwright-mcp.service
+
+# Stop any existing instance on port 8931 to avoid conflicts
+if lsof -i :8931 >/dev/null 2>&1; then
+  echo "[playwright-mcp-service] Stopping existing process on port 8931..."
+  lsof -ti :8931 | xargs kill -9 2>/dev/null || true
+  sleep 2
+fi
+
+# Start the service if not already running
+if ! systemctl --user is-active --quiet playwright-mcp.service; then
+  systemctl --user start playwright-mcp.service
+  echo "[playwright-mcp-service] Service started."
+  # Wait for service to be ready
+  sleep 3
+else
+  echo "[playwright-mcp-service] Service already running."
+fi
+
+echo "[playwright-mcp-service] Done. Status:"
+systemctl --user status playwright-mcp.service --no-pager || true
+
+# Verify the service is listening on port 8931
+if lsof -i :8931 >/dev/null 2>&1; then
+  echo "[playwright-mcp-service] ✅ Playwright MCP is listening on http://localhost:8931/mcp"
+else
+  echo "[playwright-mcp-service] ⚠️  Warning: Service may not be listening on port 8931 yet. Check logs with: journalctl --user -u playwright-mcp.service -n 20"
+fi

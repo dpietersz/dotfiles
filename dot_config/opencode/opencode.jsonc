@@ -261,6 +261,15 @@
       "type": "local",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    // Playwright MCP - Browser automation via Playwright running in distrobox
+    // Used by: web automation, testing, browser interaction tasks
+    // Requires: playwright distrobox (distrobox enter playwright)
+    // Service: Managed by systemd (playwright-mcp.service)
+    // Endpoint: http://localhost:8931/mcp (started automatically via chezmoi)
+    "playwright": {
+      "type": "remote",
+      "url": "http://localhost:8931/mcp"
     }
   }
 
