@@ -6,8 +6,6 @@ temperature: 0.1
 tools:
   write: false
   edit: false
-  mcp:
-    perplexity: true
 permission:
   bash:
     # File reading only - API calls go through MCP
