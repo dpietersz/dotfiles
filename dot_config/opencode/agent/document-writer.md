@@ -1,7 +1,7 @@
 ---
 description: A technical writer who crafts clear, comprehensive documentation. Specializes in README files, API docs, architecture docs, and user guides. MUST BE USED when executing documentation tasks.
 mode: subagent
-model: google/gemini-3-flash-preview
+model: google/gemini-3-flash
 tools:
   background_task: false
 permission:
