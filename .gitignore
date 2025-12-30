@@ -5,6 +5,3 @@ dotfiles_gruvbox-example/
 .opencode/package.json
 .opencode/bun.lock
 .opencode/node_modules/
-
-# Legacy OpenCode config (superseded by dot_config/opencode/opencode.jsonc)
-opencode.json
