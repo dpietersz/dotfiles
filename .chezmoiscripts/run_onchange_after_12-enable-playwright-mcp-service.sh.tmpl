@@ -64,6 +64,11 @@ cat > "$PLIST_FILE" << EOF
 <dict>
     <key>Label</key>
     <string>com.playwright.mcp</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
     <key>ProgramArguments</key>
     <array>
         <string>$NPX_PATH</string>

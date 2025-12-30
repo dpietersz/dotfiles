@@ -177,14 +177,14 @@
     // Wrapper script loads API key from password store automatically
     "brave": {
       "type": "local",
-      "command": ["/var/home/pietersz/.local/bin/scripts/brave-mcp-wrapper.sh"]
+      "command": ["{{ .chezmoi.homeDir }}/.local/bin/scripts/brave-mcp-wrapper.sh"]
     },
     // Perplexity Search MCP - Real-time web search and reasoning using Perplexity API
     // Used by: perplexity-researcher agent, research skill
     // Wrapper script loads API key from password store automatically
     "perplexity": {
       "type": "local",
-      "command": ["/var/home/pietersz/.local/bin/scripts/perplexity-mcp-wrapper.sh"]
+      "command": ["{{ .chezmoi.homeDir }}/.local/bin/scripts/perplexity-mcp-wrapper.sh"]
     },
     // Playwright MCP - Browser automation via Playwright running in distrobox
     // Used by: web automation, testing, browser interaction tasks
