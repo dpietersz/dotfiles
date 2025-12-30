@@ -10,4 +10,5 @@ for file in "${XDG_CONFIG_HOME:-$HOME/.config}/bash"/*.sh; do
   [[ -r "$file" ]] && source "$file"
 done
 
-
+# AsyncAPI CLI Autocomplete
+ASYNCAPI_AC_BASH_SETUP_PATH={{ .chezmoi.homeDir }}/.cache/@asyncapi/cli/autocomplete/bash_setup && test -f $ASYNCAPI_AC_BASH_SETUP_PATH && source $ASYNCAPI_AC_BASH_SETUP_PATH

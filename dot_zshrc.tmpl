@@ -14,3 +14,6 @@ for file in "${XDG_CONFIG_HOME:-$HOME/.config}/zsh"/*.sh; do
   [[ "$(basename "$file")" == "15-shell-options.sh" ]] && continue
   [[ -r "$file" ]] && source "$file"
 done
+
+# AsyncAPI CLI Autocomplete
+ASYNCAPI_AC_ZSH_SETUP_PATH={{ .chezmoi.homeDir }}/.cache/@asyncapi/cli/autocomplete/zsh_setup && test -f $ASYNCAPI_AC_ZSH_SETUP_PATH && source $ASYNCAPI_AC_ZSH_SETUP_PATH
