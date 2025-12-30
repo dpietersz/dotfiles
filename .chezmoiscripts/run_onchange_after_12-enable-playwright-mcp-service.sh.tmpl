@@ -84,17 +84,31 @@ if ! command -v distrobox >/dev/null 2>&1; then
 fi
 
 # Check if playwright distrobox exists, create if not
+DISTROBOX_CREATED=false
 if ! distrobox list | grep -q "playwright"; then
   echo "[playwright-mcp-service] playwright distrobox not found, creating..."
   DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
   if [ -f "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" ]; then
     distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini"
     echo "[playwright-mcp-service] playwright distrobox created."
+    DISTROBOX_CREATED=true
   else
     echo "[playwright-mcp-service] playwright-toolbox.ini not found, skipping."
     exit 0
   fi
 fi
+
+# Ensure Playwright browsers are installed and up-to-date
+# The MCP server may need a newer browser version than what's in the image
+echo "[playwright-mcp-service] Ensuring Playwright browsers are installed..."
+distrobox enter playwright -- bash -c '
+  export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+  # Fix permissions if needed (allow MCP to create browser profiles)
+  sudo chmod -R 777 /opt/playwright-browsers 2>/dev/null || true
+  # Install/update chromium for the MCP server
+  npx playwright install chromium 2>/dev/null || true
+'
+echo "[playwright-mcp-service] Playwright browsers ready."
 
 # Check if service file exists
 SERVICE_FILE="$HOME/.config/systemd/user/playwright-mcp.service"
