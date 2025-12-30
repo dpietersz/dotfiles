@@ -2,30 +2,39 @@
 
 set -euo pipefail
 
-# ------------------ Enable playwright-mcp service ------------------
-# This script enables the playwright-mcp service after chezmoi deployment.
-# - On Linux (Bluefin/Fedora): Uses systemd + distrobox
-# - On macOS: Uses launchd + native npx
-# - On remote: Skips entirely
+# ------------------ Setup Playwright MCP ------------------
+# This script sets up Playwright for use with OpenCode MCP.
+#
+# On Linux (Bluefin/Fedora):
+#   1. Creates playwright distrobox from ghcr.io/dpietersz/playwright-toolbox
+#   2. Exports playwright CLI tools to host via distrobox-export
+#   3. Installs/updates browsers inside the container
+#   4. Starts the MCP server via systemd
+#
+# On macOS:
+#   1. Installs Playwright browsers natively
+#   2. Starts the MCP server via launchd
+#
+# On remote: Skips entirely
 
 {{- if .remote }}
-echo "[playwright-mcp-service] Skipping: remote environment (.remote=true)."
+echo "[playwright] Skipping: remote environment (.remote=true)."
 exit 0
 {{- end }}
 
 {{- if .isMacOS }}
-# ------------------ macOS: Use launchd ------------------
-echo "[playwright-mcp-service] macOS detected, using launchd..."
+# ------------------ macOS: Native installation ------------------
+echo "[playwright] macOS detected, using native installation..."
 
 # Check if node/npx is available
 if ! command -v npx >/dev/null 2>&1; then
-  echo "[playwright-mcp-service] npx not found, skipping. Install Node.js first."
+  echo "[playwright] npx not found, skipping. Install Node.js first."
   exit 0
 fi
 
 # Install Playwright browsers if not already installed
 if [ ! -d "$HOME/Library/Caches/ms-playwright" ]; then
-  echo "[playwright-mcp-service] Installing Playwright browsers..."
+  echo "[playwright] Installing Playwright browsers..."
   INSTALL_DIR=/tmp/playwright-install
   mkdir -p "$INSTALL_DIR"
   cd "$INSTALL_DIR"
@@ -71,103 +80,103 @@ EOF
 launchctl unload "$PLIST_FILE" 2>/dev/null || true
 launchctl load "$PLIST_FILE"
 
-echo "[playwright-mcp-service] launchd service loaded."
+echo "[playwright] launchd service loaded."
 sleep 3
 
 # Verify the service is listening
 if lsof -i :8931 >/dev/null 2>&1; then
-  echo "[playwright-mcp-service] ✅ Playwright MCP is listening on http://localhost:8931/mcp"
+  echo "[playwright] ✅ Playwright MCP is listening on http://localhost:8931/mcp"
 else
-  echo "[playwright-mcp-service] ⚠️  Warning: Service may not be listening. Check /tmp/playwright-mcp.log"
+  echo "[playwright] ⚠️  Warning: Service may not be listening. Check /tmp/playwright-mcp.log"
 fi
 
 exit 0
 {{- end }}
 
+# ------------------ Linux: Distrobox-based installation ------------------
+
 # Only proceed if distrobox is installed
 if ! command -v distrobox >/dev/null 2>&1; then
-  echo "[playwright-mcp-service] distrobox not installed, skipping service enablement."
+  echo "[playwright] distrobox not installed, skipping."
   exit 0
 fi
 
 # Check if playwright distrobox exists, create if not
-DISTROBOX_CREATED=false
 if ! distrobox list | grep -q "playwright"; then
-  echo "[playwright-mcp-service] playwright distrobox not found, creating..."
+  echo "[playwright] Creating playwright distrobox..."
   DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
   if [ -f "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" ]; then
     distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini"
-    echo "[playwright-mcp-service] playwright distrobox created."
-    DISTROBOX_CREATED=true
+    echo "[playwright] Distrobox created."
   else
-    echo "[playwright-mcp-service] playwright-toolbox.ini not found, skipping."
+    echo "[playwright] playwright-toolbox.ini not found, skipping."
     exit 0
   fi
 fi
 
-# Ensure Playwright browsers are installed and up-to-date
-# The MCP server may need a newer browser version than what's in the image
-echo "[playwright-mcp-service] Ensuring Playwright browsers are installed..."
+# Export Playwright CLI tools to host (this is the distrobox way!)
+# This makes playwright, playwright-test, playwright-codegen available on the host
+echo "[playwright] Exporting Playwright CLI tools to host..."
+if [ ! -f "$HOME/.local/bin/playwright" ]; then
+  distrobox enter playwright -- /usr/local/bin/setup-host-integration
+  echo "[playwright] CLI tools exported to ~/.local/bin/"
+else
+  echo "[playwright] CLI tools already exported."
+fi
+
+# Ensure browsers are installed and up-to-date
+echo "[playwright] Ensuring browsers are installed..."
 distrobox enter playwright -- bash -c '
   export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
   
-  # Fix permissions if needed (allow MCP to create browser profiles)
+  # Fix permissions for browser profiles
   sudo chmod -R 777 /opt/playwright-browsers 2>/dev/null || true
   
-  # Install chromium using a temp project (npx playwright install needs a project context)
+  # Install chromium using a temp project context
   INSTALL_DIR=/tmp/playwright-install
   if [ ! -f "$INSTALL_DIR/package.json" ]; then
-    echo "Setting up Playwright install environment..."
     mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
     npm init -y >/dev/null 2>&1
     npm install @playwright/test >/dev/null 2>&1
   fi
-  
   cd "$INSTALL_DIR"
-  echo "Installing Chromium browser..."
-  npx playwright install chromium || echo "Browser install completed (or already installed)"
+  npx playwright install chromium 2>&1 || true
 '
-echo "[playwright-mcp-service] Playwright browsers ready."
+echo "[playwright] Browsers ready."
 
-# Check if service file exists
+# Start the MCP server via systemd
 SERVICE_FILE="$HOME/.config/systemd/user/playwright-mcp.service"
 if [ ! -f "$SERVICE_FILE" ]; then
-  echo "[playwright-mcp-service] Service file not found at $SERVICE_FILE"
+  echo "[playwright] Service file not found at $SERVICE_FILE, skipping MCP setup."
+  echo "[playwright] ✅ Playwright CLI tools are available on host. Use: playwright --help"
   exit 0
 fi
 
-echo "[playwright-mcp-service] Enabling and starting playwright-mcp systemd service..."
-
-# Reload systemd user daemon to pick up the new service file
+echo "[playwright] Starting MCP server..."
 systemctl --user daemon-reload
-
-# Enable the service (creates the symlink in default.target.wants/)
 systemctl --user enable playwright-mcp.service
 
-# Stop any existing instance on port 8931 to avoid conflicts
+# Stop any existing instance on port 8931
 if lsof -i :8931 >/dev/null 2>&1; then
-  echo "[playwright-mcp-service] Stopping existing process on port 8931..."
+  echo "[playwright] Stopping existing process on port 8931..."
   lsof -ti :8931 | xargs kill -9 2>/dev/null || true
   sleep 2
 fi
 
-# Start the service if not already running
+# Start the service
 if ! systemctl --user is-active --quiet playwright-mcp.service; then
   systemctl --user start playwright-mcp.service
-  echo "[playwright-mcp-service] Service started."
-  # Wait for service to be ready
   sleep 3
-else
-  echo "[playwright-mcp-service] Service already running."
 fi
 
-echo "[playwright-mcp-service] Done. Status:"
-systemctl --user status playwright-mcp.service --no-pager || true
-
-# Verify the service is listening on port 8931
+# Verify
 if lsof -i :8931 >/dev/null 2>&1; then
-  echo "[playwright-mcp-service] ✅ Playwright MCP is listening on http://localhost:8931/mcp"
+  echo "[playwright] ✅ MCP server listening on http://localhost:8931/mcp"
 else
-  echo "[playwright-mcp-service] ⚠️  Warning: Service may not be listening on port 8931 yet. Check logs with: journalctl --user -u playwright-mcp.service -n 20"
+  echo "[playwright] ⚠️  MCP server may not be ready. Check: journalctl --user -u playwright-mcp -n 20"
 fi
+
+echo "[playwright] ✅ Setup complete!"
+echo "[playwright]    - CLI tools: playwright, playwright-test, playwright-codegen"
+echo "[playwright]    - MCP server: http://localhost:8931/mcp"
