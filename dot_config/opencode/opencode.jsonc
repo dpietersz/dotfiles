@@ -237,8 +237,7 @@
     // Requires: BRAVE_API_KEY env var
     "brave": {
       "type": "local",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-brave-search"],
       "environment": {
         "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
       }
@@ -248,8 +247,7 @@
     // Requires: PERPLEXITY_API_KEY env var
     "perplexity": {
       "type": "local",
-      "command": "npx",
-      "args": ["-y", "@perplexity-ai/mcp-server"],
+      "command": ["npx", "-y", "@perplexity-ai/mcp-server"],
       "environment": {
         "PERPLEXITY_API_KEY": "{env:PERPLEXITY_API_KEY}"
       }
@@ -259,8 +257,7 @@
     // No environment variables required
     "sequential-thinking": {
       "type": "local",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     // Playwright MCP - Browser automation via Playwright running in distrobox
     // Used by: web automation, testing, browser interaction tasks
