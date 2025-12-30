@@ -232,33 +232,6 @@
         "API_TOKEN": "{env:BRIGHTDATA_API_TOKEN}"
       }
     },
-    // Brave Search MCP - Web search using Brave Search API
-    // Used by: research skill, explore agent
-    // Requires: BRAVE_API_KEY env var
-    "brave": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-brave-search"],
-      "environment": {
-        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
-      }
-    },
-    // Perplexity Search MCP - Real-time web search and reasoning using Perplexity API
-    // Used by: perplexity-researcher agent, research skill
-    // Requires: PERPLEXITY_API_KEY env var
-    "perplexity": {
-      "type": "local",
-      "command": ["npx", "-y", "@perplexity-ai/mcp-server"],
-      "environment": {
-        "PERPLEXITY_API_KEY": "{env:PERPLEXITY_API_KEY}"
-      }
-    },
-    // Sequential Thinking MCP - Structured reasoning and problem-solving
-    // Used by: oracle agent, complex reasoning tasks
-    // No environment variables required
-    "sequential-thinking": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
-    },
     // Playwright MCP - Browser automation via Playwright running in distrobox
     // Used by: web automation, testing, browser interaction tasks
     // Requires: playwright distrobox (distrobox enter playwright)
