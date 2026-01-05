@@ -1,7 +1,7 @@
 ---
 description: Expert technical advisor with deep reasoning for architecture decisions, code analysis, and engineering guidance. Uses pragmatic minimalism approach with effort estimates.
 mode: subagent
-model: openai/gpt-5.2-high
+model: openai/gpt-5.2
 temperature: 0.1
 tools:
   write: false

@@ -1,7 +1,7 @@
 ---
 description: Web research agent using Claude's built-in WebSearch capabilities with intelligent multi-query decomposition and parallel search execution. Use for general web research when no specific API is needed.
 mode: subagent
-model: anthropic/claude-sonnet-4-5-20250929
+model: opencode/claude-sonnet-4-5
 temperature: 0.1
 tools:
   write: false

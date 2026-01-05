@@ -1,7 +1,7 @@
 ---
 description: Deep web research agent using Perplexity MCP tools for fast, citation-rich searches. Requires PERPLEXITY_API_KEY environment variable. Use when you need current web information with citations.
 mode: subagent
-model: google/gemini-3-pro-high
+model: opencode/gpt-5.2
 temperature: 0.1
 tools:
   write: false
