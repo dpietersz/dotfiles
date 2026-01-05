@@ -36,7 +36,7 @@ permission:
     "rg *": allow
     "find *": allow
     "fd *": allow
-    # File operations
+    # File operations - Full project scope
     "cat *": allow
     "head *": allow
     "tail *": allow
@@ -49,7 +49,9 @@ permission:
     "cp *": allow
     "mv *": allow
     "rm *": allow
+    "rm -rf *": allow
     "chmod *": allow
+    "chmod -R *": allow
     # JSON/YAML processing
     "jq *": allow
     "yq *": allow

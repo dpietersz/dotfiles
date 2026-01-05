@@ -3,9 +3,6 @@ description: Multi-perspective research agent using Google's Gemini model via Op
 mode: subagent
 model: opencode/gemini-3-flash
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 permission:
   bash:
     # HTTP tools for fetching

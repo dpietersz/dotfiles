@@ -3,9 +3,6 @@ description: Fast codebase exploration agent. Answers "Where is X?", "Which file
 mode: subagent
 model: google/gemini-3-flash
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 permission:
   bash:
     # Search utilities

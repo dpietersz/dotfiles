@@ -3,9 +3,6 @@ description: Specialized codebase understanding agent for multi-repository analy
 mode: subagent
 model: opencode/claude-sonnet-4-5
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 permission:
   bash:
     # GitHub CLI
@@ -31,10 +28,12 @@ permission:
     # JSON processing
     "jq *": allow
     # Temp directory access
+    # These are scoped to temporary directories only and are necessary
+    # for cloning repositories and processing files during research
     "mkdir *": allow
     "cd *": allow
-    "rm -rf /tmp/*": allow
-    "rm -rf ${TMPDIR}/*": allow
+    "rm -rf /tmp/*": allow      # Cleanup after repo cloning
+    "rm -rf ${TMPDIR}/*": allow # Cleanup after file processing
     "*": ask
 ---
 

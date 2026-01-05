@@ -3,9 +3,6 @@ description: Deep web research agent using Perplexity MCP tools for fast, citati
 mode: subagent
 model: opencode/gpt-5.2
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 permission:
   bash:
     # File reading only - API calls go through MCP

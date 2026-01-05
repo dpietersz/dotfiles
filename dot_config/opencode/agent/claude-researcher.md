@@ -3,9 +3,6 @@ description: Web research agent using Claude's built-in WebSearch capabilities w
 mode: subagent
 model: opencode/claude-sonnet-4-5
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 permission:
   bash:
     # HTTP tools for fetching

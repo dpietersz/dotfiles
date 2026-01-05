@@ -3,9 +3,6 @@ description: Expert technical advisor with deep reasoning for architecture decis
 mode: subagent
 model: openai/gpt-5.2
 temperature: 0.1
-tools:
-  write: false
-  edit: false
 reasoningEffort: medium
 textVerbosity: high
 permission:

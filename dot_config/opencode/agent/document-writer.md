@@ -2,8 +2,6 @@
 description: A technical writer who crafts clear, comprehensive documentation. Specializes in README files, API docs, architecture docs, and user guides. MUST BE USED when executing documentation tasks.
 mode: subagent
 model: opencode/gpt-5.1-codex-mini
-tools:
-  background_task: false
 permission:
   edit: allow
   bash:

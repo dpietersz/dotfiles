@@ -2,8 +2,6 @@
 description: A designer-turned-developer who crafts stunning UI/UX even without design mockups. Code may be a bit messy, but the visual output is always fire.
 mode: subagent
 model: opencode/claude-sonnet-4-5
-tools:
-  background_task: false
 permission:
   edit: allow
   bash:
