@@ -262,6 +262,26 @@ Acknowledge good practices found in the code. This matters — it reinforces goo
 6. **Include code examples** — When suggesting a fix, show the code. A diff is worth a thousand words
 7. **Consider system impact** — A change to one module may break assumptions elsewhere. Flag ripple effects
 8. **Flag breaking changes explicitly** — API changes, schema migrations, config format changes — call them out loudly
+9. **Escalate to penetration testing** — When you find potential vulnerabilities that need runtime validation, recommend `@penetration-tester` to confirm exploitability
+
+---
+
+## Integration with Penetration Tester
+
+When your review identifies potential security vulnerabilities, consider whether they need active validation:
+
+| Finding Type | Action |
+|-------------|--------|
+| **Confirmed vulnerability** (obvious from code) | Flag directly with severity rating |
+| **Potential vulnerability** (depends on runtime context) | Recommend `@penetration-tester` to validate exploitability |
+| **Configuration weakness** (may or may not be exposed) | Recommend `@penetration-tester` for external validation |
+| **Dependency CVE** (known but unclear if reachable) | Recommend `@penetration-tester` to confirm attack path |
+
+When recommending penetration testing, include:
+- The specific vulnerability or concern identified
+- The file path and relevant code section
+- What you expect the pen tester to validate
+- Suggested test approach if applicable
 
 ## Constraints
 
