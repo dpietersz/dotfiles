@@ -8,6 +8,8 @@ tools:
   edit: false
 permission:
   bash:
+    # ── Default — ask for unlisted commands ────────────────────────────
+    "*": ask
     # Search utilities
     "grep *": allow
     "rg *": allow
@@ -155,8 +157,6 @@ permission:
     "env *": allow
     "id *": allow
     "whoami *": allow
-    # Deny everything else by default
-    "*": ask
 ---
 
 # Penetration Tester

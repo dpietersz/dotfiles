@@ -51,6 +51,8 @@ permission:
     # Allow everything else
     "*": allow
   bash:
+    # ── Default — ask for unlisted commands ────────────────────────────
+    "*": ask
     # ── Version control ──────────────────────────────────────────────
     "git *": allow
     "gh *": allow
@@ -313,8 +315,6 @@ permission:
     "chmod -R 777 *": deny
     "terraform destroy *": ask
     "kubectl delete *": ask
-    # ── Everything else — ask ────────────────────────────────────────
-    "*": ask
 ---
 
 <Role>

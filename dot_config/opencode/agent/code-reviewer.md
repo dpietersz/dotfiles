@@ -8,6 +8,8 @@ tools:
   edit: false
 permission:
   bash:
+    # ── Default — ask for unlisted commands ────────────────────────────
+    "*": ask
     # Search utilities
     "grep *": allow
     "rg *": allow
@@ -109,8 +111,7 @@ permission:
     "cargo clippy *": allow
     "cargo test *": allow
     "cargo check *": allow
-    # Deny everything else by default
-    "*": ask
+
 ---
 
 # Code Reviewer

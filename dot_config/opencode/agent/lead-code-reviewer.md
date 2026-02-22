@@ -29,6 +29,8 @@ tools:
 permission:
   edit: deny
   bash:
+    # ── Default — ask for unlisted commands ────────────────────────────
+    "*": ask
     # ── Version control ──────────────────────────────────────────────
     "git *": allow
     "gh *": allow
@@ -223,8 +225,6 @@ permission:
     "reboot *": deny
     "systemctl *": deny
     "chmod -R 777 *": deny
-    # ── Everything else — ask ────────────────────────────────────────
-    "*": ask
 ---
 
 # Lead Code Reviewer
