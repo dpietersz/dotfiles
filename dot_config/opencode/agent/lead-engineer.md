@@ -6,59 +6,275 @@ maxTokens: 64000
 thinking:
   type: enabled
   budgetTokens: 32000
+tools:
+  # Full access — Lead Engineer builds, edits, and ships
+  write: true
+  edit: true
+  patch: true
+  read: true
+  grep: true
+  glob: true
+  list: true
+  bash: true
+  skill: true
+  todowrite: true
+  todoread: true
+  webfetch: true
+  websearch: true
+  question: true
+  lsp: true
 permission:
-  edit: allow
+  edit:
+    # Protect sensitive files from accidental modification
+    "**/.env": deny
+    "**/.env.local": deny
+    "**/.env.production": deny
+    "**/.env.staging": deny
+    "**/*.key": deny
+    "**/*.pem": deny
+    "**/*.p12": deny
+    "**/*.pfx": deny
+    "**/*id_rsa*": deny
+    "**/*id_ed25519*": deny
+    "**/credentials.json": deny
+    "**/.aws/credentials": deny
+    "**/.npmrc": deny
+    "**/.pypirc": deny
+    "**/*.secret": deny
+    "**/*.secret.*": deny
+    # Allow templates and examples
+    "**/.env.example": allow
+    "**/.env.template": allow
+    "**/.env.sample": allow
+    "**/*.pub": allow
+    # Allow everything else
+    "*": allow
   bash:
-    # Version control
+    # ── Version control ──────────────────────────────────────────────
     "git *": allow
     "gh *": allow
-    # Package managers
-    "npm *": allow
-    "yarn *": allow
-    "pnpm *": allow
-    "bun *": allow
-    "pip *": allow
-    "cargo *": allow
+    # ── Go toolchain ─────────────────────────────────────────────────
     "go *": allow
-    # Go toolchain
     "gofmt *": allow
     "goimports *": allow
     "golangci-lint *": allow
     "staticcheck *": allow
     "govulncheck *": allow
-    # Build tools
+    "gosec *": allow
+    "dlv *": allow
+    "benchstat *": allow
+    # ── Python toolchain ─────────────────────────────────────────────
+    "python *": allow
+    "python3 *": allow
+    "pytest *": allow
+    "mypy *": allow
+    "ruff *": allow
+    "ruff check *": allow
+    "black *": allow
+    "isort *": allow
+    "pylint *": allow
+    "flake8 *": allow
+    "bandit *": allow
+    "pip *": allow
+    "pip3 *": allow
+    "pip audit *": allow
+    "poetry *": allow
+    "uv *": allow
+    "pdm *": allow
+    "tox *": allow
+    "nox *": allow
+    "coverage *": allow
+    # ── Build tools ──────────────────────────────────────────────────
     "make *": allow
-    # HTTP tools
+    "just *": allow
+    "task *": allow
+    "cmake *": allow
+    "ninja *": allow
+    # ── Package managers ─────────────────────────────────────────────
+    "npm *": allow
+    "yarn *": allow
+    "pnpm *": allow
+    "bun *": allow
+    "cargo *": allow
+    # ── Code generation & API tooling ────────────────────────────────
+    "protoc *": allow
+    "buf *": allow
+    "grpcurl *": allow
+    "openapi-generator *": allow
+    "oapi-codegen *": allow
+    "swagger *": allow
+    # ── Static analysis & security scanning ──────────────────────────
+    "semgrep *": allow
+    "shellcheck *": allow
+    "trivy *": allow
+    "grype *": allow
+    "syft *": allow
+    "hadolint *": allow
+    "checkov *": allow
+    # ── HTTP tools ───────────────────────────────────────────────────
     "curl *": allow
     "wget *": allow
-    # Search utilities
+    "httpie *": allow
+    "http *": allow
+    # ── Container & orchestration ────────────────────────────────────
+    "docker *": allow
+    "docker compose *": allow
+    "podman *": allow
+    "kubectl *": allow
+    "helm *": allow
+    # ── Infrastructure as code ───────────────────────────────────────
+    "terraform *": allow
+    "terragrunt *": allow
+    # ── Cloud CLIs ───────────────────────────────────────────────────
+    "aws *": allow
+    "gcloud *": allow
+    "az *": allow
+    # ── Database clients ─────────────────────────────────────────────
+    "psql *": allow
+    "pg_dump *": allow
+    "pg_restore *": allow
+    "sqlite3 *": allow
+    "redis-cli *": allow
+    "mysql *": allow
+    "mysqldump *": allow
+    "mongosh *": allow
+    # ── Crypto, certs & SSH ──────────────────────────────────────────
+    "openssl *": allow
+    "ssh *": allow
+    "ssh-keygen *": allow
+    "ssh-agent *": allow
+    "ssh-add *": allow
+    "gpg *": allow
+    "age *": allow
+    "sops *": allow
+    # ── Debugging & profiling ────────────────────────────────────────
+    "strace *": allow
+    "gdb *": allow
+    "time *": allow
+    "hyperfine *": allow
+    # ── Search utilities ─────────────────────────────────────────────
     "grep *": allow
     "rg *": allow
     "find *": allow
     "fd *": allow
-    # File operations - Full project scope
+    "ag *": allow
+    "fzf *": allow
+    # ── File reading & inspection ────────────────────────────────────
     "cat *": allow
     "head *": allow
     "tail *": allow
     "less *": allow
-    "ls *": allow
-    "tree *": allow
+    "more *": allow
+    "file *": allow
+    "stat *": allow
+    "md5sum *": allow
+    "sha256sum *": allow
     "wc *": allow
+    "diff *": allow
+    "colordiff *": allow
+    "hexdump *": allow
+    "xxd *": allow
+    "strings *": allow
+    # ── File operations ──────────────────────────────────────────────
     "mkdir *": allow
+    "mkdir -p *": allow
     "touch *": allow
     "cp *": allow
+    "cp -r *": allow
     "mv *": allow
     "rm *": allow
     "rm -rf *": allow
+    "ln *": allow
+    "ln -s *": allow
     "chmod *": allow
     "chmod -R *": allow
-    # JSON/YAML processing
+    "chown *": allow
+    "rsync *": allow
+    "install *": allow
+    # ── Directory operations ─────────────────────────────────────────
+    "ls": allow
+    "ls *": allow
+    "tree *": allow
+    "du *": allow
+    "df *": allow
+    "pwd": allow
+    "realpath *": allow
+    "readlink *": allow
+    "basename *": allow
+    "dirname *": allow
+    # ── JSON/YAML/data processing ────────────────────────────────────
     "jq *": allow
     "yq *": allow
-    # Environment
+    "xq *": allow
+    "csvtool *": allow
+    "column *": allow
+    "sort *": allow
+    "uniq *": allow
+    "cut *": allow
+    "awk *": allow
+    "sed *": allow
+    "tr *": allow
+    "paste *": allow
+    "comm *": allow
+    "base64 *": allow
+    "split *": allow
+    # ── Stream & pipeline utilities ──────────────────────────────────
+    "tee *": allow
+    "xargs *": allow
+    "watch *": allow
+    "timeout *": allow
+    "mktemp *": allow
+    # ── Process control ──────────────────────────────────────────────
+    "kill *": allow
+    "pkill *": allow
+    "wait *": allow
+    # ── Environment & dev workflow ───────────────────────────────────
+    "env": allow
     "env *": allow
+    "printenv *": allow
     "which *": allow
+    "command -v *": allow
+    "type *": allow
     "echo *": allow
+    "printf *": allow
+    "date *": allow
+    "uname *": allow
+    "id": allow
+    "whoami": allow
+    "hostname": allow
+    "direnv *": allow
+    "mise *": allow
+    # ── Process inspection ───────────────────────────────────────────
+    "ps *": allow
+    "top -bn1 *": allow
+    "lsof *": allow
+    "ss *": allow
+    "netstat *": allow
+    # ── Network diagnostics ──────────────────────────────────────────
+    "dig *": allow
+    "host *": allow
+    "nslookup *": allow
+    "ping -c *": allow
+    # ── Compression ──────────────────────────────────────────────────
+    "tar *": allow
+    "zip *": allow
+    "unzip *": allow
+    "gzip *": allow
+    "gunzip *": allow
+    # ── Dangerous operations — always deny ───────────────────────────
+    "rm -rf /": deny
+    "rm -rf /*": deny
+    "sudo *": deny
+    "> /dev/*": deny
+    "mkfs *": deny
+    "dd *": deny
+    "shutdown *": deny
+    "reboot *": deny
+    "systemctl *": deny
+    "chmod -R 777 *": deny
+    "terraform destroy *": ask
+    "kubectl delete *": ask
+    # ── Everything else — ask ────────────────────────────────────────
     "*": ask
 ---
 
