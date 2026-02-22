@@ -13,6 +13,64 @@ tools:
   edit: false
 permission:
   bash:
+    # Version control
+    "git *": allow
+    "gh *": allow
+    # Go toolchain - build, test, vet, analysis
+    "go build *": allow
+    "go test *": allow
+    "go vet *": allow
+    "go mod *": allow
+    "go run *": allow
+    "go generate *": allow
+    "go list *": allow
+    "go env *": allow
+    "go version *": allow
+    "go tool *": allow
+    "gofmt *": allow
+    "goimports *": allow
+    "golangci-lint *": allow
+    "staticcheck *": allow
+    "govulncheck *": allow
+    "gosec *": allow
+    "dlv *": allow
+    # Python toolchain - test, lint, type-check, format
+    "python *": allow
+    "python3 *": allow
+    "pytest *": allow
+    "mypy *": allow
+    "ruff *": allow
+    "black *": allow
+    "isort *": allow
+    "pylint *": allow
+    "flake8 *": allow
+    "bandit *": allow
+    "pip *": allow
+    "pip3 *": allow
+    "pip audit *": allow
+    "poetry *": allow
+    "uv *": allow
+    "pdm *": allow
+    # Build tools
+    "make *": allow
+    "just *": allow
+    # Package managers (for dependency review)
+    "npm *": allow
+    "cargo *": allow
+    "cargo audit *": allow
+    # Static analysis & security scanning
+    "semgrep *": allow
+    "shellcheck *": allow
+    "trivy *": allow
+    "grype *": allow
+    "syft *": allow
+    # HTTP tools (for API review/testing)
+    "curl *": allow
+    "wget *": allow
+    # Container inspection
+    "docker inspect *": allow
+    "docker compose config *": allow
+    "docker image *": allow
     # Search utilities
     "grep *": allow
     "rg *": allow
@@ -27,23 +85,14 @@ permission:
     "ls *": allow
     "tree *": allow
     "wc *": allow
-    # Git for context and diffs
-    "git log *": allow
-    "git diff *": allow
-    "git show *": allow
-    "git blame *": allow
-    "git status *": allow
     # JSON/YAML processing
     "jq *": allow
     "yq *": allow
-    # Static analysis tools
-    "npm audit *": allow
-    "cargo audit *": allow
-    "pip audit *": allow
-    "golangci-lint *": allow
-    "staticcheck *": allow
-    "govulncheck *": allow
-    "shellcheck *": allow
+    # Environment inspection
+    "env *": allow
+    "which *": allow
+    "echo *": allow
+    "printenv *": allow
     # Deny everything else by default
     "*": ask
 ---
