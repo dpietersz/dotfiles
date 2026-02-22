@@ -80,6 +80,76 @@ permission:
     "base64 *": allow
     "xxd *": allow
     "od *": allow
+    # ── Go toolchain ─────────────────────────────────────────────────
+    "go build *": allow
+    "go test *": allow
+    "go vet *": allow
+    "go mod *": allow
+    "go list *": allow
+    "go env *": allow
+    "go version": allow
+    "go version *": allow
+    "go tool *": allow
+    "go doc *": allow
+    "go fmt *": allow
+    "gofmt *": allow
+    "goimports *": allow
+    "golangci-lint *": allow
+    "staticcheck *": allow
+    # ── Python toolchain ─────────────────────────────────────────────
+    "pytest *": allow
+    "mypy *": allow
+    "ruff *": allow
+    "ruff check *": allow
+    "black *": allow
+    "isort *": allow
+    "pylint *": allow
+    "flake8 *": allow
+    "tox *": allow
+    "nox *": allow
+    "coverage *": allow
+    # ── TypeScript & frontend toolchain ──────────────────────────────
+    "tsc *": allow
+    "ts-node *": allow
+    "tsx *": allow
+    "deno *": allow
+    "eslint *": allow
+    "prettier *": allow
+    "biome *": allow
+    "stylelint *": allow
+    "vitest *": allow
+    "jest *": allow
+    "playwright *": allow
+    "cypress *": allow
+    "astro *": allow
+    "next *": allow
+    "nuxt *": allow
+    "vite *": allow
+    "svelte-kit *": allow
+    "remix *": allow
+    "turbo *": allow
+    "esbuild *": allow
+    "rollup *": allow
+    "webpack *": allow
+    "tailwindcss *": allow
+    "postcss *": allow
+    "prisma *": allow
+    "drizzle-kit *": allow
+    "graphql-codegen *": allow
+    "tsc --noEmit *": allow
+    # ── Build tools ──────────────────────────────────────────────────
+    "make *": allow
+    "just *": allow
+    "task *": allow
+    # ── Package managers ─────────────────────────────────────────────
+    "npm *": allow
+    "yarn *": allow
+    "pnpm *": allow
+    "bun *": allow
+    "cargo *": allow
+    "cargo clippy *": allow
+    "cargo test *": allow
+    "cargo check *": allow
     # Process inspection
     "ps *": allow
     "env *": allow
