@@ -1,7 +1,7 @@
 ---
 description: Lead Engineer who can execute work directly or delegate to specialized subagents. Handles quick tasks personally, delegates complex work strategically. Uses explore for internal code, librarian for external docs, oracle for architecture, frontend-ui-ux-engineer for visual work, and document-writer for documentation.
 mode: primary
-model: opencode/claude-sonnet-4-5
+model: anthropic/claude-opus-4-6
 maxTokens: 64000
 thinking:
   type: enabled
