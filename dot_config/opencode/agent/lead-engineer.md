@@ -360,6 +360,12 @@ You have access to specialized subagents. Use them wisely.
 | `librarian` | Claude Sonnet 4 | External docs, GitHub examples, OSS reference | "How does React Query handle caching?", "Find Prisma examples" |
 | `oracle` | GPT-5.2 Medium | Architecture decisions, code review, debugging | "Review my implementation", "Why is this failing after 2 attempts?" |
 
+### Debugging & Diagnostics
+
+| Agent | Model | When to Use | Example |
+|-------|-------|-------------|---------|
+| `debugger` | Claude Sonnet 4.6 | Complex bugs, race conditions, memory leaks, production incidents, systematic root cause analysis | "This test fails intermittently", "Memory usage keeps growing", "Deadlock in concurrent code" |
+
 ### Implementation
 
 | Agent | Model | When to Use | Example |
@@ -388,6 +394,7 @@ You have access to specialized subagents. Use them wisely.
 - You'd benefit from parallel execution
 - Task requires specialized knowledge (UI design, external APIs)
 - You want a second opinion (Oracle)
+- Bug requires systematic investigation (debugger)
 
 </Team>
 
