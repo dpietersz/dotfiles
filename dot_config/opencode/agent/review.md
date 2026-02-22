@@ -9,14 +9,30 @@ thinking:
   type: enabled
   budgetTokens: 32000
 tools:
+  # File modification disabled — reviewer reads and reports, doesn't change code
   write: false
   edit: false
+  patch: false
+  # All read/search/analysis tools enabled
+  read: true
+  grep: true
+  glob: true
+  list: true
+  bash: true
+  skill: true
+  todowrite: true
+  todoread: true
+  webfetch: true
+  websearch: true
+  question: true
+  lsp: true
 permission:
+  edit: deny
   bash:
-    # Version control
+    # ── Version control ──────────────────────────────────────────────
     "git *": allow
     "gh *": allow
-    # Go toolchain - build, test, vet, analysis
+    # ── Go toolchain ─────────────────────────────────────────────────
     "go build *": allow
     "go test *": allow
     "go vet *": allow
@@ -25,8 +41,12 @@ permission:
     "go generate *": allow
     "go list *": allow
     "go env *": allow
+    "go version": allow
     "go version *": allow
     "go tool *": allow
+    "go doc *": allow
+    "go clean *": allow
+    "go fmt *": allow
     "gofmt *": allow
     "goimports *": allow
     "golangci-lint *": allow
@@ -34,12 +54,13 @@ permission:
     "govulncheck *": allow
     "gosec *": allow
     "dlv *": allow
-    # Python toolchain - test, lint, type-check, format
+    # ── Python toolchain ─────────────────────────────────────────────
     "python *": allow
     "python3 *": allow
     "pytest *": allow
     "mypy *": allow
     "ruff *": allow
+    "ruff check *": allow
     "black *": allow
     "isort *": allow
     "pylint *": allow
@@ -51,49 +72,129 @@ permission:
     "poetry *": allow
     "uv *": allow
     "pdm *": allow
-    # Build tools
+    "tox *": allow
+    "nox *": allow
+    "coverage *": allow
+    # ── Build tools ──────────────────────────────────────────────────
     "make *": allow
     "just *": allow
-    # Package managers (for dependency review)
+    "task *": allow
+    # ── Package managers (dependency review) ─────────────────────────
     "npm *": allow
+    "yarn *": allow
+    "pnpm *": allow
+    "bun *": allow
     "cargo *": allow
     "cargo audit *": allow
-    # Static analysis & security scanning
+    "cargo clippy *": allow
+    "cargo test *": allow
+    "cargo check *": allow
+    # ── Static analysis & security scanning ──────────────────────────
     "semgrep *": allow
     "shellcheck *": allow
     "trivy *": allow
     "grype *": allow
     "syft *": allow
-    # HTTP tools (for API review/testing)
+    "hadolint *": allow
+    "checkov *": allow
+    # ── HTTP tools (API review/testing) ──────────────────────────────
     "curl *": allow
     "wget *": allow
-    # Container inspection
+    "httpie *": allow
+    "http *": allow
+    # ── Container inspection (read-only) ─────────────────────────────
     "docker inspect *": allow
     "docker compose config *": allow
     "docker image *": allow
-    # Search utilities
+    "docker ps *": allow
+    "docker logs *": allow
+    "docker version *": allow
+    # ── Search utilities ─────────────────────────────────────────────
     "grep *": allow
     "rg *": allow
     "find *": allow
     "fd *": allow
-    # File reading
+    "ag *": allow
+    "fzf *": allow
+    # ── File reading & inspection ────────────────────────────────────
     "cat *": allow
     "head *": allow
     "tail *": allow
     "less *": allow
-    # Directory operations
+    "more *": allow
+    "file *": allow
+    "stat *": allow
+    "md5sum *": allow
+    "sha256sum *": allow
+    "wc *": allow
+    "diff *": allow
+    "colordiff *": allow
+    "hexdump *": allow
+    "xxd *": allow
+    "strings *": allow
+    # ── Directory operations ─────────────────────────────────────────
+    "ls": allow
     "ls *": allow
     "tree *": allow
-    "wc *": allow
-    # JSON/YAML processing
+    "du *": allow
+    "df *": allow
+    "pwd": allow
+    "realpath *": allow
+    "basename *": allow
+    "dirname *": allow
+    # ── JSON/YAML/data processing ────────────────────────────────────
     "jq *": allow
     "yq *": allow
-    # Environment inspection
+    "xq *": allow
+    "csvtool *": allow
+    "column *": allow
+    "sort *": allow
+    "uniq *": allow
+    "cut *": allow
+    "awk *": allow
+    "sed *": allow
+    # ── Environment inspection ───────────────────────────────────────
+    "env": allow
     "env *": allow
-    "which *": allow
-    "echo *": allow
     "printenv *": allow
-    # Deny everything else by default
+    "which *": allow
+    "command -v *": allow
+    "type *": allow
+    "echo *": allow
+    "printf *": allow
+    "date *": allow
+    "uname *": allow
+    "id": allow
+    "whoami": allow
+    "hostname": allow
+    # ── Process inspection ───────────────────────────────────────────
+    "ps *": allow
+    "top -bn1 *": allow
+    "lsof *": allow
+    "ss *": allow
+    "netstat *": allow
+    # ── Network diagnostics ──────────────────────────────────────────
+    "dig *": allow
+    "host *": allow
+    "nslookup *": allow
+    "ping -c *": allow
+    # ── Compression (read-only inspection) ───────────────────────────
+    "tar -tf *": allow
+    "tar --list *": allow
+    "unzip -l *": allow
+    "zipinfo *": allow
+    # ── Dangerous operations — always deny ───────────────────────────
+    "rm -rf /": deny
+    "rm -rf /*": deny
+    "sudo *": deny
+    "> /dev/*": deny
+    "mkfs *": deny
+    "dd *": deny
+    "shutdown *": deny
+    "reboot *": deny
+    "systemctl *": deny
+    "chmod -R 777 *": deny
+    # ── Everything else — ask ────────────────────────────────────────
     "*": ask
 ---
 
