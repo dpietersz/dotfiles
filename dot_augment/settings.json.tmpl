@@ -1,0 +1,30 @@
+{
+  "model": "opus4.6",
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "grep_app": {
+      "type": "http",
+      "url": "https://mcp.grep.app"
+    },
+    "brightdata": {
+      "command": "npx",
+      "args": ["-y", "@brightdata/mcp"],
+      "env": {
+        "API_TOKEN": "{env:BRIGHTDATA_API_TOKEN}"
+      }
+    },
+    "brave": {
+      "command": "{{ .chezmoi.homeDir }}/.local/bin/scripts/brave-mcp-wrapper.sh"
+    },
+    "perplexity": {
+      "command": "{{ .chezmoi.homeDir }}/.local/bin/scripts/perplexity-mcp-wrapper.sh"
+    },
+    "playwright": {
+      "type": "http",
+      "url": "http://localhost:8931/mcp"
+    }
+  }
+}
