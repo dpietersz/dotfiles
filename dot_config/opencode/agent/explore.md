@@ -1,7 +1,7 @@
 ---
 description: Fast codebase exploration agent. Answers "Where is X?", "Which file has Y?", "Find the code that does Z". Fire multiple in parallel for broad searches. Specify thoroughness - "quick" for basic, "medium" for moderate, "very thorough" for comprehensive analysis.
 mode: subagent
-model: opencode/gemini-3-flash
+model: anthropic/claude-haiku-4-5
 temperature: 0.1
 permission:
   bash:
