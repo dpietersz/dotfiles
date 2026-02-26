@@ -1,6 +1,7 @@
 ---
 name: code-review
-description: Comprehensive production-grade code review command. Launches parallel subagents to research the codebase (architecture/scope, security, quality enforcement), runs the build and test suite, then works through every review concern systematically — fixing critical issues, incorrect docstrings, TODOs, and incomplete implementations inline. No corners cut. Run before merging to validate everything is production-ready. USE WHEN user asks to review code, review a PR, review staged changes, or check code quality.
+description: Comprehensive production-grade code review command. Launches parallel sub-agents to research the codebase (architecture/scope, security, quality enforcement), runs the build and test suite, then works through every review concern systematically — fixing critical issues, incorrect docstrings, TODOs, and incomplete implementations inline. No corners cut. Run before merging to validate everything is production-ready.
+disable-model-invocation: true
 ---
 
 # Production-Grade Code Review
@@ -9,27 +10,13 @@ description: Comprehensive production-grade code review command. Launches parall
 
 **Fix policy**: This review fixes issues directly — it does not just report them. See Phase 4 for the exact fix policy. The goal is to hand back code that is genuinely production-ready, not a list of things to do later.
 
-## When to Use This Skill
-
-**USE this skill when:**
-- User asks to "review my code" or "review this PR"
-- User says "check my staged changes"
-- User wants a security review
-- User asks "is this code production-ready?"
-- User wants code quality assessment before merging
-
-**DO NOT use this skill when:**
-- User wants to implement a new feature → use the engineering skill instead
-- User wants to debug a specific bug → use the debugger subagent directly
-- User wants architecture advice only → use the oracle subagent directly
-
 ---
 
 ## Phase 1: Parallel Research
 
-Launch **three subagents simultaneously**. All three run in parallel. Do not proceed until all three have returned.
+Launch **three sub-agents simultaneously** using the Task tool. All three run in parallel. Do not proceed until all three have returned.
 
-### Subagent 1: Scope, Architecture & Intent
+### Sub-agent 1: Scope, Architecture & Intent
 
 > Research this codebase and the changes under review. Return a structured summary covering:
 >
@@ -38,11 +25,11 @@ Launch **three subagents simultaneously**. All three run in parallel. Do not pro
 > 3. **Architecture map** — for each changed file: what module/package does it belong to, what calls INTO it (callers/dependents), what does it call OUT to (imports/dependencies), and are there related test files?
 > 4. **Codebase conventions** — linter configs, formatter settings, naming patterns, error handling style, logging conventions, test framework and patterns in use.
 > 5. **Build and test commands** — exact commands to build and run the test suite (check `Makefile`, `justfile`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, etc.).
-> 6. **Delegation strategy** — based on file count and complexity, recommend how to split the review across `code-reviewer` subagents (which files together, what focus areas).
+> 6. **Delegation strategy** — based on file count and complexity, recommend how to split the review across `@code-reviewer` sub-agents (which files together, what focus areas).
 >
 > Be exhaustive. The review will only cover what you identify here.
 
-### Subagent 2: Security Deep-Dive
+### Sub-agent 2: Security Deep-Dive
 
 > Conduct a focused security analysis of the changed files. Read the diff carefully. Return a structured report covering:
 >
@@ -56,7 +43,7 @@ Launch **three subagents simultaneously**. All three run in parallel. Do not pro
 >
 > For each finding: file path, line number, severity (🔴🟠🟡), what the vulnerability is, and what an attacker could do with it.
 
-### Subagent 3: Quality Enforcement
+### Sub-agent 3: Quality Enforcement
 
 > Conduct a thorough quality audit of the changed files. This is zero-tolerance enforcement — every item found must be reported with file path and line number. Return findings in these categories:
 >
@@ -70,13 +57,13 @@ Launch **three subagents simultaneously**. All three run in parallel. Do not pro
 >
 > Be exhaustive. Nothing gets a pass because it's "minor". Every finding needs a file path and line number.
 
-**Wait for all three subagents to complete before proceeding.**
+**Wait for all three sub-agents to complete before proceeding.**
 
 ---
 
 ## Phase 2: Build & Test Validation
 
-Using the build and test commands from Subagent 1, run the full build and test suite now:
+Using the build and test commands from Sub-agent 1, run the full build and test suite now:
 
 ```bash
 # Examples — use whatever the project actually uses:
@@ -99,10 +86,10 @@ If the build fails entirely, stop and report:
 
 ## Phase 3: Create Task List
 
-Using findings from all three subagents and the build/test results, create a task for each review concern area.
+Using findings from all three sub-agents and the build/test results, create a task for each review concern area. Use the TodoWrite tool to track these.
 
 Each task should be scoped to a logical concern, not a single file. Examples:
-- "Review authentication module — security findings from Subagent 2"
+- "Review authentication module — security findings from Sub-agent 2"
 - "Fix all TODOs and incomplete implementations across changed files"
 - "Correct docstrings in [module] — 7 incorrect/missing found"
 - "Address test coverage gaps in [feature]"
@@ -144,31 +131,31 @@ For each task, mark it in-progress and work through it systematically. The fix p
 
 ### Delegation During Execution
 
-For deep file-level analysis of specific modules, invoke the `code-reviewer` subagent with full context:
+For deep file-level analysis of specific modules, invoke `@code-reviewer` sub-agents with full context:
 
 ```
-Use the code-reviewer subagent to review these files for production readiness.
+@code-reviewer: Review these files for production readiness.
 
 Files: [file list]
 
 Context from codebase exploration:
-- Architecture: [module structure from Subagent 1]
+- Architecture: [module structure from Sub-agent 1]
 - Callers: [what depends on these files]
 - Patterns: [conventions this codebase follows]
 - Change intent: [what this change is trying to accomplish]
-- Security findings: [relevant findings from Subagent 2]
-- Quality findings: [relevant findings from Subagent 3]
+- Security findings: [relevant findings from Sub-agent 2]
+- Quality findings: [relevant findings from Sub-agent 3]
 
 Focus: [security / performance / correctness / all]
 
 Return findings in severity-tiered format (🔴🟠🟡🔵) with file paths and line numbers.
 ```
 
-Fire multiple `code-reviewer` instances in parallel for large changesets. Always pass the full Subagent 1 context — subagents without context produce shallow reviews.
+Fire multiple `@code-reviewer` instances in parallel for large changesets. Pass the full Sub-agent 1 context — subagents without context produce shallow reviews.
 
 ### Penetration Testing (Conditional)
 
-Invoke the `penetration-tester` subagent only when Subagent 2 or `code-reviewer` identifies:
+Invoke `@penetration-tester` only when Sub-agent 2 or `@code-reviewer` identifies:
 - Public-facing API changes with potential auth bypass
 - User input handling with injection risk
 - Cryptographic operations with implementation concerns
@@ -220,14 +207,14 @@ Do **not** invoke for: internal tooling, pure refactoring, documentation changes
 
 ### Overall Assessment
 
-| Aspect          | Rating       | Notes  |
-|-----------------|--------------|--------|
-| Security        | 🔴🟠🟡🟢   | [note] |
-| Correctness     | 🔴🟠🟡🟢   | [note] |
-| Performance     | 🔴🟠🟡🟢   | [note] |
-| Maintainability | 🔴🟠🟡🟢   | [note] |
-| Test Coverage   | 🔴🟠🟡🟢   | [note] |
-| Documentation   | 🔴🟠🟡🟢   | [note] |
+| Aspect        | Rating       | Notes |
+|---------------|--------------|-------|
+| Security      | 🔴🟠🟡🟢   | [note] |
+| Correctness   | 🔴🟠🟡🟢   | [note] |
+| Performance   | 🔴🟠🟡🟢   | [note] |
+| Maintainability | 🔴🟠🟡🟢 | [note] |
+| Test Coverage | 🔴🟠🟡🟢   | [note] |
+| Documentation | 🔴🟠🟡🟢   | [note] |
 
 **Recommendation**: APPROVE / REQUEST CHANGES / BLOCK
 
@@ -246,8 +233,8 @@ If yes, write a detailed report to `code-review-report.md` in the project root c
 - Full summary with stats
 - Per-task breakdown: what was reviewed, what was found, what was fixed
 - All remaining issues with full details, severity, and specific fix recommendations
-- Security findings from Subagent 2 with exploitability assessment
-- Quality findings from Subagent 3 with resolution status
+- Security findings from Sub-agent 2 with exploitability assessment
+- Quality findings from Sub-agent 3 with resolution status
 - Build and test results
 - Positive observations
 - Recommendations for any unresolved issues
