@@ -14,6 +14,7 @@
   // Note: OpenCode caches resolved versions. To update plugins, run:
   // rm -rf ~/.cache/opencode/node_modules ~/.cache/opencode/bun.lock
   "plugin": [
+    "oh-my-opencode@latest",
     "opencode-antigravity-auth",
     "opencode-openai-codex-auth",
     "@franlol/opencode-md-table-formatter"
@@ -33,38 +34,57 @@
     // a Gemini Code Assist license. Skipping uses personal Antigravity quota.
     //
     // Model names below are Antigravity-specific (not standard Google API names).
+    // Uses variant system: models support low/high variants instead of separate entries.
     // See: docs/how-to/opencode-antigravity-setup.md
     "google": {
       "models": {
-        // Gemini 3 Pro - High thinking (best for complex reasoning, frontend, agentic coding)
-        "gemini-3-pro-high": {
-          "name": "Gemini 3 Pro High (Antigravity)",
+        // Gemini 3 Pro - variants: low, high (best for complex reasoning, frontend, agentic coding)
+        "antigravity-gemini-3-pro": {
+          "name": "Gemini 3 Pro (Antigravity)",
           "limit": { "context": 1048576, "output": 65535 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "high": { "thinkingLevel": "high" }
+          }
         },
-        // Gemini 3 Pro - Low thinking (faster, less reasoning)
-        "gemini-3-pro-low": {
-          "name": "Gemini 3 Pro Low (Antigravity)",
-          "limit": { "context": 1048576, "output": 65535 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
-        },
-        // Gemini 3 Flash - Fast model for quick tasks
-        "gemini-3-flash": {
+        // Gemini 3 Flash - variants: minimal, low, medium, high (fast model for quick tasks)
+        "antigravity-gemini-3-flash": {
           "name": "Gemini 3 Flash (Antigravity)",
           "limit": { "context": 1048576, "output": 65536 },
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "minimal": { "thinkingLevel": "minimal" },
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
+          }
+        },
+        // Claude Sonnet 4.6 via Antigravity (no variants)
+        "antigravity-claude-sonnet-4-6": {
+          "name": "Claude Sonnet 4.6 (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
         },
-        // Gemini 2.5 Pro - Stable reasoning model (fallback)
-        "gemini-2.5-pro": {
-          "name": "Gemini 2.5 Pro (Antigravity)",
-          "limit": { "context": 1048576, "output": 65536 },
-          "modalities": { "input": ["text", "image", "audio", "video", "pdf"], "output": ["text"] }
+        // Claude Sonnet 4.6 Thinking via Antigravity - variants: low, max
+        "antigravity-claude-sonnet-4-6-thinking": {
+          "name": "Claude Sonnet 4.6 Thinking (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
         },
-        // Gemini 2.5 Flash - Stable fast model (fallback)
-        "gemini-2.5-flash": {
-          "name": "Gemini 2.5 Flash (Antigravity)",
-          "limit": { "context": 1048576, "output": 65536 },
-          "modalities": { "input": ["text", "image", "audio", "video", "pdf"], "output": ["text"] }
+        // Claude Opus 4.5 Thinking via Antigravity - variants: low, max
+        "antigravity-claude-opus-4-5-thinking": {
+          "name": "Claude Opus 4.5 Thinking (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
         }
       }
     },
