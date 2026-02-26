@@ -66,7 +66,7 @@
       "model": "anthropic/claude-haiku-4-5"
     },
     "unspecified-low": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "unspecified-high": {
       "model": "anthropic/claude-opus-4-6",
