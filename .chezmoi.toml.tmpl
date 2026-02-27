@@ -1,7 +1,7 @@
 {{- $isMacOS := eq .chezmoi.os "darwin" -}}
-{{- $isBluefin := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bluefin\"") -}}
-{{- $isBazzite := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "VARIANT_ID=\"bazzite\"") -}}
-{{- $isFedora := and (stat "/etc/os-release") (contains (output "cat" "/etc/os-release" | default "") "ID=\"fedora\"") -}}
+{{- $isBluefin := and (stat "/etc/os-release") (contains "VARIANT_ID=bluefin" (output "cat" "/etc/os-release" | default "")) -}}
+{{- $isBazzite := and (stat "/etc/os-release") (contains "VARIANT_ID=bazzite" (output "cat" "/etc/os-release" | default "")) -}}
+{{- $isFedora := and (stat "/etc/os-release") (contains "ID=fedora" (output "cat" "/etc/os-release" | default "")) -}}
 {{- $remote := and (not $isBluefin) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $containerName := output "hostname" | trim -}}
 {{- $hardwareModel := (and (stat "/sys/class/dmi/id/product_name") (output "cat" "/sys/class/dmi/id/product_name" | trim)) | default "" -}}
