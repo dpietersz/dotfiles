@@ -6,7 +6,7 @@ bat = "latest"
 btop = "latest"
 {{- end }}
 {{- if not .remote }}
-android-sdk = "latest"  # Android SDK command-line tools (host only)
+android-sdk = "20.0"    # Android SDK command-line tools (host only; pin version - "latest" broken in plugin)
 {{- end }}
 bun = "latest"
 chezmoi = "latest"
