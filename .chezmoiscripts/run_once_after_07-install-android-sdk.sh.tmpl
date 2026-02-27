@@ -14,7 +14,8 @@ set -euo pipefail
 # - Linux:  uses sdkmanager installed by mise android-sdk plugin
 # - Skips on remote environments (containers/devpods)
 #
-# Packages installed: cmdline-tools;latest, platform-tools, platforms;android-35, build-tools;35.0.0, emulator
+# Packages installed: cmdline-tools;latest, platform-tools, platforms;android-35, platforms;android-36,
+#                     build-tools;35.0.0, build-tools;28.0.3, emulator
 #
 # License acceptance: writes known license hashes directly to $ANDROID_SDK_ROOT/licenses/
 # (avoids `yes | sdkmanager --licenses` which causes SIGPIPE/exit 141 in non-interactive shells)
@@ -149,7 +150,9 @@ echo "[android-sdk] Installing SDK packages..."
   "cmdline-tools;latest" \
   "platform-tools" \
   "platforms;android-35" \
+  "platforms;android-36" \
   "build-tools;35.0.0" \
+  "build-tools;28.0.3" \
   "emulator"
 
 echo "[android-sdk] ✓ Android SDK installed at: $ANDROID_SDK_ROOT"
