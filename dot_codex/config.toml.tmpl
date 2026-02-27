@@ -1,0 +1,97 @@
+# Codex CLI Global Configuration
+# ~/.codex/config.toml
+#
+# Documentation: https://github.com/openai/codex
+# Config precedence: CLI flags > profiles > project .codex/config.toml > this file > system > defaults
+
+# Default model for interactive sessions
+model = "o4-mini"
+
+# Approval policy: "suggest" | "auto-edit" | "full-auto"
+# suggest = ask for every action (safest)
+# auto-edit = auto-approve file edits, ask for shell commands
+# full-auto = approve everything (use with caution)
+approval_policy = "suggest"
+
+# Disable sending telemetry to OpenAI
+disable_response_storage = true
+
+# ── Features ──────────────────────────────────────────────────────────────────
+[features]
+# Enable experimental multi-agent support
+# Allows spawning specialized subagents for complex tasks
+multi_agent = true
+
+# ── MCP Servers ───────────────────────────────────────────────────────────────
+# MCP (Model Context Protocol) servers provide external capabilities
+
+# Context7 - Official documentation lookup for libraries
+# Used by: librarian agent, dev-research skill
+[mcp_servers.context7]
+type = "http"
+url = "https://mcp.context7.com/mcp"
+
+# BrightData - Advanced web scraping with CAPTCHA bypass
+# Used by: research skill retrieve workflow
+# Requires: BRIGHTDATA_API_TOKEN environment variable
+[mcp_servers.brightdata]
+command = "npx"
+args = ["-y", "@brightdata/mcp"]
+
+[mcp_servers.brightdata.env]
+API_TOKEN = "${BRIGHTDATA_API_TOKEN}"
+
+# Brave Search MCP - Web search using Brave Search API
+# Used by: research skill, web search tasks
+# Requires: BRAVE_API_KEY environment variable
+[mcp_servers.brave]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-brave-search"]
+
+[mcp_servers.brave.env]
+BRAVE_API_KEY = "${BRAVE_API_KEY}"
+
+# Playwright MCP - Browser automation via Playwright
+# Used by: playwright skill, web automation tasks
+# Requires: playwright-mcp service running (systemctl --user start playwright-mcp)
+# Service endpoint: http://localhost:8931/mcp
+[mcp_servers.playwright]
+type = "http"
+url = "http://localhost:8931/mcp"
+
+# ── Multi-Agent Roles ─────────────────────────────────────────────────────────
+# Each agent role can have its own model, instructions, and sandbox settings
+# Agent config files are loaded from ~/.codex/agents/<name>.toml
+
+[agents.oracle]
+config_file = "~/.codex/agents/oracle.toml"
+
+[agents.explore]
+config_file = "~/.codex/agents/explore.toml"
+
+[agents.librarian]
+config_file = "~/.codex/agents/librarian.toml"
+
+[agents.debugger]
+config_file = "~/.codex/agents/debugger.toml"
+
+[agents.code-reviewer]
+config_file = "~/.codex/agents/code-reviewer.toml"
+
+[agents.perplexity-researcher]
+config_file = "~/.codex/agents/perplexity-researcher.toml"
+
+[agents.gemini-researcher]
+config_file = "~/.codex/agents/gemini-researcher.toml"
+
+[agents.claude-researcher]
+config_file = "~/.codex/agents/claude-researcher.toml"
+
+[agents.document-writer]
+config_file = "~/.codex/agents/document-writer.toml"
+
+[agents.frontend-ui-ux-engineer]
+config_file = "~/.codex/agents/frontend-ui-ux-engineer.toml"
+
+[agents.penetration-tester]
+config_file = "~/.codex/agents/penetration-tester.toml"

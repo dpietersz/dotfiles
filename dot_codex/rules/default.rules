@@ -1,0 +1,108 @@
+# Codex CLI Command Approval Rules
+# Starlark format (Python-like syntax)
+# 
+# These rules define which shell commands are auto-approved vs. require confirmation.
+# Rules are evaluated top-to-bottom; first match wins.
+#
+# Actions: ALLOW, DENY, ASK
+
+def on_exec(cmd):
+    """Called for every shell command Codex wants to execute."""
+    
+    # ── ALWAYS DENY — Destructive/dangerous operations ────────────────────────
+    if cmd[0] in ["rm"] and "-rf" in cmd and ("/" in cmd or "/*" in cmd):
+        return DENY
+    if cmd[0] == "sudo":
+        return DENY
+    if cmd[0] in ["mkfs", "dd", "shutdown", "reboot", "poweroff"]:
+        return DENY
+    if cmd[0] == "chmod" and "-R" in cmd and "777" in cmd:
+        return DENY
+    
+    # ── ALWAYS ALLOW — Safe read-only operations ──────────────────────────────
+    # Search utilities
+    if cmd[0] in ["grep", "rg", "find", "fd", "ag", "fzf"]:
+        return ALLOW
+    # File reading
+    if cmd[0] in ["cat", "head", "tail", "less", "more", "file", "stat", "wc"]:
+        return ALLOW
+    # Directory listing
+    if cmd[0] in ["ls", "tree", "du", "df", "pwd", "realpath"]:
+        return ALLOW
+    # Git read operations
+    if cmd[0] == "git" and len(cmd) > 1 and cmd[1] in ["log", "diff", "show", "blame", "status", "branch", "remote", "fetch", "stash"]:
+        return ALLOW
+    # JSON/YAML processing
+    if cmd[0] in ["jq", "yq", "xq"]:
+        return ALLOW
+    # Environment inspection
+    if cmd[0] in ["env", "printenv", "which", "type", "echo", "printf", "date", "uname", "id", "whoami", "hostname"]:
+        return ALLOW
+    # Process inspection
+    if cmd[0] in ["ps", "lsof", "ss", "netstat"]:
+        return ALLOW
+    # Network diagnostics (read-only)
+    if cmd[0] in ["dig", "host", "nslookup", "ping", "traceroute", "curl", "wget"]:
+        return ALLOW
+    
+    # ── ALWAYS ALLOW — Development tools ─────────────────────────────────────
+    # Version control
+    if cmd[0] in ["git", "gh"]:
+        return ALLOW
+    # Build tools
+    if cmd[0] in ["make", "just", "task", "cmake", "ninja"]:
+        return ALLOW
+    # Package managers
+    if cmd[0] in ["npm", "yarn", "pnpm", "bun", "cargo", "pip", "pip3", "uv"]:
+        return ALLOW
+    # Go toolchain
+    if cmd[0] in ["go", "gofmt", "goimports", "golangci-lint"]:
+        return ALLOW
+    # Python toolchain
+    if cmd[0] in ["python", "python3", "pytest", "mypy", "ruff", "black", "isort"]:
+        return ALLOW
+    # TypeScript/JS toolchain
+    if cmd[0] in ["tsc", "ts-node", "tsx", "deno", "eslint", "prettier", "biome"]:
+        return ALLOW
+    if cmd[0] in ["vitest", "jest", "playwright", "cypress"]:
+        return ALLOW
+    if cmd[0] in ["next", "nuxt", "vite", "astro", "remix", "turbo"]:
+        return ALLOW
+    # Mise (tool version manager)
+    if cmd[0] == "mise":
+        return ALLOW
+    # Chezmoi (dotfiles manager) — read-only operations only
+    if cmd[0] == "chezmoi" and len(cmd) > 1 and cmd[1] in ["status", "diff", "data", "cat", "source-path", "target-path"]:
+        return ALLOW
+    
+    # ── ALWAYS ALLOW — File operations ────────────────────────────────────────
+    if cmd[0] in ["mkdir", "touch", "cp", "mv", "ln", "chmod", "rsync"]:
+        return ALLOW
+    if cmd[0] == "rm" and "-rf" not in cmd:
+        return ALLOW
+    
+    # ── ASK — Potentially destructive or sensitive ────────────────────────────
+    # Chezmoi apply (modifies home directory)
+    if cmd[0] == "chezmoi" and len(cmd) > 1 and cmd[1] == "apply":
+        return ASK
+    # Docker/container operations
+    if cmd[0] in ["docker", "podman", "kubectl", "helm"]:
+        return ASK
+    # Terraform (infrastructure changes)
+    if cmd[0] in ["terraform", "terragrunt"]:
+        return ASK
+    # Cloud CLIs
+    if cmd[0] in ["aws", "gcloud", "az"]:
+        return ASK
+    # Database clients
+    if cmd[0] in ["psql", "sqlite3", "redis-cli", "mysql", "mongosh"]:
+        return ASK
+    # SSH/GPG operations
+    if cmd[0] in ["ssh", "ssh-keygen", "gpg", "age", "sops"]:
+        return ASK
+    # System service management
+    if cmd[0] == "systemctl":
+        return ASK
+    
+    # ── DEFAULT — Ask for anything not explicitly listed ──────────────────────
+    return ASK
