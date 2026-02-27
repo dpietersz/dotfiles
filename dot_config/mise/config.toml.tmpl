@@ -5,6 +5,9 @@ bat = "latest"
 {{- if not .isMacOS }}
 btop = "latest"
 {{- end }}
+{{- if not .remote }}
+android-sdk = "latest"  # Android SDK command-line tools (host only)
+{{- end }}
 bun = "latest"
 chezmoi = "latest"
 claude = "latest"
@@ -22,11 +25,13 @@ go = "latest"
 gitui = "latest"
 gh = "latest"
 gum = "latest"
-lazydocker = "latest"
-terraform = "latest"
+{{- if not .remote }}
+java = "temurin-17"     # Java 17 (Temurin), required by Android SDK tools (host only)
+{{- end }}
 k9s = "latest"
 kubectl = "latest"
 kubeseal = "latest"
+lazydocker = "latest"
 lazygit = "latest"
 {{- if not .isMacOS }}
 navi = "latest"
@@ -38,7 +43,11 @@ python = "3.12.12"
 ripgrep = "latest"
 starship = "1.23.0"
 swag = "latest"
+terraform = "latest"
 uv = "latest"
 yazi = "latest"
+{{- if not .remote }}
+yq = "latest"           # YAML processor, required by mise android-sdk plugin (host only)
+{{- end }}
 zellij = "latest"
 zoxide = "latest"

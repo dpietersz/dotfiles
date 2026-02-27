@@ -30,3 +30,12 @@ if [[ -d /var/lib/flatpak/exports/share ]]; then
 fi
 {{- end}}
 
+# Android SDK
+{{- if not .remote }}
+if [[ -n "${ANDROID_SDK_ROOT:-}" ]]; then
+  prepend_path "$ANDROID_SDK_ROOT/emulator"
+  prepend_path "$ANDROID_SDK_ROOT/platform-tools"
+  prepend_path "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
+fi
+{{- end }}
+

@@ -103,3 +103,19 @@ fi
 # Where PAI is installed (change this to YOUR path!)
 export ENGINEER_NAME="Dimitri"
 
+# ========== Android SDK ==========
+{{- if not .remote }}
+{{- if .isMacOS }}
+# macOS: Homebrew installs android-commandlinetools here
+_brew_prefix="$(brew --prefix 2>/dev/null)"
+if [[ -n "$_brew_prefix" ]]; then
+  export ANDROID_SDK_ROOT="$_brew_prefix/share/android-commandlinetools"
+fi
+unset _brew_prefix
+{{- else }}
+# Linux: manually installed to XDG data dir
+export ANDROID_SDK_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/android-sdk"
+{{- end }}
+export ANDROID_HOME="$ANDROID_SDK_ROOT"
+{{- end }}
+
