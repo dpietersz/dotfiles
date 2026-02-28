@@ -81,7 +81,6 @@ alias last='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
 
 alias p="pass"
 alias pp="pass git push"
-alias pi="pass insert"
 alias pmv="pass mv"
 alias pcp="pass cp"
 alias pedit="pass edit"
