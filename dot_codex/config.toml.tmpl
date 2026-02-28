@@ -7,11 +7,11 @@
 # Default model for interactive sessions
 model = "o4-mini"
 
-# Approval policy: "suggest" | "auto-edit" | "full-auto"
-# suggest = ask for every action (safest)
-# auto-edit = auto-approve file edits, ask for shell commands
-# full-auto = approve everything (use with caution)
-approval_policy = "suggest"
+# Approval policy: "untrusted" | "on-request" | "never"
+# untrusted   = only run trusted commands (ls, cat, sed, etc.) without asking; escalate others
+# on-request  = model decides when to ask for approval (recommended for interactive use)
+# never       = never ask for approval (use with caution in non-interactive runs)
+approval_policy = "on-request"
 
 # Disable sending telemetry to OpenAI
 disable_response_storage = true
