@@ -1,0 +1,271 @@
+#!/bin/bash
+{{- if .remote }}
+# Skip on remote environments (containers, codespaces, SSH, etc.)
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# ------------------ minion-daemon installer ------------------
+# Downloads and installs minion-daemon from GitHub releases,
+# and configures it as a background daemon service.
+#
+# - macOS: LaunchAgent (launchd)
+# - Linux: systemd user service
+
+REPO="dpietersz/minions-ai-infra"
+BINARY_NAME="minion-daemon"
+INSTALL_DIR="$HOME/.local/bin"
+VERSION_FILE="$INSTALL_DIR/.minion-daemon-version"
+BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
+LOG_PREFIX="[minion-daemon]"
+
+# ------------------ Determine OS and asset name ------------------
+case "$(uname -s)-$(uname -m)" in
+  Darwin-arm64)  ASSET_NAME="minion-daemon-darwin-arm64" ;;
+  Linux-x86_64)  ASSET_NAME="minion-daemon-linux-amd64" ;;
+  *)
+    echo "$LOG_PREFIX Unsupported platform: $(uname -s)-$(uname -m), skipping."
+    exit 0
+    ;;
+esac
+
+# ------------------ GitHub API helpers ------------------
+gh_api() {
+  local endpoint="$1"
+  if command -v gh >/dev/null 2>&1; then
+    gh api "$endpoint" 2>/dev/null
+  else
+    local token
+    token="$(pass show Sites/github.com/pat/host-machine)"
+    curl -fsSL \
+      -H "Authorization: token $token" \
+      -H "Accept: application/vnd.github+json" \
+      "https://api.github.com$endpoint" 2>/dev/null
+  fi
+}
+
+gh_download() {
+  local url="$1" dest="$2"
+  if command -v gh >/dev/null 2>&1; then
+    # Must request octet-stream to get actual file content, not JSON metadata
+    gh api -H "Accept: application/octet-stream" "$url" > "$dest" 2>/dev/null
+  else
+    local token
+    token="$(pass show Sites/github.com/pat/host-machine)"
+    curl -fsSL -L \
+      -H "Authorization: token $token" \
+      -H "Accept: application/octet-stream" \
+      "$url" -o "$dest" 2>/dev/null
+  fi
+}
+
+# ------------------ Check latest release ------------------
+echo "$LOG_PREFIX Checking for updates..."
+
+RELEASE_JSON="$(gh_api "/repos/$REPO/releases/latest")" || {
+  echo "$LOG_PREFIX Failed to fetch latest release, skipping."
+  exit 0
+}
+
+LATEST_TAG="$(echo "$RELEASE_JSON" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')"
+
+if [ -z "$LATEST_TAG" ]; then
+  echo "$LOG_PREFIX Could not determine latest version, skipping."
+  exit 0
+fi
+
+# Compare with installed version
+CURRENT_VERSION=""
+if [ -f "$VERSION_FILE" ]; then
+  CURRENT_VERSION="$(cat "$VERSION_FILE")"
+fi
+
+if [ "$CURRENT_VERSION" = "$LATEST_TAG" ] && [ -f "$BINARY_PATH" ]; then
+  echo "$LOG_PREFIX Already up to date ($LATEST_TAG)."
+  # Ensure service is running even if binary is current
+  ensure_service_running() { true; }
+else
+  echo "$LOG_PREFIX Updating: ${CURRENT_VERSION:-none} -> $LATEST_TAG"
+
+  # ------------------ Find asset download URLs ------------------
+  # Extract asset API URLs for our binary and checksums
+  BINARY_API_URL="$(echo "$RELEASE_JSON" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for asset in data.get('assets', []):
+    if asset['name'] == '$ASSET_NAME':
+        print(asset['url'])
+        break
+" 2>/dev/null)" || true
+
+  CHECKSUMS_API_URL="$(echo "$RELEASE_JSON" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for asset in data.get('assets', []):
+    if asset['name'] == 'checksums.txt':
+        print(asset['url'])
+        break
+" 2>/dev/null)" || true
+
+  if [ -z "$BINARY_API_URL" ]; then
+    echo "$LOG_PREFIX Asset $ASSET_NAME not found in release $LATEST_TAG, skipping."
+    exit 0
+  fi
+
+  # ------------------ Download and verify ------------------
+  TMPDIR_DL="$(mktemp -d)"
+  trap "rm -rf '$TMPDIR_DL'" EXIT
+
+  echo "$LOG_PREFIX Downloading $ASSET_NAME ($LATEST_TAG)..."
+  gh_download "$BINARY_API_URL" "$TMPDIR_DL/$ASSET_NAME"
+
+  # Verify checksum if checksums.txt is available
+  if [ -n "$CHECKSUMS_API_URL" ]; then
+    echo "$LOG_PREFIX Verifying checksum..."
+    gh_download "$CHECKSUMS_API_URL" "$TMPDIR_DL/checksums.txt"
+
+    EXPECTED_SHA="$(grep "$ASSET_NAME" "$TMPDIR_DL/checksums.txt" | awk '{print $1}')"
+    if [ -n "$EXPECTED_SHA" ]; then
+      if command -v sha256sum >/dev/null 2>&1; then
+        ACTUAL_SHA="$(sha256sum "$TMPDIR_DL/$ASSET_NAME" | awk '{print $1}')"
+      else
+        ACTUAL_SHA="$(shasum -a 256 "$TMPDIR_DL/$ASSET_NAME" | awk '{print $1}')"
+      fi
+
+      if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
+        echo "$LOG_PREFIX Checksum mismatch! Expected: $EXPECTED_SHA, Got: $ACTUAL_SHA"
+        exit 1
+      fi
+      echo "$LOG_PREFIX Checksum verified."
+    fi
+  fi
+
+  # ------------------ Install binary ------------------
+  mkdir -p "$INSTALL_DIR"
+
+  # Stop existing service before replacing binary
+  case "$(uname -s)" in
+    Darwin)
+      PLIST_LABEL="com.minion.daemon"
+      if launchctl list "$PLIST_LABEL" >/dev/null 2>&1; then
+        echo "$LOG_PREFIX Stopping existing launchd service..."
+        launchctl bootout "gui/$(id -u)/$PLIST_LABEL" 2>/dev/null || true
+      fi
+      ;;
+    Linux)
+      if systemctl --user is-active --quiet minion-daemon.service 2>/dev/null; then
+        echo "$LOG_PREFIX Stopping existing systemd service..."
+        systemctl --user stop minion-daemon.service 2>/dev/null || true
+      fi
+      ;;
+  esac
+
+  chmod +x "$TMPDIR_DL/$ASSET_NAME"
+  mv "$TMPDIR_DL/$ASSET_NAME" "$BINARY_PATH"
+  echo "$LATEST_TAG" > "$VERSION_FILE"
+  echo "$LOG_PREFIX Installed $BINARY_NAME $LATEST_TAG to $BINARY_PATH"
+fi
+
+# ------------------ Service setup and start ------------------
+case "$(uname -s)" in
+  Darwin)
+    # ---- macOS: launchd LaunchAgent ----
+    PLIST_DIR="$HOME/Library/LaunchAgents"
+    PLIST_LABEL="com.minion.daemon"
+    PLIST_FILE="$PLIST_DIR/$PLIST_LABEL.plist"
+    WRAPPER_PATH="$INSTALL_DIR/start-minion-daemon.sh"
+    LOG_DIR="$HOME/Library/Logs"
+
+    mkdir -p "$PLIST_DIR" "$LOG_DIR"
+
+    # Wrapper script that sources env vars (launchd provides minimal PATH)
+    cat > "$WRAPPER_PATH" <<'WRAPPER'
+#!/bin/bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+export DAEMON_DATABASE_URL="$(pass show Logins/homelab/minions-ai/postgres)"
+exec "$HOME/.local/bin/minion-daemon" --auth-only
+WRAPPER
+    chmod +x "$WRAPPER_PATH"
+
+    cat > "$PLIST_FILE" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$PLIST_LABEL</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$WRAPPER_PATH</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>$LOG_DIR/minion-daemon.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>$LOG_DIR/minion-daemon.stderr.log</string>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
+EOF
+
+    # Load/reload the service
+    if launchctl list "$PLIST_LABEL" >/dev/null 2>&1; then
+      echo "$LOG_PREFIX Reloading launchd service..."
+      launchctl bootout "gui/$(id -u)/$PLIST_LABEL" 2>/dev/null || true
+      sleep 1
+    fi
+    launchctl bootstrap "gui/$(id -u)" "$PLIST_FILE"
+    echo "$LOG_PREFIX launchd service started."
+    ;;
+
+  Linux)
+    # ---- Linux: systemd user service ----
+    SERVICE_DIR="$HOME/.config/systemd/user"
+    SERVICE_FILE="$SERVICE_DIR/minion-daemon.service"
+    WRAPPER_PATH="$INSTALL_DIR/start-minion-daemon.sh"
+
+    mkdir -p "$SERVICE_DIR"
+
+    # Wrapper script that sources env vars (systemd doesn't run a shell)
+    cat > "$WRAPPER_PATH" <<'WRAPPER'
+#!/bin/bash
+export DAEMON_DATABASE_URL="$(pass show Logins/homelab/minions-ai/postgres)"
+exec "$HOME/.local/bin/minion-daemon" --auth-only
+WRAPPER
+    chmod +x "$WRAPPER_PATH"
+
+    cat > "$SERVICE_FILE" <<EOF
+[Unit]
+Description=Minion Daemon (auth-only mode)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=$WRAPPER_PATH
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable minion-daemon.service
+
+    if systemctl --user is-active --quiet minion-daemon.service; then
+      echo "$LOG_PREFIX Restarting systemd service..."
+      systemctl --user restart minion-daemon.service
+    else
+      echo "$LOG_PREFIX Starting systemd service..."
+      systemctl --user start minion-daemon.service
+    fi
+    echo "$LOG_PREFIX systemd service started."
+    ;;
+esac
+
+echo "$LOG_PREFIX Done."
