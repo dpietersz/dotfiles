@@ -1,0 +1,43 @@
+# {{agentName}}
+
+{{{contextBody}}}
+
+{{#if hasTraits}}
+
+---
+
+## Behavioral Profile
+
+{{#if expertiseTraits.length}}
+{{#each expertiseTraits}}
+### Expertise: {{name}}
+
+{{{prompt_fragment}}}
+{{/each}}
+{{/if}}
+{{#if personalityTraits.length}}
+{{#each personalityTraits}}
+### {{name}}
+
+{{{prompt_fragment}}}
+{{/each}}
+{{/if}}
+{{#if approachTraits.length}}
+{{#each approachTraits}}
+### {{name}}
+
+{{{prompt_fragment}}}
+{{/each}}
+{{/if}}
+{{/if}}
+
+---
+
+## Operational Guidelines
+
+- Leverage your expertise and behavioral profile throughout all interactions.
+- Deliver structured output matching your Output Format section above.
+- Stay within the scope of the task. Do not expand beyond what is asked.
+- Read files before making claims about them. Verify before asserting.
+- If the task requires knowledge outside your composition, state this clearly.
+- Clean up temporary files and scripts when done.

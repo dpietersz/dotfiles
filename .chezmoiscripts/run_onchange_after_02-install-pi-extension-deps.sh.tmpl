@@ -1,0 +1,25 @@
+#!/bin/bash
+# minion-subagents deps: {{ include "dot_pi/agent/extensions/minion-subagents/package.json" | sha256sum }}
+
+set -euo pipefail
+
+echo "[pi-extensions] Installing npm dependencies for minion-subagents..."
+
+EXT_DIR="{{ .chezmoi.homeDir }}/.pi/agent/extensions/minion-subagents"
+
+if [ ! -d "$EXT_DIR" ]; then
+  echo "[pi-extensions] Extension directory not found, skipping"
+  exit 0
+fi
+
+# Find npm via mise or PATH
+if command -v npm >/dev/null 2>&1; then
+  NPM_BIN="npm"
+else
+  MISE_BIN="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+  NPM_BIN="$MISE_BIN exec -- npm"
+fi
+
+cd "$EXT_DIR"
+$NPM_BIN install --prefer-offline --no-audit --no-fund
+echo "[pi-extensions] Done"

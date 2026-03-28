@@ -1,0 +1,45 @@
+Scrape an entire documentation site and save all pages as structured markdown files in .ai/ref-docs/{domain-key}/. Use this when you need to download and locally cache a full documentation site for reference.
+
+Usage notes:
+  - Provide the entry URL of the documentation (e.g. https://opencode.ai/docs)
+  - Also supports GitHub repository docs: provide a URL like https://github.com/owner/repo/tree/main/docs
+  - For GitHub URLs, all markdown files in the directory are fetched via the GitHub API
+  - GitHub docs are stored under github.com/owner/repo (all lowercase) as the domain key
+  - For website docs, the domain key is the hostname plus the common path prefix across all sections. For example, https://developer.hashicorp.com/packer/docs with sections under /packer/* produces domain key "developer.hashicorp.com/packer", while /terraform/* produces "developer.hashicorp.com/terraform". This allows multiple doc sets on the same domain to coexist without file collisions.
+  - The tool uses recursive BFS link discovery: it crawls the entry page, discovers internal links, then crawls those pages to find even more links, continuing until all reachable pages are found (up to 500 pages max)
+  - Pages are saved as markdown files with YAML frontmatter (title, description, source, scraped_at)
+  - An _index.md file is generated with a table of contents linking to all pages
+  - Only links on the same domain and under the allowed path prefixes are followed
+  - The tool uses the Crawl4AI /crawl endpoint which returns both metadata and markdown
+  - Large documentation sites may take several minutes to complete due to recursive discovery
+  - Use the _index.md frontmatter and descriptions to decide which pages to read in full
+  - If the URL looks like a subpage (e.g. /docs/themes instead of /docs), the tool detects this and returns options — ask the user which they prefer before proceeding
+  - The "scope" parameter is only used when responding to a root-detection prompt: "auto" resolves to the detected root, "as-is" uses the URL as given (not used for GitHub URLs)
+  - The "sections" parameter allows crawling multiple sibling sections of a documentation site in one go. Use this when a doc site organizes content under multiple top-level paths that are siblings, not children. For example, HashiCorp Packer has /packer/docs, /packer/install, /packer/tutorials, /packer/guides, /packer/integrations — pass the main one as "url" and the others as comma-separated "sections". All sections must be on the same domain. The filenames will be relative to the common path prefix across all sections.
+  - Incremental updates for websites: pages less than 7 days old are skipped; stale pages are checked via HTTP ETag headers before re-crawling; only truly changed pages are fetched
+  - Incremental updates for GitHub: uses the file SHA from the GitHub API; only files whose SHA has changed are re-fetched
+  - The "location" parameter controls where docs are saved: "project" saves to .ai/ref-docs/ in the current project, "global" saves to ~/.pi/.ai/ref-docs/ for use across all projects. If not specified, ask the user which they prefer before fetching.
+  - All markdown filenames are converted to lowercase
+  - Crawl results from the discovery phase are cached and reused during the fetch phase, avoiding double-crawling pages
+
+TWO-PHASE WORKFLOW (website mode):
+  For website docs, the tool uses a two-phase approach to avoid downloading too many pages:
+
+  Phase 1 — DISCOVER: Call docsfetch with just url (and optionally sections, scope, location).
+  The tool recursively discovers all reachable doc pages via BFS and returns them grouped by
+  section with page counts. It does NOT download/save any pages yet.
+
+  Phase 2 — FETCH: Review the discovered URLs and curate the list. Then call docsfetch again
+  with the same url/sections/location plus a "urls" parameter containing a newline-separated
+  list of only the URLs you want to actually download. When "urls" is set, discovery is skipped.
+
+  When curating the URL list between phases, you MUST intelligently filter:
+  - Remove old version pages (keep only the latest version, e.g. remove v1.5.x through v1.12.x)
+  - Remove pages that aren't actual documentation (marketing pages, changelogs, blog posts)
+  - Remove overly granular subpages if the parent page covers the topic adequately
+  - Keep core documentation, API references, configuration guides, and getting-started pages
+  - When in doubt about what the user needs, ask them which sections to include
+  - Aim for a focused, useful set of docs — typically 20-80 pages for most projects
+
+  GitHub mode does NOT use this two-phase flow — it fetches all markdown files directly since
+  GitHub repos typically have a well-curated set of docs already.

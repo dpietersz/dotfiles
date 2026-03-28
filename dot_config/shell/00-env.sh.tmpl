@@ -79,6 +79,7 @@ if [[ $- == *i* ]] && command -v pass &>/dev/null; then
   export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
   export GOOGLE_API_KEY="$GEMINI_API_KEY"
   export OPENROUTER_API_KEY="$(pass show Sites/openrouter.ai/api-keys/aider)"
+  export LINEAR_ACCESS_TOKEN="$(pass show Sites/linear.app/api-keys/dotfiles)"
   export DAEMON_DATABASE_URL="$(pass show Logins/homelab/minions-ai/postgres)"
   
   export ELEVENLABS_API_KEY="$(pass show Sites/elevenlabs.com/api-key/pai)"

@@ -1,0 +1,10 @@
+Fabric AI tools run analysis patterns and pipelines via the Fabric REST API.
+
+Two unified tools:
+- fabric(pattern, input, model?) — run a single Fabric pattern on text input
+- fabric_pipeline(pipeline, input, model?) — chain sources and patterns together
+
+Pattern and pipeline names are listed in each tool's description.
+
+IMPORTANT: When given a YouTube URL, ALWAYS use the fabric_pipeline tool with a yt_* pipeline — they auto-fetch the transcript.
+Only use the fabric tool with pattern tools when you already have the text content in hand.

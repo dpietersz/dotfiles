@@ -1,0 +1,251 @@
+{
+  "defaultModel": "gemini-2.5-flash-lite",
+
+  "patterns": [
+    "youtube_summary",
+    "extract_wisdom",
+    "extract_wisdom_agents",
+    "extract_main_activities",
+    "extract_patterns",
+    "extract_article_wisdom",
+    "extract_recommendations",
+    "summarize",
+    "summarize_git_diff",
+    "summarize_git_changes",
+    "summarize_paper",
+    "summarize_pull-requests",
+    "create_summary",
+    "create_git_diff_commit",
+    "sanitize_broken_html_to_markdown",
+    "convert_to_markdown",
+    "review_design",
+    "review_code",
+    "refine_design_document",
+    "create_prd",
+    "create_pattern",
+    "create_mermaid_visualization_for_github",
+    "create_mermaid_visualization",
+    "create_design_document",
+    "create_coding_feature",
+    "create_user_story",
+    "create_stride_threat_model",
+    "analyze_mistakes",
+    "explain_code",
+    "explain_terms",
+    "improve_writing",
+    "improve_prompt",
+    "generate_code_rules",
+    "write_pull-request",
+    "to_flashcards",
+    "extract_instructions"
+  ],
+
+  "sources": {
+    "youtube_transcript": {
+      "endpoint": "/youtube/transcript",
+      "bodyKey": "url",
+      "resultKey": "transcript",
+      "description": "Fetch YouTube video transcript from a URL",
+      "extraBody": { "timestamps": true }
+    },
+    "webfetch": {
+      "endpoint": "/md",
+      "bodyKey": "url",
+      "resultKey": "markdown",
+      "description": "Fetch a web page and convert to clean markdown",
+      "baseUrl": "https://crawl4ai.pietersz.me",
+      "authHeaders": {
+        "CF-Access-Client-Id": "$CLOUDFLARE_ACCESS_CRAWL4AI_CLIENT_ID",
+        "CF-Access-Client-Secret": "$CLOUDFLARE_ACCESS_CRAWL4AI_CLIENT_SECRET"
+      }
+    }
+  },
+
+  "pipelines": {
+    "yt_summary": {
+      "description": "Fetch a YouTube video transcript and create a concise, timestamped summary highlighting key points.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "youtube_summary" }
+      ]
+    },
+    "yt_wisdom": {
+      "description": "Fetch a YouTube video transcript and extract surprising, insightful information on human flourishing, AI, learning, and more.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_wisdom" }
+      ]
+    },
+    "yt_wisdom_agents": {
+      "description": "Fetch a YouTube video transcript and extract valuable insights, ideas, quotes, and references from the content.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_wisdom_agents" }
+      ]
+    },
+    "yt_activities": {
+      "description": "Fetch a YouTube video transcript and extract key events and activities, providing a summary of what happened.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_main_activities" }
+      ]
+    },
+    "yt_patterns": {
+      "description": "Fetch a YouTube video transcript and extract recurring, surprising, and insightful patterns with analysis and advice.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_patterns" }
+      ]
+    },
+    "yt_article_wisdom": {
+      "description": "Fetch a YouTube video transcript and extract structured wisdom: summary, ideas, quotes, facts, references, and recommendations.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_article_wisdom" }
+      ]
+    },
+    "yt_recommendations": {
+      "description": "Fetch a YouTube video transcript and extract concise, actionable recommendations.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_recommendations" }
+      ]
+    },
+    "yt_flashcards": {
+      "description": "Fetch a YouTube video transcript, extract key wisdom, then generate Anki flashcards for spaced repetition learning.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_wisdom" },
+        { "pattern": "to_flashcards" }
+      ]
+    },
+    "yt_mermaid": {
+      "description": "Fetch a YouTube video transcript, summarize it, then visualize the structure as a Mermaid diagram.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "summarize" },
+        { "pattern": "create_mermaid_visualization" }
+      ]
+    },
+    "web_summary": {
+      "description": "Fetch a web page and summarize it into a 20-word sentence, main points, and takeaways.",
+      "inputDescription": "URL of a web page or blog article",
+      "steps": [
+        { "source": "webfetch" },
+        { "pattern": "summarize" }
+      ]
+    },
+    "web_wisdom": {
+      "description": "Fetch a web page and extract surprising, insightful information on human flourishing, AI, learning, and more.",
+      "inputDescription": "URL of a web page or blog article",
+      "steps": [
+        { "source": "webfetch" },
+        { "pattern": "extract_article_wisdom" }
+      ]
+    },
+    "web_recommendations": {
+      "description": "Fetch a web page and extract concise, actionable recommendations.",
+      "inputDescription": "URL of a web page or blog article",
+      "steps": [
+        { "source": "webfetch" },
+        { "pattern": "extract_recommendations" }
+      ]
+    },
+    "web_instructions": {
+      "description": "Fetch a web page and extract clear, step-by-step instructions from tutorials and how-to guides.",
+      "inputDescription": "URL of a tutorial, how-to guide, or documentation page",
+      "steps": [
+        { "source": "webfetch" },
+        { "pattern": "extract_instructions" }
+      ]
+    },
+    "html_to_markdown": {
+      "description": "Convert HTML content to clean, properly formatted Markdown, preserving structure and formatting.",
+      "inputDescription": "HTML content to convert",
+      "steps": [
+        { "pattern": "convert_to_markdown" }
+      ]
+    },
+    "prd_to_stories": {
+      "description": "Turn a rough idea or requirements into a PRD, then break it into implementable user stories.",
+      "inputDescription": "A rough feature idea, requirements description, or problem statement",
+      "steps": [
+        { "pattern": "create_prd" },
+        { "pattern": "create_user_story" }
+      ]
+    },
+    "prd_to_threat_model": {
+      "description": "Turn requirements into a PRD, then generate a STRIDE-based security threat model.",
+      "inputDescription": "A feature idea, requirements description, or system description",
+      "steps": [
+        { "pattern": "create_prd" },
+        { "pattern": "create_stride_threat_model" }
+      ]
+    },
+    "design_and_review": {
+      "description": "Generate a C4-model design document, then immediately critique it for clarity, security, and scalability.",
+      "inputDescription": "A system description, requirements, or feature specification",
+      "steps": [
+        { "pattern": "create_design_document" },
+        { "pattern": "review_design" }
+      ]
+    },
+    "explain_and_glossary": {
+      "description": "Explain unfamiliar code, then generate a glossary of all technical terms with definitions and analogies.",
+      "inputDescription": "Code, configuration, or technical text to understand",
+      "steps": [
+        { "pattern": "explain_code" },
+        { "pattern": "explain_terms" }
+      ]
+    },
+    "diff_to_commit": {
+      "description": "Analyze a git diff and generate proper git commands with conventional commit messages.",
+      "inputDescription": "Git diff output (from git diff, git diff --staged, etc.)",
+      "steps": [
+        { "pattern": "summarize_git_diff" },
+        { "pattern": "create_git_diff_commit" }
+      ]
+    },
+    "diff_to_pr": {
+      "description": "Analyze a git diff, summarize changes, then draft a detailed pull request description.",
+      "inputDescription": "Git diff output (from git diff, git diff --staged, etc.)",
+      "steps": [
+        { "pattern": "summarize_git_diff" },
+        { "pattern": "write_pull-request" }
+      ]
+    },
+    "diff_to_review": {
+      "description": "Summarize a git diff, then perform a code review with feedback on correctness, security, and performance.",
+      "inputDescription": "Git diff output (from git diff, git diff --staged, etc.)",
+      "steps": [
+        { "pattern": "summarize_git_diff" },
+        { "pattern": "review_code" }
+      ]
+    },
+    "yt_instructions": {
+      "description": "Fetch a YouTube video transcript and extract clear, step-by-step instructions from technical tutorials and how-to videos.",
+      "inputDescription": "YouTube video URL",
+      "steps": [
+        { "source": "youtube_transcript" },
+        { "pattern": "extract_instructions" }
+      ]
+    },
+    "code_and_review": {
+      "description": "Generate a code feature from a specification, then immediately review it for correctness, security, and performance.",
+      "inputDescription": "A feature specification or project description (ideally with code2context JSON)",
+      "steps": [
+        { "pattern": "create_coding_feature" },
+        { "pattern": "review_code" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,69 @@
+Manage Linear project management via the pm-tool. All actions are performed as @Minion (the AI agent) in the Linear workspace.
+
+Single tool with an `action` parameter. Pass action-specific fields in `params`.
+
+ACTIONS AND PARAMS:
+
+Issues:
+- list_issues: List issues with filters. params: { team?, state?, assignee?, label?, project?, estimate?, priority?, milestone?, createdAfter?, updatedAfter?, hasBlocking?, parentId?, orderBy?, limit? }
+- search_issues: Full-text search. params: { query, limit? }
+- get_issue: Get issue details. params: { id } (accepts UUID or identifier like "SUR-42")
+- create_issue: Create issue. params: { title, team?, description?, priority?, state?, assignee?, labels?, project?, cycle?, parent?, milestone?, dueDate? }
+- update_issue: Update issue. params: { id, title?, description?, priority?, state?, assignee?, labels?, project?, cycle?, milestone?, dueDate?, sortOrder?, addLabels?, removeLabels? }
+- assign_to_minion: Assign issue to Minion as delegate. params: { id }
+- delete_issue: Archive issue. params: { id }
+- reorder_issues: Set sort order for a list of issues. params: { issues } (array of issue IDs in desired order — assigns sortOrder 100, 200, 300...)
+
+Comments:
+- create_comment: Add comment. params: { issueId, body }
+- list_comments: List comments on issue. params: { issueId, limit? }
+
+Projects:
+- list_projects: List projects. params: { limit? }
+- get_project: Get project details. params: { id }
+- create_project: Create project. params: { name, teamIds, description?, content?, leadId?, startDate?, targetDate?, priority? }
+- update_project: Update project. params: { id, name?, description?, content?, leadId?, statusId?, startDate?, targetDate?, priority? }
+
+Project Resources:
+- create_document: Create doc in project. params: { projectId, title, content }
+- update_document: Update doc. params: { id, title?, content? }
+- list_documents: List project docs. params: { projectId }
+- create_link: Add external link. params: { projectId, url, label }
+- delete_link: Remove link. params: { id }
+- list_links: List project links. params: { projectId }
+
+Project Updates:
+- create_project_update: Post status update. params: { projectId, body, health? } (health: onTrack|atRisk|offTrack)
+- list_project_updates: List updates. params: { projectId, limit? }
+
+Milestones:
+- create_milestone: Create milestone. params: { projectId, name, description?, targetDate? }
+- update_milestone: Update milestone. params: { id, name?, description?, targetDate? }
+- list_milestones: List milestones. params: { projectId }
+
+Reference Data:
+- viewer: Show current authenticated user (Minion agent info)
+- list_teams: List all teams with workflow states and labels
+- list_labels: List labels. params: { team? }
+- list_states: List workflow states. params: { team? }
+
+NOTES:
+- `team` params accept team name, key (e.g. "SUR"), or UUID
+- `state` params accept state name (e.g. "In Progress") or UUID
+- `assignee` params accept user name or UUID. Use "minion" to assign to the agent itself
+- `labels` accepts array of label names or UUIDs
+- `priority`: 0=none, 1=urgent, 2=high, 3=normal, 4=low
+- `estimate`: story points (0, 1, 2, 3, 5, 8) — filter or set on issues
+- `milestone` in list_issues: filter by milestone name
+- `milestone` in create/update_issue: milestone UUID — auto-resolves project if not provided
+- `createdAfter`/`updatedAfter`: ISO date string (e.g. "2026-03-01") for date range filters
+- `hasBlocking`: true to filter issues that block other issues
+- `parentId`: filter sub-issues by parent (accepts UUID or identifier like "SUR-42")
+- `orderBy`: "updatedAt" (default), "createdAt", or "sortOrder" for manual ordering
+- `sortOrder`: float value for manual issue positioning (used in update_issue). Sub-issues and list results show sort values when available
+- `health`: onTrack, atRisk, offTrack (for project updates)
+- `description`/`content`/`body` fields accept markdown
+- All dates use "YYYY-MM-DD" format
+- IDs in output can be used directly in follow-up actions
+- The `content` field on projects is the "Project Brief"
+- The `description` field on projects is the short summary

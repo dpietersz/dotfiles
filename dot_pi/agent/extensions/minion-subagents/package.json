@@ -1,0 +1,9 @@
+{
+  "name": "minion-subagents",
+  "version": "0.1.0",
+  "description": "Subagent delegation with chains, parallel execution, and TUI clarification (forked from pi-subagents by Nico Bailon)",
+  "type": "module",
+  "dependencies": {
+    "yaml": "^2.8.0"
+  }
+}
