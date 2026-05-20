@@ -1,0 +1,79 @@
+#!/bin/bash
+{{- if not .remote }}
+{{- if or .isBluefin .isFedora }}
+
+set -euo pipefail
+
+# Replace Bluefin's BGRT-based Plymouth (which displays the firmware/OEM logo —
+# the red Lenovo splash on ThinkPads) with the Fedora "spinner" theme so the
+# post-firmware boot screen shows the Fedora "f" mark.
+#
+# Three idempotent steps:
+#   1. Swap generic-logos -> fedora-logos at the rpm-ostree base layer so the
+#      `spinner` theme's watermark resolves to the Fedora "f" instead of a
+#      generic placeholder.
+#   2. Set Plymouth's default theme to `spinner` (writes /etc/plymouth/plymouthd.conf).
+#   3. Track that config file via `rpm-ostree initramfs-etc --track` so it's
+#      baked into the initramfs of every future deployment.
+#
+# Requires a reboot to take effect.
+
+if ! command -v rpm-ostree >/dev/null 2>&1 || [ ! -e /run/ostree-booted ]; then
+  echo "[plymouth] Not an rpm-ostree system; skipping."
+  exit 0
+fi
+
+NEED_REBOOT=0
+
+# 1. Swap logo package so the Fedora "f" appears in Plymouth themes.
+if rpm -q fedora-logos >/dev/null 2>&1; then
+  echo "[plymouth] fedora-logos already installed."
+else
+  echo "[plymouth] Swapping generic-logos -> fedora-logos via rpm-ostree override..."
+  if ! sudo rpm-ostree override remove generic-logos --install fedora-logos; then
+    if sudo rpm-ostree status | grep -q fedora-logos; then
+      echo "[plymouth] Override already pending."
+    else
+      exit 1
+    fi
+  fi
+  NEED_REBOOT=1
+fi
+
+# 2. Set spinner as the default Plymouth theme.
+if grep -qE '^Theme=spinner$' /etc/plymouth/plymouthd.conf 2>/dev/null; then
+  echo "[plymouth] spinner theme already configured."
+else
+  echo "[plymouth] Setting Plymouth default theme to spinner..."
+  # plymouth-set-default-theme rewrites plymouthd.conf without -R (which would
+  # try to regenerate the initramfs locally — unsupported on atomic).
+  sudo plymouth-set-default-theme spinner
+  NEED_REBOOT=1
+fi
+
+# 3. Make sure the new plymouthd.conf is folded into every future initramfs.
+# --unchanged-exit-77 returns 77 if no new deployment was created (i.e. already
+# tracked and current); we treat that as success.
+echo "[plymouth] Tracking /etc/plymouth/plymouthd.conf in initramfs..."
+set +e
+sudo rpm-ostree initramfs-etc \
+  --track=/etc/plymouth/plymouthd.conf \
+  --unchanged-exit-77
+rc=$?
+set -e
+case "$rc" in
+  0)  NEED_REBOOT=1 ;;
+  77) echo "[plymouth] initramfs-etc tracking already current." ;;
+  *)  exit "$rc" ;;
+esac
+
+if [ "$NEED_REBOOT" -eq 1 ]; then
+  echo "[plymouth] Staged. Reboot required:  systemctl reboot"
+fi
+
+{{- else }}
+echo "Plymouth theme switch is only relevant on Bluefin/Fedora; skipping."
+exit 0
+
+{{- end }}
+{{- end }}
