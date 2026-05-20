@@ -1,0 +1,72 @@
+#!/bin/bash
+{{- if not .remote }}
+{{- if or .isBluefin .isFedora }}
+
+{{/*
+  Embed the latest COPR build id for noctalia-shell-v5. Whenever upstream pushes
+  a new build, this number changes -> rendered template hash changes -> chezmoi
+  re-runs this script and pulls the new package. If we're offline, falls back
+  to the string "offline" so apply doesn't break.
+*/ -}}
+{{- $coprBuild := output "bash" "-c" "curl -fsSL --max-time 5 'https://copr.fedorainfracloud.org/api_3/package/?ownername=lionheartp&projectname=Hyprland&packagename=noctalia-shell-v5&with_latest_build=True' 2>/dev/null | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d[\"builds\"][\"latest\"][\"id\"])' 2>/dev/null || echo offline" | trim -}}
+# noctalia-shell-v5 latest COPR build: {{ $coprBuild }}
+
+set -euo pipefail
+
+# Install or update Noctalia v5 (Qt-free Wayland shell) on Fedora/Bluefin.
+# Package source: COPR lionheartp/Hyprland -> noctalia-shell-v5
+# Docs: https://docs.noctalia.dev/v5/
+#
+# This script is `run_onchange_before_` and the rendered output contains the
+# upstream COPR build id above, so chezmoi re-runs it whenever a new build
+# lands. First run installs; subsequent runs re-fetch the latest version.
+
+REPO_FILE="/etc/yum.repos.d/_copr_lionheartp-Hyprland.repo"
+REPO_URL="https://copr.fedorainfracloud.org/coprs/lionheartp/Hyprland/repo/fedora-$(rpm -E %fedora)/lionheartp-Hyprland-fedora-$(rpm -E %fedora).repo"
+
+if [ ! -f "$REPO_FILE" ]; then
+  echo "[noctalia] Adding COPR repo lionheartp/Hyprland..."
+  sudo curl -fsSL -o "$REPO_FILE" "$REPO_URL"
+fi
+
+if command -v rpm-ostree >/dev/null 2>&1 && [ -e /run/ostree-booted ]; then
+  if rpm -q noctalia-shell-v5 >/dev/null 2>&1; then
+    echo "[noctalia] Refreshing noctalia-shell-v5 from COPR..."
+    # `update --uninstall X --install X` forces re-fetch of a single layered
+    # package, picking up any newer build available in the repo.
+    sudo rpm-ostree update --uninstall noctalia-shell-v5 --install noctalia-shell-v5 || {
+      if sudo rpm-ostree status | grep -q noctalia-shell-v5; then
+        echo "[noctalia] Update already pending."
+      else
+        exit 1
+      fi
+    }
+  else
+    echo "[noctalia] Layering noctalia-shell-v5 via rpm-ostree..."
+    sudo rpm-ostree install noctalia-shell-v5 || {
+      if sudo rpm-ostree status | grep -q noctalia-shell-v5; then
+        echo "[noctalia] Install already pending."
+      else
+        exit 1
+      fi
+    }
+  fi
+  echo "[noctalia] Staged. Reboot when convenient:  systemctl reboot"
+
+elif command -v dnf >/dev/null 2>&1; then
+  echo "[noctalia] Standard Fedora -- installing/updating via dnf..."
+  sudo dnf install -y noctalia-shell-v5
+  sudo dnf upgrade -y noctalia-shell-v5 || true
+  echo "[noctalia] Done."
+
+else
+  echo "[noctalia] No supported package manager found; skipping."
+  exit 0
+fi
+
+{{- else }}
+echo "Noctalia installation is only supported on Bluefin and Fedora"
+exit 0
+
+{{- end }}
+{{- end }}
