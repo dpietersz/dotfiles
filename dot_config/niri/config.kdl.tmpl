@@ -33,7 +33,7 @@ binds {
     Mod+N hotkey-overlay-title="Control center / notifications" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
     Mod+Comma hotkey-overlay-title="Noctalia Settings" { spawn "noctalia" "msg" "settings-toggle"; }
      XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
-     Mod+B hotkey-overlay-title="Open Zen Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /opt/zen-browser-bin/zen-bin"; }
+     Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /usr/local/bin/helium"; }
 
     // === VOXD Voice Control ===
     Ctrl+Space hotkey-overlay-title="VOXD: Toggle Recording" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh toggle"; }
