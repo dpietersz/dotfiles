@@ -6,9 +6,10 @@ spawn-at-startup "noctalia"
 // Auto-start VOXD (Voice Control Daemon)
 spawn-at-startup "/home/pietersz/.local/bin/start-voxd.sh"
 
-workspace "Coding"
-workspace "Media"
-workspace "Work"
+workspace "Terminal"
+workspace "Browser"
+workspace "Chat"
+workspace "Misc"
 
 // Define keybindings
 binds {
@@ -57,7 +58,7 @@ binds {
 
     // === Wireless Controls (F8 = WiFi, F10 = Bluetooth) ===
     // v5 IPC doesn't expose wifi/bluetooth toggles yet; use system tools directly.
-    XF86Bluetooth hotkey-overlay-title="Toggle Bluetooth" { spawn "bash" "-c" "rfkill toggle bluetooth"; }
+    XF86Bluetooth hotkey-overlay-title="Toggle Bluetooth" { spawn "bash" "-c" "bluetoothctl show | grep -q 'Powered: yes' && bluetoothctl power off || bluetoothctl power on"; }
     XF86WLAN      hotkey-overlay-title="Toggle WiFi"      { spawn "nmcli" "radio" "wifi"; }
 
      // === Window Management ===
@@ -149,10 +150,10 @@ binds {
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
     // === Numbered Workspaces ===
-    Mod+1 { focus-workspace "Coding"; }
-    Mod+2 { focus-workspace "Media"; }
-    Mod+3 { focus-workspace "Work"; }
-    Mod+4 { focus-workspace 4; }
+    Mod+1 { focus-workspace "Terminal"; }
+    Mod+2 { focus-workspace "Browser"; }
+    Mod+3 { focus-workspace "Chat"; }
+    Mod+4 { focus-workspace "Misc"; }
     Mod+5 { focus-workspace 5; }
     Mod+6 { focus-workspace 6; }
     Mod+7 { focus-workspace 7; }
@@ -160,10 +161,10 @@ binds {
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 { move-column-to-workspace "Coding"; }
-    Mod+Shift+2 { move-column-to-workspace "Media"; }
-    Mod+Shift+3 { move-column-to-workspace "Work"; }
-    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+1 { move-column-to-workspace "Terminal"; }
+    Mod+Shift+2 { move-column-to-workspace "Browser"; }
+    Mod+Shift+3 { move-column-to-workspace "Chat"; }
+    Mod+Shift+4 { move-column-to-workspace "Misc"; }
     Mod+Shift+5 { move-column-to-workspace 5; }
     Mod+Shift+6 { move-column-to-workspace 6; }
     Mod+Shift+7 { move-column-to-workspace 7; }
@@ -347,48 +348,48 @@ screenshot-path "~/dev/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.pn
 // ============================================================================
 // Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
 
-// === Browsers → Media Workspace ===
+// === Browsers → Browser Workspace ===
 window-rule {
     match app-id="zen"
-    open-on-workspace "Media"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="firefox"
-    open-on-workspace "Media"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="chromium"
-    open-on-workspace "Media"
+    open-on-workspace "Browser"
     open-focused true
 }
 
 window-rule {
     match app-id="qutebrowser"
-    open-on-workspace "Media"
+    open-on-workspace "Browser"
 }
 
-// === Terminals → Coding Workspace ===
+// === Terminals → Terminal Workspace ===
 window-rule {
     match app-id="kitty"
-    open-on-workspace "Coding"
+    open-on-workspace "Terminal"
 }
 
 window-rule {
     match app-id="Alacritty"
-    open-on-workspace "Coding"
+    open-on-workspace "Terminal"
 }
 
 window-rule {
     match app-id="gnome-terminal-server"
-    open-on-workspace "Coding"
+    open-on-workspace "Terminal"
 }
 
-// === Code Editors → Coding Workspace ===
+// === Code Editors → Terminal Workspace ===
 window-rule {
     match app-id="Code"
-    open-on-workspace "Coding"
+    open-on-workspace "Terminal"
 }
 
 // === Default window styling (matches Noctalia's recommended corner radius) ===

@@ -1,0 +1,42 @@
+# Declarative Noctalia v5 config — tracked in chezmoi so all machines share it.
+#
+# Noctalia merges built-in defaults < this file < ~/.local/state/noctalia/settings.toml.
+# The GUI Settings panel writes to the state file, NOT here, so:
+#   - Edit this file by hand and `chezmoi apply` to propagate across machines.
+#   - When you tweak something via the GUI and want it tracked, copy the relevant
+#     section from ~/.local/state/noctalia/settings.toml into this file, then
+#     remove it from state (so this file becomes authoritative).
+
+[bar.default]
+start  = ["control-center", "wallpaper", "workspaces", "media"]
+center = ["date", "clock"]
+end    = ["notifications", "clipboard", "network", "bluetooth", "battery", "volume", "brightness", "session", "tray"]
+
+[brightness]
+enable_ddcutil = true
+
+[nightlight]
+enabled = true
+
+[shell]
+telemetry_enabled = false
+
+[shell.panel]
+attach_clipboard = true
+attach_launcher  = true
+
+[theme]
+builtin = "Gruvbox"
+source  = "builtin"
+
+[widget.bluetooth]
+capsule    = false
+show_label = false
+
+[widget.network]
+capsule    = false
+show_label = false
+
+[widget.workspaces]
+display         = "name"   # "none" | "id" | "name"  — show "Coding"/"Media"/"Work" from niri
+max_label_chars = 10
