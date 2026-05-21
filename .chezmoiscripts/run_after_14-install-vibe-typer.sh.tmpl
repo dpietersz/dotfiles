@@ -37,39 +37,43 @@ fi
 
 local_version=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
 
-if [ "$local_version" = "$remote_version" ] && [ -x "$APP_PATH" ]; then
-    exit 0
+if [ "$local_version" != "$remote_version" ] || [ ! -x "$APP_PATH" ]; then
+    echo "[vibe-typer] Installing $remote_version (was: ${local_version:-<none>})..."
+    tmp=$(mktemp "$APP_DIR/.VibeTyper.AppImage.XXXXXX")
+    trap 'rm -f "$tmp"' EXIT
+
+    if ! curl -fSL --progress-bar --max-time 600 -o "$tmp" "$APPIMAGE_URL"; then
+        echo "[vibe-typer] Download failed; keeping existing version (if any)."
+        exit 1
+    fi
+
+    chmod +x "$tmp"
+    mv -f "$tmp" "$APP_PATH"
+    trap - EXIT
+    echo "$remote_version" > "$VERSION_FILE"
+
+    # Ensure libfuse2 / fuse-libs is present on Fedora atomic (AppImage runtime).
+    if ! ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
+        echo "[vibe-typer] libfuse.so.2 not found — layering fuse-libs (may need reboot)..."
+        sudo rpm-ostree install --apply-live --allow-inactive -y fuse-libs || \
+            echo "[vibe-typer] fuse-libs layering deferred until next boot."
+    fi
+else
+    echo "[vibe-typer] AppImage v$remote_version already current."
 fi
 
-echo "[vibe-typer] Installing $remote_version (was: ${local_version:-<none>})..."
-tmp=$(mktemp "$APP_DIR/.VibeTyper.AppImage.XXXXXX")
-trap 'rm -f "$tmp"' EXIT
-
-if ! curl -fSL --progress-bar --max-time 600 -o "$tmp" "$APPIMAGE_URL"; then
-    echo "[vibe-typer] Download failed; keeping existing version (if any)."
-    exit 1
-fi
-
-chmod +x "$tmp"
-mv -f "$tmp" "$APP_PATH"
-trap - EXIT
-echo "$remote_version" > "$VERSION_FILE"
-
-# Ensure libfuse2 / fuse-libs is present on Fedora atomic (AppImage runtime).
-if ! ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
-    echo "[vibe-typer] libfuse.so.2 not found — layering fuse-libs (may need reboot)..."
-    sudo rpm-ostree install --apply-live --allow-inactive -y fuse-libs || \
-        echo "[vibe-typer] fuse-libs layering deferred until next boot."
-fi
-
-# Desktop entry — only write once (or rewrite when version changes for the Exec line stability).
+# Desktop entry — always regenerated, so Exec-line changes (e.g. new flags) propagate.
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Vibe Typer
 GenericName=Voice Dictation
 Comment=AI voice typing — Vibe Typer
-Exec=$APP_PATH
+# --password-store=gnome-libsecret: forces Electron to use gnome-libsecret backend
+# for safeStorage. Without it, Electron's auto-detect falls back to "basic"
+# (plaintext) on non-GNOME/KDE sessions like niri, and the app refuses to sign in
+# because it considers the keyring inaccessible.
+Exec=$APP_PATH --password-store=gnome-libsecret
 Icon=vibe-typer
 StartupWMClass=VibeTyper
 Categories=Utility;AudioVideo;Office;

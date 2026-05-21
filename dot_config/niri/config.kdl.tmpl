@@ -3,6 +3,10 @@
 // Auto-start Noctalia v5 (Wayland shell: bar + launcher + notifications + OSD + lock)
 spawn-at-startup "noctalia"
 
+// Polkit authentication agent (mate-polkit). niri ships no agent of its own;
+// GUI apps that invoke pkexec (vibe-typer setup, etc.) fail without this.
+spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
+
 workspace "Terminal"
 workspace "Browser"
 workspace "Chat"

@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+{{- if or .remote (not .isBluefin) }}
+exit 0
+{{- end }}
+
+# ------------------ Polkit authentication agent (mate-polkit) ------------------
+# niri sessions don't ship a polkit auth agent. Without one, any GUI app calling
+# pkexec (vibe-typer setup, network/storage privileged ops, etc.) fails with
+# exit 127 "could not obtain authorization".
+#
+# mate-polkit is the de-facto replacement for the now-retired polkit-gnome — GTK,
+# no GNOME runtime deps, works under any Wayland compositor. The binary lands at
+# /usr/libexec/polkit-mate-authentication-agent-1 and gets autostarted from niri
+# via spawn-at-startup (see dot_config/niri/config.kdl.tmpl).
+
+if rpm -q mate-polkit >/dev/null 2>&1; then
+    exit 0
+fi
+
+echo "📦 Layering mate-polkit via rpm-ostree (--apply-live)..."
+if ! sudo rpm-ostree install --apply-live --allow-inactive -y mate-polkit; then
+    echo "⚠️  --apply-live failed; mate-polkit will be available after next reboot."
+    exit 1
+fi
+
+echo "✅ mate-polkit installed."

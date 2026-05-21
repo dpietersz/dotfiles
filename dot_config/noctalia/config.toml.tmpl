@@ -19,7 +19,9 @@ enable_ddcutil = true
 enabled = true
 
 [shell]
-polkit_agent     = true
+# Noctalia's built-in polkit agent didn't play well with Vibe Typer's
+# pkexec flow — using mate-polkit (layered + spawn-at-startup in niri) instead.
+polkit_agent     = false
 telemetry_enabled = false
 
 [shell.panel]
