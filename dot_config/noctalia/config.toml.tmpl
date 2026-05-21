@@ -8,7 +8,7 @@
 #     remove it from state (so this file becomes authoritative).
 
 [bar.default]
-start  = ["control-center", "wallpaper", "workspaces", "media"]
+start  = ["control-center", "wallpaper", "workspaces"]
 center = ["date", "clock"]
 end    = ["notifications", "clipboard", "network", "bluetooth", "battery", "volume", "brightness", "session", "tray"]
 
@@ -28,6 +28,10 @@ attach_launcher  = true
 [theme]
 builtin = "Gruvbox"
 source  = "builtin"
+
+[wallpaper]
+directory_dark  = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/dark"
+directory_light = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/light"
 
 [widget.bluetooth]
 capsule    = false
