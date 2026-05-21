@@ -54,12 +54,20 @@ box_exists() {
     | grep -qx "$1"
 }
 
+# Staleness check via skopeo: fetches only the manifest (~1.5KB) instead of
+# the full image blobs. Returns 0 (stale) when we should recreate.
 image_is_stale() {
   local box="$1" image="$2"
-  local remote_id container_image
-  remote_id=$(podman image inspect "$image" --format '{{`{{.Id}}`}}' 2>/dev/null || true)
+  local remote_digest local_digest container_image local_image_id
+  remote_digest=$(skopeo inspect --no-tags --format '{{`{{.Digest}}`}}' "docker://$image" 2>/dev/null || true)
+  [ -z "$remote_digest" ] && return 1  # can't tell remote; don't churn
+  local_digest=$(podman image inspect "$image" --format '{{`{{.Digest}}`}}' 2>/dev/null || true)
+  if [ -z "$local_digest" ] || [ "$remote_digest" != "$local_digest" ]; then
+    return 0  # remote newer (or image not pulled locally)
+  fi
   container_image=$(podman container inspect "$box" --format '{{`{{.Image}}`}}' 2>/dev/null || true)
-  [ -n "$remote_id" ] && [ -n "$container_image" ] && [ "$remote_id" != "$container_image" ]
+  local_image_id=$(podman image inspect "$image" --format '{{`{{.Id}}`}}' 2>/dev/null || true)
+  [ -n "$container_image" ] && [ -n "$local_image_id" ] && [ "$container_image" != "$local_image_id" ]
 }
 
 refresh_exports_if_changed() {
@@ -107,15 +115,8 @@ for ini in "$DISTROBOX_CONFIG_DIR"/*.ini; do
     continue
   fi
 
-  image_pulled=0
-  if timeout 60 podman pull --quiet "$image" >/dev/null 2>&1; then
-    image_pulled=1
-  else
-    echo "[toolboxes] could not pull $image (offline or auth?); staleness check skipped"
-  fi
-
   if box_exists "$box"; then
-    if [ "$image_pulled" = 1 ] && image_is_stale "$box" "$image"; then
+    if image_is_stale "$box" "$image"; then
       echo "[toolboxes] $box image is stale -> stopping and recreating"
       echo "  (in-container state will be lost; \$HOME is mounted from host so files are safe)"
       distrobox stop "$box" >/dev/null 2>&1 || true
