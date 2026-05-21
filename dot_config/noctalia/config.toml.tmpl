@@ -30,8 +30,16 @@ builtin = "Gruvbox"
 source  = "builtin"
 
 [wallpaper]
-directory_dark  = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/dark"
-directory_light = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/light"
+# Noctalia v5's GUI only exposes the global "directory" key; the
+# directory_dark / directory_light per-scheme overrides live in Advanced
+# settings and weren't picked up reliably. Using the global directory matches
+# the working setup on the main machine.
+directory = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/dark"
+
+[wallpaper.default]
+# Seed which wallpaper to show on first launch (state's [wallpaper.last] /
+# [wallpaper.monitors.*] override this once the user picks something in the UI).
+path = "{{ .chezmoi.homeDir }}/dev/Pictures/Wallpapers/dark/fedora-gruvbox-dark.webp"
 
 [widget.bluetooth]
 capsule    = false

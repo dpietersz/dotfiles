@@ -409,10 +409,3 @@ debug {
     honor-xdg-activation-with-invalid-serial
 }
 
-// Place Noctalia's wallpaper layer behind windows (stationary wallpaper option).
-// Disable Noctalia's "Enable overview wallpaper" setting to use this.
-layer-rule {
-    match namespace="^noctalia-wallpaper.*"
-    place-within-backdrop true
-}
-
