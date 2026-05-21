@@ -3,6 +3,13 @@
 
 set -euo pipefail
 
+{{- if and (lookPath "pass") (stat (joinPath .chezmoi.homeDir ".password-store/Sites/github.com/pat/host-machine.gpg")) }}
+# Avoid GitHub anonymous rate limits when mise fetches asset metadata / releases.
+export GITHUB_TOKEN="{{ pass "Sites/github.com/pat/host-machine" }}"
+export GH_TOKEN="$GITHUB_TOKEN"
+export MISE_GITHUB_TOKEN="$GITHUB_TOKEN"
+{{- end }}
+
 MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
 
 $MISE_BIN_PATH trust {{ .chezmoi.homeDir }}/.config/mise/config.toml

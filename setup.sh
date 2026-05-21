@@ -22,6 +22,16 @@ reset chezmoi's run-once state and try again:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EOF
 
+# If pass is already set up on this machine, surface the GitHub token to
+# chezmoi scripts so mise / gh / curl avoid anonymous GitHub rate limits.
+# Harmless no-op on first bootstrap (pass not yet installed).
+if command -v pass >/dev/null && pass show Sites/github.com/pat/host-machine >/dev/null 2>&1; then
+  GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
+  export GITHUB_TOKEN
+  export GH_TOKEN="$GITHUB_TOKEN"
+  export MISE_GITHUB_TOKEN="$GITHUB_TOKEN"
+fi
+
 if command -v chezmoi >/dev/null; then
   chezmoi init --apply --source "$PWD"
   exit 0
