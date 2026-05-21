@@ -1,0 +1,66 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ Configure syncthing for tailscale-only use ------------------
+# Disables global discovery, NAT traversal, and relaying so that all sync
+# traffic flows over the tailnet (or local LAN). Local discovery stays on so
+# two machines on the same physical LAN still find each other directly.
+#
+# Per-device tailnet addresses must be set manually after pairing — see the
+# instructions printed at the end of this script.
+
+{{- if or .remote (not .isBluefin) }}
+exit 0
+{{- end }}
+
+if ! command -v syncthing >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Daemon must be running for the CLI to reach the API.
+if ! systemctl --user is-active --quiet syncthing.service 2>/dev/null; then
+    echo "[syncthing-config] syncthing not running yet; skipping. Will run on next apply."
+    exit 0
+fi
+
+# Wait briefly for the API to become reachable (it takes a moment after start).
+for _ in 1 2 3 4 5; do
+    if syncthing cli config version get >/dev/null 2>&1; then
+        break
+    fi
+    sleep 1
+done
+
+if ! syncthing cli config version get >/dev/null 2>&1; then
+    echo "[syncthing-config] syncthing API not reachable; skipping."
+    exit 0
+fi
+
+set_option() {
+    local key=$1 desired=$2 current
+    current=$(syncthing cli config options "$key" get 2>/dev/null || echo "")
+    if [ "$current" != "$desired" ]; then
+        syncthing cli config options "$key" set "$desired"
+        echo "[syncthing-config] $key: $current -> $desired"
+    fi
+}
+
+set_option global-announce-enabled false
+set_option local-announce-enabled  true
+set_option relays-enabled          false
+set_option nat-enabled             false
+
+echo ""
+echo "📌 Manual step — set per-device tailnet addresses (only needed once per peer):"
+echo ""
+echo "   1. Open http://localhost:8384"
+echo "   2. For each remote device card, click 'Edit'"
+echo "   3. Under 'Addresses', replace 'dynamic' with the peer's tailnet name, e.g.:"
+echo "        tcp://p14:22000"
+echo "        tcp://p14-2:22000"
+echo "      (uses MagicDNS — falls back to 100.x.y.z if MagicDNS is off)"
+echo "   4. Save"
+echo ""
+echo "   Current tailnet hostname:"
+tailscale status --self --json 2>/dev/null | grep -m1 '"HostName"' | sed 's/^/        /' || echo "        (tailscale not connected)"
+echo ""
