@@ -2,8 +2,12 @@
 # Wrapper to start voxd with API keys injected from pass via chezmoi
 # This file contains secrets, ensure it has restrictive permissions (0700)
 
+{{- if and (lookPath "pass") (stat (joinPath .chezmoi.homeDir ".password-store/Sites/openai.com/api-keys/neovim.gpg")) }}
 export OPENAI_API_KEY="{{ pass "Sites/openai.com/api-keys/neovim" }}"
+{{- end }}
+{{- if and (lookPath "pass") (stat (joinPath .chezmoi.homeDir ".password-store/Sites/anthropic.com/PAT/neovim.gpg")) }}
 export ANTHROPIC_API_KEY="{{ pass "Sites/anthropic.com/PAT/neovim" }}"
+{{- end }}
 
 # Prepend /usr/bin to PATH to ensure system python3 is found before mise's python
 export PATH="/usr/bin:$PATH"
