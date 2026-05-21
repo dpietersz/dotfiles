@@ -1,0 +1,60 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ Bring up tailscale ------------------
+# Tailscale is pre-installed on Bluefin. This script:
+#   1) Enables tailscaled
+#   2) If not yet authenticated, pulls an auth key from pass and runs
+#      `tailscale up --auth-key=<key>`
+#
+# Prerequisites (set up by earlier run_once_before_* scripts):
+#   - pass installed        (06)
+#   - GPG keys decrypted    (08)
+#   - password-store cloned (10)
+#
+# Auth key location in pass: Homelab/tailscale/auth-key
+
+{{- if or .remote (not (or .isBluefin .isFedora)) }}
+exit 0
+{{- end }}
+
+if ! command -v tailscale >/dev/null 2>&1; then
+    echo "[tailscale] not installed; skipping."
+    exit 0
+fi
+
+# Ensure the daemon is running and enabled.
+if ! systemctl is-enabled --quiet tailscaled 2>/dev/null; then
+    echo "[tailscale] Enabling tailscaled..."
+    sudo systemctl enable --now tailscaled
+elif ! systemctl is-active --quiet tailscaled 2>/dev/null; then
+    sudo systemctl start tailscaled
+fi
+
+# Already authenticated? Nothing to do.
+if tailscale status >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Need pass + entry to bring up.
+if ! command -v pass >/dev/null 2>&1; then
+    echo "[tailscale] pass not yet installed — skipping tailscale up for now."
+    exit 0
+fi
+
+if ! pass show Homelab/tailscale/auth-key >/dev/null 2>&1; then
+    echo "[tailscale] No auth key at pass Homelab/tailscale/auth-key; skipping."
+    echo "            Run manually: sudo tailscale up --auth-key=<key>"
+    exit 0
+fi
+
+auth_key=$(pass show Homelab/tailscale/auth-key | head -n1)
+if [ -z "$auth_key" ]; then
+    echo "[tailscale] pass entry is empty; skipping."
+    exit 0
+fi
+
+echo "[tailscale] Bringing up..."
+sudo tailscale up --auth-key="$auth_key"
+echo "[tailscale] Connected:"
+tailscale status || true

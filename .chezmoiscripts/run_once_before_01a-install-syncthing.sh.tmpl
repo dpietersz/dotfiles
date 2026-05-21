@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+{{ if and .isBluefin (not .remote) -}}
+
+echo "🔄 Installing syncthing"
+echo "━━━━━━━━━━━━━━━━━━━━━━━"
+
+if rpm -q syncthing >/dev/null 2>&1 && command -v syncthing >/dev/null 2>&1; then
+    echo "✅ syncthing already installed"
+    exit 0
+fi
+
+echo "📦 Installing syncthing via rpm-ostree (--apply-live)..."
+if sudo rpm-ostree install --apply-live --allow-inactive -y syncthing; then
+    echo "✅ syncthing installed and live in current deployment"
+else
+    echo "⚠️  --apply-live failed; package will be present after next reboot."
+    echo "   Re-run: chezmoi apply"
+    exit 1
+fi
+
+{{ end -}}

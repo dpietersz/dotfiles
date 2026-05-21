@@ -1,0 +1,41 @@
+#!/bin/bash
+set -euo pipefail
+
+{{- if .remote }}
+echo "[syncthing-service] Skipping: remote environment."
+exit 0
+{{- end }}
+
+if ! command -v syncthing >/dev/null 2>&1; then
+    echo "[syncthing-service] syncthing not on PATH yet — reboot may be required."
+    echo "[syncthing-service] Exiting non-zero so this script re-runs on next apply."
+    exit 1
+fi
+
+SERVICE_FILE="$HOME/.config/systemd/user/syncthing.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+    echo "[syncthing-service] Service file not found at $SERVICE_FILE"
+    exit 1
+fi
+
+echo "[syncthing-service] Enabling lingering so the service runs without an active login..."
+sudo loginctl enable-linger "$USER"
+
+echo "[syncthing-service] Reloading user systemd daemon..."
+systemctl --user daemon-reload
+
+echo "[syncthing-service] Enabling syncthing.service..."
+systemctl --user enable syncthing.service
+
+if ! systemctl --user is-active --quiet syncthing.service; then
+    systemctl --user start syncthing.service
+    echo "[syncthing-service] Started."
+else
+    echo "[syncthing-service] Already running."
+fi
+
+echo ""
+echo "🌐 Web UI: http://localhost:8384"
+echo "   On first run, open the UI to add the other machine as a device,"
+echo "   then share ~/dev between the two."
+echo ""

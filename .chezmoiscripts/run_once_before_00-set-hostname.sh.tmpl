@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+{{ if not .remote -}}
+
+# ------------------ Set static hostname interactively ------------------
+# On a fresh machine the static hostname is often unset and the transient
+# hostname is a useless string like "localhost" or an IPv6 address. Prompt
+# the user once on first apply and persist via hostnamectl.
+
+current=$(hostnamectl --static 2>/dev/null || true)
+
+case "$current" in
+    "" | "localhost" | "localhost.localdomain" | "fedora" | "bluefin")
+        printf '\n🏷️  Static hostname is not set (currently: %s).\n' "${current:-<empty>}" > /dev/tty
+        printf '   Enter desired hostname (e.g. p14, p14-2), or leave blank to skip: ' > /dev/tty
+        read -r new < /dev/tty
+        if [ -n "${new:-}" ]; then
+            sudo hostnamectl set-hostname "$new"
+            echo "✅ Hostname set to: $new"
+        else
+            echo "⏭️  Skipped hostname change."
+        fi
+        ;;
+    *)
+        echo "✅ Hostname already set: $current"
+        ;;
+esac
+
+{{ end -}}
