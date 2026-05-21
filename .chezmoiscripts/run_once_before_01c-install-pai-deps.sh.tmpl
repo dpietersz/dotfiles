@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+
+{{- if or .remote .isMacOS }}
+# macOS PAI deps are covered by 01b-install-homebrew-packages.sh.tmpl
+exit 0
+{{- end }}
+
+# Bluefin/Fedora — atomic FS, so install bun to user-writable path only.
+
+# 1. bun — curl installer puts it in ~/.bun, no sudo needed, works on rpm-ostree
+if [ ! -x "$HOME/.bun/bin/bun" ]; then
+    echo "[pai-deps] Installing bun to ~/.bun…"
+    curl -fsSL https://bun.sh/install | bash
+else
+    echo "[pai-deps] bun already installed: $($HOME/.bun/bin/bun --version)"
+fi
+
+# 2. Verify the CLI tools PAI hooks/skills shell out to.
+#    On Bluefin most are system-installed (rg, fd, bat, jq, git, curl).
+#    Warn if any are missing — don't run rpm-ostree from an automated script
+#    (it requires reboot and is non-interactive-unsafe here).
+MISSING=()
+for tool in rg fd bat jq git curl; do
+    command -v "$tool" >/dev/null 2>&1 || MISSING+=("$tool")
+done
+
+if [ ${#MISSING[@]} -gt 0 ]; then
+    echo "[pai-deps] ⚠ Missing CLI tools: ${MISSING[*]}"
+    echo "[pai-deps]   Install via:  rpm-ostree install ${MISSING[*]}"
+    echo "[pai-deps]   Then reboot, then re-run chezmoi apply."
+fi
+
+# 3. kitty — optional. hooks/lib/tab-setter.ts already has a fallback if absent.
+if ! command -v kitten >/dev/null 2>&1; then
+    echo "[pai-deps] (optional) kitty not installed — tab-setter will skip gracefully"
+fi
+
+echo "[pai-deps] PAI deps check complete."

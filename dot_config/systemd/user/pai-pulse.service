@@ -1,0 +1,23 @@
+[Unit]
+Description=PAI Pulse — HTTP routing and voice server
+Documentation=file:%h/.claude/PAI/DOCUMENTATION/Pulse/PulseSystem.md
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=4
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.claude/PAI/PULSE
+ExecStartPre=/bin/mkdir -p %h/.claude/PAI/PULSE/state %h/.claude/PAI/PULSE/logs
+ExecStart=%h/.bun/bin/bun run %h/.claude/PAI/PULSE/pulse.ts
+Restart=on-failure
+RestartSec=2
+SuccessExitStatus=0
+Environment=HOME=%h
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target
