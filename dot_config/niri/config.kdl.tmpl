@@ -3,9 +3,6 @@
 // Auto-start Noctalia v5 (Wayland shell: bar + launcher + notifications + OSD + lock)
 spawn-at-startup "noctalia"
 
-// Auto-start VOXD (Voice Control Daemon)
-spawn-at-startup "/home/pietersz/.local/bin/start-voxd.sh"
-
 workspace "Terminal"
 workspace "Browser"
 workspace "Chat"
@@ -35,10 +32,9 @@ binds {
      XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
      Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /usr/local/bin/helium"; }
 
-    // === VOXD Voice Control ===
-    Ctrl+Space hotkey-overlay-title="VOXD: Toggle Recording" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh toggle"; }
-    Ctrl+Mod+E hotkey-overlay-title="VOXD: Switch to English" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh lang en"; }
-    Ctrl+Mod+D hotkey-overlay-title="VOXD: Switch to Dutch" { spawn "bash" "-c" "$HOME/.local/bin/scripts/voxd-ctrl.sh lang nl"; }
+    // === Voquill Voice Dictation ===
+    // Toggle recording; refine the CLI invocation after `voquill-desktop --help`.
+    F12 hotkey-overlay-title="Voquill: Toggle Dictation" { spawn "voquill-desktop" "--toggle"; }
 
     // === Volume Controls (F2/F3/F4) — Noctalia provides the OSD ===
     XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
@@ -368,6 +364,48 @@ window-rule {
 window-rule {
     match app-id="qutebrowser"
     open-on-workspace "Browser"
+}
+
+window-rule {
+    match app-id="helium"
+    open-on-workspace "Browser"
+}
+
+window-rule {
+    match app-id="(?i)^polypane$"
+    open-on-workspace "Browser"
+}
+
+// === Chat apps → Chat Workspace ===
+window-rule {
+    match app-id="legcord"
+    open-on-workspace "Chat"
+}
+
+window-rule {
+    match app-id="(?i)^teams-for-linux$"
+    open-on-workspace "Chat"
+}
+
+// === Notes / DB / API tools → Misc Workspace ===
+window-rule {
+    match app-id="obsidian"
+    open-on-workspace "Misc"
+}
+
+window-rule {
+    match app-id="anytype"
+    open-on-workspace "Misc"
+}
+
+window-rule {
+    match app-id="(?i)^beekeeper-studio$"
+    open-on-workspace "Misc"
+}
+
+window-rule {
+    match app-id="(?i)^bruno$"
+    open-on-workspace "Misc"
 }
 
 // === Terminals → Terminal Workspace ===

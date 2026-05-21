@@ -1,0 +1,9 @@
+# Files/directories chezmoi removes from the destination on each apply.
+# Once gone, listing them here is a no-op. Safe to leave entries here
+# permanently as a tombstone of removed tooling.
+
+# voxd voice dictation — replaced by voquill (2026-05-21).
+.local/bin/scripts/voxd-ctrl.sh
+.local/bin/start-voxd.sh
+.config/voxd
+.local/share/voxd
