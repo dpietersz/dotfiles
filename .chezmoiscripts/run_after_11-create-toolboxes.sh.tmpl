@@ -1,9 +1,7 @@
 #!/bin/bash
-# Re-trigger whenever any tracked toolbox .ini config or the generic export script changes.
-# browser-toolbox.ini:  {{ include "dot_config/distrobox/browser-toolbox.ini.tmpl" | sha256sum }}
-# data-toolbox.ini:     {{ include "dot_config/distrobox/data-toolbox.ini.tmpl" | sha256sum }}
-# notetaking.ini:       {{ include "dot_config/distrobox/notetaking-toolbox.ini.tmpl" | sha256sum }}
-# auto-export script:   {{ include "dot_local/bin/scripts/executable_distrobox-auto-export.sh" | sha256sum }}
+# Runs on every `chezmoi apply` because remote image bumps at ghcr.io are
+# invisible to chezmoi's content-hash gating. The internal skopeo manifest
+# checks are cheap (~1s per box) so the per-apply overhead is small.
 
 {{- if .remote }}
 echo "Skipping toolbox creation on remote system"
