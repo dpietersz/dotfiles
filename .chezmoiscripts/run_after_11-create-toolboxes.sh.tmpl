@@ -68,6 +68,13 @@ image_is_stale() {
   [ -n "$container_image" ] && [ -n "$local_image_id" ] && [ "$container_image" != "$local_image_id" ]
 }
 
+run_exports_in_box() {
+  local box="$1"
+  [ -x "$EXPORT_SCRIPT" ] || { echo "[toolboxes] WARN: export script missing or not executable: $EXPORT_SCRIPT"; return 1; }
+  echo "[toolboxes] running export script inside $box"
+  distrobox enter "$box" -- bash "$EXPORT_SCRIPT" 2>&1 | sed 's/^/  /'
+}
+
 refresh_exports_if_changed() {
   local box="$1"
   local hash_file="$HASH_DIR/$box.sha256"
@@ -82,8 +89,8 @@ refresh_exports_if_changed() {
     return 0
   fi
 
-  echo "[toolboxes] export script changed for $box -> refreshing inside container"
-  if distrobox enter "$box" -- bash "$EXPORT_SCRIPT" 2>&1 | sed 's/^/  /'; then
+  echo "[toolboxes] export script changed for $box -> refreshing"
+  if run_exports_in_box "$box"; then
     echo "$current" > "$hash_file"
   else
     echo "[toolboxes] WARN: refresh failed for $box; will retry on next apply"
@@ -120,6 +127,10 @@ for ini in "$DISTROBOX_CONFIG_DIR"/*.ini; do
       distrobox stop "$box" >/dev/null 2>&1 || true
       distrobox rm -f "$box" >/dev/null 2>&1 || true
       distrobox-assemble create --file "$ini"
+      # init_hooks declared in .ini only fires on first `distrobox enter`, not
+      # on `distrobox-assemble create`. Invoke exports explicitly so a fresh
+      # box ends up with apps on host even if user never enters it manually.
+      run_exports_in_box "$box" || true
       [ -x "$EXPORT_SCRIPT" ] && sha256sum "$EXPORT_SCRIPT" | cut -d' ' -f1 > "$HASH_DIR/$box.sha256"
     else
       echo "[toolboxes] $box exists and image is current"
@@ -128,6 +139,7 @@ for ini in "$DISTROBOX_CONFIG_DIR"/*.ini; do
   else
     echo "[toolboxes] $box missing -> creating from $ini_filename"
     distrobox-assemble create --file "$ini"
+    run_exports_in_box "$box" || true
     [ -x "$EXPORT_SCRIPT" ] && sha256sum "$EXPORT_SCRIPT" | cut -d' ' -f1 > "$HASH_DIR/$box.sha256"
   fi
 done
