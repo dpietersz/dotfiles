@@ -1,0 +1,82 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ Install / update Vibe Typer (AppImage) ------------------
+# Vibe Typer ships only as a Linux AppImage. We track the upstream stable
+# channel via cdn.vibetyper.com/releases/latest.json and re-download only when
+# the version changes. AppImage lands in ~/Applications/, with a desktop entry
+# in ~/.local/share/applications/ so it shows up in the launcher.
+#
+# Refs:
+#   manifest: https://cdn.vibetyper.com/releases/latest.json
+#   binary:   https://cdn.vibetyper.com/releases/linux/VibeTyper.AppImage
+
+{{- if or .remote .isMacOS }}
+exit 0
+{{- end }}
+
+MANIFEST_URL="https://cdn.vibetyper.com/releases/latest.json"
+APPIMAGE_URL="https://cdn.vibetyper.com/releases/linux/VibeTyper.AppImage"
+APP_DIR="$HOME/Applications"
+APP_PATH="$APP_DIR/VibeTyper.AppImage"
+STATE_DIR="$HOME/.local/state/vibe-typer"
+VERSION_FILE="$STATE_DIR/version"
+DESKTOP_FILE="$HOME/.local/share/applications/vibe-typer.desktop"
+
+mkdir -p "$APP_DIR" "$STATE_DIR" "$(dirname "$DESKTOP_FILE")"
+
+# Fetch upstream version (small JSON, ~100 bytes).
+remote_version=$(curl -fsSL --max-time 10 "$MANIFEST_URL" 2>/dev/null \
+    | python3 -c 'import sys,json; print(json.load(sys.stdin)["version"])' 2>/dev/null \
+    || true)
+
+if [ -z "$remote_version" ]; then
+    echo "[vibe-typer] Could not reach $MANIFEST_URL; skipping (will retry on next apply)."
+    exit 0
+fi
+
+local_version=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
+
+if [ "$local_version" = "$remote_version" ] && [ -x "$APP_PATH" ]; then
+    exit 0
+fi
+
+echo "[vibe-typer] Installing $remote_version (was: ${local_version:-<none>})..."
+tmp=$(mktemp "$APP_DIR/.VibeTyper.AppImage.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+
+if ! curl -fSL --progress-bar --max-time 600 -o "$tmp" "$APPIMAGE_URL"; then
+    echo "[vibe-typer] Download failed; keeping existing version (if any)."
+    exit 1
+fi
+
+chmod +x "$tmp"
+mv -f "$tmp" "$APP_PATH"
+trap - EXIT
+echo "$remote_version" > "$VERSION_FILE"
+
+# Ensure libfuse2 / fuse-libs is present on Fedora atomic (AppImage runtime).
+if ! ldconfig -p 2>/dev/null | grep -q 'libfuse\.so\.2'; then
+    echo "[vibe-typer] libfuse.so.2 not found — layering fuse-libs (may need reboot)..."
+    sudo rpm-ostree install --apply-live --allow-inactive -y fuse-libs || \
+        echo "[vibe-typer] fuse-libs layering deferred until next boot."
+fi
+
+# Desktop entry — only write once (or rewrite when version changes for the Exec line stability).
+cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Vibe Typer
+GenericName=Voice Dictation
+Comment=AI voice typing — Vibe Typer
+Exec=$APP_PATH
+Icon=vibe-typer
+StartupWMClass=VibeTyper
+Categories=Utility;AudioVideo;Office;
+Terminal=false
+EOF
+update-desktop-database "$(dirname "$DESKTOP_FILE")" 2>/dev/null || true
+
+echo "[vibe-typer] Installed: $APP_PATH ($remote_version)"
+echo "[vibe-typer] Launcher entry: $DESKTOP_FILE"
+echo "[vibe-typer] First run: launch from your app launcher, configure the in-app hotkey."

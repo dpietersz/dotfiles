@@ -36,10 +36,11 @@ binds {
      XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
      Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /usr/local/bin/helium"; }
 
-    // === Voquill Voice Dictation ===
-    // Bound to the ThinkPad star key (Fn+F12 / FnLock-F12). Refine the CLI
-    // invocation after `voquill-desktop --help` confirms the real flag.
-    XF86Favorites hotkey-overlay-title="Voquill: Toggle Dictation" { spawn "voquill-desktop" "--toggle"; }
+    // === Voice Dictation (Vibe Typer) ===
+    // Vibe Typer registers its own global hotkey internally (configured in its
+    // settings UI). Niri keybinding only needed if you want compositor-level
+    // forwarding — left unbound for now. Configure the in-app hotkey to e.g.
+    // XF86Favorites (the ThinkPad star key) via Vibe Typer's preferences.
 
     // === Volume Controls (F2/F3/F4) — Noctalia provides the OSD ===
     XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }

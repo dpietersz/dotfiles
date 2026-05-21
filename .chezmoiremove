@@ -2,8 +2,13 @@
 # Once gone, listing them here is a no-op. Safe to leave entries here
 # permanently as a tombstone of removed tooling.
 
-# voxd voice dictation — replaced by voquill (2026-05-21).
+# voxd voice dictation — replaced by voquill (2026-05-21), then by vibe-typer.
 .local/bin/scripts/voxd-ctrl.sh
 .local/bin/start-voxd.sh
 .config/voxd
 .local/share/voxd
+
+# voquill voice dictation — replaced by vibe-typer (2026-05-21).
+.config/com.voquill.desktop
+.local/share/com.voquill.desktop
+.cache/com.voquill.desktop
