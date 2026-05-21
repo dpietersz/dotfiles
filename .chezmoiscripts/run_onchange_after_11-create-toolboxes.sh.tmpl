@@ -24,23 +24,91 @@ if ! command -v distrobox-assemble >/dev/null 2>&1; then
 fi
 
 DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
+HASH_DIR="$HOME/.cache/dotfiles/toolbox-export-hashes"
+mkdir -p "$HASH_DIR"
 
-# Idempotent: create each toolbox only if it does not already exist.
-# Playwright is intentionally excluded — handled by 12-enable-playwright-mcp-service.
-for box in browser-toolbox data-toolbox notetaking-toolbox; do
-  if distrobox list 2>/dev/null | awk -F'|' '{gsub(/ /,"",$2); print $2}' | grep -qx "$box"; then
-    echo "[toolboxes] $box already exists, skipping"
+# box | image | export-script-filename
+TOOLBOXES=(
+  "browser-toolbox|ghcr.io/dpietersz/browser-toolbox:latest|export-browser-toolbox-gui.sh"
+  "data-toolbox|ghcr.io/dpietersz/data-toolbox:latest|export-data-toolbox-gui.sh"
+  "notetaking-toolbox|ghcr.io/dpietersz/notetaking-toolbox:latest|export-notetaking-toolbox-gui.sh"
+)
+
+box_exists() {
+  distrobox list 2>/dev/null \
+    | awk -F'|' '{gsub(/ /,"",$2); print $2}' \
+    | grep -qx "$1"
+}
+
+# Returns 0 if container's image differs from latest pulled image (i.e., recreate needed)
+image_is_stale() {
+  local box="$1" image="$2"
+  local remote_id container_image
+  remote_id=$(podman image inspect "$image" --format '{{.Id}}' 2>/dev/null || true)
+  container_image=$(podman container inspect "$box" --format '{{.Image}}' 2>/dev/null || true)
+  [ -n "$remote_id" ] && [ -n "$container_image" ] && [ "$remote_id" != "$container_image" ]
+}
+
+refresh_exports_if_changed() {
+  local box="$1" script_path="$2"
+  local hash_file="$HASH_DIR/$box.sha256"
+  local current previous
+
+  [ -x "$script_path" ] || return 0
+
+  current=$(sha256sum "$script_path" | cut -d' ' -f1)
+  previous=$(cat "$hash_file" 2>/dev/null || true)
+
+  if [ "$current" = "$previous" ]; then
+    return 0
+  fi
+
+  echo "[toolboxes] export script changed for $box -> refreshing inside container"
+  if distrobox enter "$box" -- bash "$script_path" 2>&1 | sed 's/^/  /'; then
+    echo "$current" > "$hash_file"
+  else
+    echo "[toolboxes] WARN: refresh failed for $box; will retry on next apply"
+  fi
+}
+
+# Playwright is intentionally excluded — owned by 12-enable-playwright-mcp-service.
+for entry in "${TOOLBOXES[@]}"; do
+  IFS='|' read -r box image script_name <<<"$entry"
+
+  ini="$DISTROBOX_CONFIG_DIR/$box.ini"
+  export_script="$HOME/.local/bin/scripts/$script_name"
+
+  if [ ! -f "$ini" ]; then
+    echo "[toolboxes] WARN: $ini missing, skipping $box"
     continue
   fi
 
-  INI="$DISTROBOX_CONFIG_DIR/$box.ini"
-  if [ ! -f "$INI" ]; then
-    echo "[toolboxes] WARN: $INI missing, skipping $box"
-    continue
+  # Quietly attempt to pull latest image (60s timeout). Skip silently if offline.
+  image_pulled=0
+  if timeout 60 podman pull --quiet "$image" >/dev/null 2>&1; then
+    image_pulled=1
+  else
+    echo "[toolboxes] could not pull $image (offline or auth?); image staleness check skipped"
   fi
 
-  echo "[toolboxes] Creating $box from $INI ..."
-  distrobox-assemble create --file "$INI"
+  if box_exists "$box"; then
+    if [ "$image_pulled" = 1 ] && image_is_stale "$box" "$image"; then
+      echo "[toolboxes] $box image is stale -> stopping and recreating"
+      echo "  (note: in-container state will be lost; \$HOME is mounted from host so files are safe)"
+      distrobox stop "$box" >/dev/null 2>&1 || true
+      distrobox rm -f "$box" >/dev/null 2>&1 || true
+      distrobox-assemble create --file "$ini"
+      # init_hooks ran exports; sync the hash file
+      [ -x "$export_script" ] && sha256sum "$export_script" | cut -d' ' -f1 > "$HASH_DIR/$box.sha256"
+    else
+      echo "[toolboxes] $box exists and image is current"
+      refresh_exports_if_changed "$box" "$export_script"
+    fi
+  else
+    echo "[toolboxes] $box missing -> creating from $ini"
+    distrobox-assemble create --file "$ini"
+    [ -x "$export_script" ] && sha256sum "$export_script" | cut -d' ' -f1 > "$HASH_DIR/$box.sha256"
+  fi
 done
 
 echo "[toolboxes] done"
