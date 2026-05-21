@@ -1,0 +1,41 @@
+#!/bin/bash
+# espanso.service hash: {{ include "dot_config/systemd/user/espanso.service" | sha256sum }}
+# (Hash above forces this run_onchange script to re-fire whenever the unit file changes.)
+
+set -euo pipefail
+
+# ------------------ Enable espanso systemd user service ------------------
+# Runs after the service file is deployed. Re-runs (via run_onchange) when
+# either this script or the service file changes — so ExecStart edits get
+# picked up via daemon-reload + restart, not just a no-op enable.
+
+{{- if .remote }}
+echo "[espanso-service] Skipping: remote environment (.remote=true)."
+exit 0
+{{- end }}
+
+if ! command -v espanso >/dev/null 2>&1; then
+  echo "[espanso-service] espanso not installed yet — exiting non-zero so this re-runs after install."
+  exit 1
+fi
+
+SERVICE_FILE="$HOME/.config/systemd/user/espanso.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+  echo "[espanso-service] Service file not found at $SERVICE_FILE"
+  exit 1
+fi
+
+echo "[espanso-service] Reloading user systemd daemon..."
+systemctl --user daemon-reload
+
+echo "[espanso-service] Enabling espanso.service..."
+systemctl --user enable espanso.service
+
+# Always restart so an updated ExecStart is picked up. `restart` on an inactive
+# service is equivalent to start, so this works in both cases.
+echo "[espanso-service] Restarting espanso.service..."
+systemctl --user restart espanso.service
+
+echo "[espanso-service] Done. Status:"
+systemctl --user status espanso.service --no-pager || true
+

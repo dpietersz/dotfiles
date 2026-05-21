@@ -3,7 +3,7 @@ Description=Espanso text expander daemon
 Documentation=https://espanso.org/docs/
 
 [Service]
-ExecStart=/usr/bin/espanso launcher
+ExecStart=/usr/bin/espanso daemon
 Restart=on-failure
 RestartSec=3
 
