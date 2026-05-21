@@ -1,22 +1,22 @@
 #!/bin/bash
-# Settings hash: paste-modeMap=wayland-generic:type
-# (Bump this comment when adding new settings to force re-apply.)
+# Settings revision: 2  -- bump to force re-apply when the DESIRED block changes.
 
 set -euo pipefail
 
-# ------------------ Vibe Typer post-install config ------------------
-# Vibe Typer writes its config to ~/.config/vibe-typer/config.json. Most of it
-# is per-machine state (recentTargets, timestamps, language, etc.) that we
-# DON'T want to track. We only enforce one critical setting:
+# ------------------ Vibe Typer authoritative settings ------------------
+# Vibe Typer writes ~/.config/vibe-typer/config.json. Some keys are per-machine
+# state (recentTargets, lastSignInEmail, userName, lastSeenReleaseNotesVersion,
+# sync.updatedAt) — those we leave alone. The block below is the cross-machine
+# source of truth. It's deep-merged into the existing config so per-machine keys
+# survive but every key we declare here is overwritten on each chezmoi apply.
 #
-#   user.textInsertion.paste.modeMap["wayland-generic"] = "type"
+# To add words to the personal dictionary, edit dictionary.entries below and
+# `chezmoi apply` — both Thinkpads get them.
 #
-# Why: niri can't expose focused-window app-id via Wayland protocols that
-# Vibe Typer understands (niri uses ext-foreign-toplevel-list-v1; Vibe Typer
-# expects wlr-foreign-toplevel-management-v1). So every focused app is
-# classified as the generic "wayland-generic" target. Vibe Typer's default
-# "paste" mode sends Ctrl+V, which doesn't work in terminals (they need
-# Ctrl+Shift+V). "type" mode types each character via uinput — universal.
+# automaticUpdatesEnabled is FALSE on purpose: chezmoi polls cdn.vibetyper.com/
+# releases/latest.json on every apply (see run_after_14-install-vibe-typer.sh.
+# tmpl) and re-downloads the AppImage when a new version ships. Vibe Typer's
+# built-in updater would race with that and clobber our managed install.
 
 {{- if or .remote .isMacOS }}
 exit 0
@@ -26,15 +26,61 @@ CONFIG="$HOME/.config/vibe-typer/config.json"
 [ -f "$CONFIG" ] || { echo "[vibe-typer-config] config not yet created (run app once); skipping."; exit 0; }
 command -v jq >/dev/null 2>&1 || { echo "[vibe-typer-config] jq not installed; skipping."; exit 0; }
 
-current=$(jq -r '.user.textInsertion.paste.modeMap["wayland-generic"] // ""' "$CONFIG" 2>/dev/null || echo "")
-if [ "$current" = "type" ]; then
+DESIRED=$(cat <<'JSON'
+{
+  "user": {
+    "language": "auto",
+    "muteSystemAudioDuringRecording": true,
+    "hotkey": "CommandOrControl+Space",
+    "toggleRecordingHotkey": true,
+    "cancelTranscriptionHotkey": "Escape",
+    "repasteTranscriptionHotkey": "F8",
+    "launchAtStartup": true,
+    "releaseChannel": "stable",
+    "automaticUpdatesEnabled": false,
+    "aiCommandModesEnabled": true,
+    "disableLocalTranscriptionHistory": false,
+    "realtimeTranscription": {
+      "enabled": true,
+      "autoFormatterEnabled": true
+    },
+    "dictionary": {
+      "entries": [],
+      "version": 1
+    },
+    "indicator": {
+      "waveformGradient": {
+        "color1Enabled": true,
+        "color1": "#7c3aed",
+        "color2Enabled": true,
+        "color2": "#e9d8fd"
+      }
+    },
+    "textInsertion": {
+      "paste": {
+        "modeMap": {
+          "wayland-generic": "type"
+        }
+      },
+      "tonePreset": "formal"
+    }
+  }
+}
+JSON
+)
+
+# Short-circuit if the file already contains every desired key with the desired
+# value. jq's `*` (deep merge) followed by a diff against the original tells us
+# whether anything would change.
+merged=$(jq --argjson d "$DESIRED" '. * $d' "$CONFIG")
+if [ "$merged" = "$(cat "$CONFIG")" ]; then
     exit 0
 fi
 
-echo "[vibe-typer-config] setting paste.modeMap[wayland-generic] = type (was: ${current:-<unset>})"
+echo "[vibe-typer-config] enforcing tracked settings (diff detected)"
 tmp=$(mktemp "${CONFIG}.XXXXXX")
 trap 'rm -f "$tmp"' EXIT
-jq '.user.textInsertion.paste.modeMap["wayland-generic"] = "type"' "$CONFIG" > "$tmp"
+printf '%s\n' "$merged" > "$tmp"
 mv -f "$tmp" "$CONFIG"
 trap - EXIT
 echo "[vibe-typer-config] done."
