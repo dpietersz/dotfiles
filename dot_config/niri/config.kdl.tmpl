@@ -37,8 +37,9 @@ binds {
      Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /usr/local/bin/helium"; }
 
     // === Voquill Voice Dictation ===
-    // Toggle recording; refine the CLI invocation after `voquill-desktop --help`.
-    F12 hotkey-overlay-title="Voquill: Toggle Dictation" { spawn "voquill-desktop" "--toggle"; }
+    // Bound to the ThinkPad star key (Fn+F12 / FnLock-F12). Refine the CLI
+    // invocation after `voquill-desktop --help` confirms the real flag.
+    XF86Favorites hotkey-overlay-title="Voquill: Toggle Dictation" { spawn "voquill-desktop" "--toggle"; }
 
     // === Volume Controls (F2/F3/F4) — Noctalia provides the OSD ===
     XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
