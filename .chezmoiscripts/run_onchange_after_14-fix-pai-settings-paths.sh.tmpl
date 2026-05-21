@@ -1,0 +1,62 @@
+#!/bin/bash
+# Self-healing fix for ~/.claude/settings.json on Linux.
+#
+# Why this exists:
+#   Claude Code does NOT expand $HOME (or ${HOME}) inside the values of the
+#   "env" block in settings.json. It DOES expand them in hooks[].command paths.
+#   This asymmetry caused a silent breakage when settings.json briefly synced
+#   with $HOME-style values across machines.
+#
+#   settings.json is therefore intentionally per-machine (added to ~/.claude/
+#   .stignore) and contains absolute paths. macOS keeps /Users/...; Linux gets
+#   /home/<user>/...
+#
+# What this script does:
+#   - Skips entirely on macOS and remote/container environments.
+#   - If ~/.claude/settings.json is missing, exits clean — Syncthing may not
+#     have populated ~/.claude yet, or this is a fresh machine.
+#   - If literal "$HOME/ appears in any value, replaces it with the absolute
+#     $HOME path (timestamped backup saved alongside).
+#   - Validates the result parses as JSON; reverts from backup on failure.
+#
+# Idempotent: re-running after a successful fix is a no-op.
+
+set -euo pipefail
+
+{{- if or .remote .isMacOS }}
+exit 0
+{{- end }}
+
+SETTINGS="$HOME/.claude/settings.json"
+
+if [ ! -f "$SETTINGS" ]; then
+    echo "[pai-settings] settings.json not found at $SETTINGS — Syncthing may not have populated"
+    echo "[pai-settings]   ~/.claude yet, or this machine has no PAI settings. Nothing to do."
+    exit 0
+fi
+
+# Look for the broken pattern: a JSON string value that starts with literal $HOME/
+if ! grep -q '"\$HOME/' "$SETTINGS"; then
+    echo "[pai-settings] settings.json paths already absolute — nothing to fix."
+    exit 0
+fi
+
+BACKUP="$SETTINGS.bak.$(date +%Y%m%d%H%M%S)"
+cp "$SETTINGS" "$BACKUP"
+echo "[pai-settings] Backup saved: $BACKUP"
+
+# Replace literal "$HOME/ with literal "$HOME-expanded/  (i.e., "/home/<user>/)
+sed -i 's|"\$HOME/|"'"$HOME"'/|g' "$SETTINGS"
+
+# Validate the result. If jq isn't available, skip validation — better than nothing.
+if command -v jq >/dev/null 2>&1; then
+    if ! jq empty "$SETTINGS" >/dev/null 2>&1; then
+        echo "[pai-settings] ✗ ERROR: post-sed JSON does not parse. Restoring backup."
+        mv "$BACKUP" "$SETTINGS"
+        exit 1
+    fi
+fi
+
+echo "[pai-settings] ✓ settings.json paths converted: \$HOME/ → $HOME/"
+echo "[pai-settings]   Affected keys (likely): PAI_DIR, PROJECTS_DIR, PAI_CONFIG_DIR, GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE"
+echo "[pai-settings]   Restart Claude Code on this machine for the change to take effect."
