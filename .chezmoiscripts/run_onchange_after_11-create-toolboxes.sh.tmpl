@@ -1,0 +1,50 @@
+#!/bin/bash
+# Re-trigger when any toolbox .ini config or export script changes.
+# browser-toolbox.ini: {{ include "dot_config/distrobox/browser-toolbox.ini.tmpl" | sha256sum }}
+# data-toolbox.ini:    {{ include "dot_config/distrobox/data-toolbox.ini.tmpl" | sha256sum }}
+# notetaking.ini:      {{ include "dot_config/distrobox/notetaking-toolbox.ini.tmpl" | sha256sum }}
+# export-browser:      {{ include "dot_local/bin/scripts/executable_export-browser-toolbox-gui.sh" | sha256sum }}
+# export-data:         {{ include "dot_local/bin/scripts/executable_export-data-toolbox-gui.sh" | sha256sum }}
+# export-notetaking:   {{ include "dot_local/bin/scripts/executable_export-notetaking-toolbox-gui.sh" | sha256sum }}
+
+{{- if .remote }}
+echo "Skipping toolbox creation on remote system"
+exit 0
+{{- else }}
+{{- if not (or .isBluefin .isFedora) }}
+echo "Skipping toolbox creation (only runs on Bluefin/Fedora)"
+exit 0
+{{- else }}
+
+set -euo pipefail
+
+if ! command -v distrobox-assemble >/dev/null 2>&1; then
+  echo "[toolboxes] distrobox not available; skipping (will retry on next apply)"
+  exit 0
+fi
+
+DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
+
+# Idempotent: create each toolbox only if it does not already exist.
+# Playwright is intentionally excluded — handled by 12-enable-playwright-mcp-service.
+for box in browser-toolbox data-toolbox notetaking-toolbox; do
+  if distrobox list 2>/dev/null | awk -F'|' '{gsub(/ /,"",$2); print $2}' | grep -qx "$box"; then
+    echo "[toolboxes] $box already exists, skipping"
+    continue
+  fi
+
+  INI="$DISTROBOX_CONFIG_DIR/$box.ini"
+  if [ ! -f "$INI" ]; then
+    echo "[toolboxes] WARN: $INI missing, skipping $box"
+    continue
+  fi
+
+  echo "[toolboxes] Creating $box from $INI ..."
+  distrobox-assemble create --file "$INI"
+done
+
+echo "[toolboxes] done"
+distrobox list
+
+{{- end }}
+{{- end }}
