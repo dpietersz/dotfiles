@@ -42,6 +42,9 @@ docs/                       # Diátaxis docs (how-to, reference, explanation)
 - `dot_pi/agent/traits.yaml` — Trait definitions for subagent behavioral composition
 - `setup.sh` — Bootstrap: installs chezmoi, applies dotfiles
 - `.chezmoiscripts/run_onchange_after_01-install-packages.sh.tmpl` — Auto `mise install` on config change
+- `.chezmoiscripts/run_onchange_after_17-configure-localsend.sh.tmpl` — Deep-merges managed `flutter.ls_*` keys into LocalSend's host-side `shared_preferences.json` (LocalSend itself runs inside `data-toolbox`; firewall port 53317 opened by `run_once_after_09-configure-firewall-localsend.sh.tmpl`)
+- `.chezmoiscripts/run_once_after_10-enable-fingerprint-pam.sh.tmpl` — Gated on `hasFingerprintReader`. Layers `fprintd`/`fprintd-pam` if missing (Bluefin reboot), enables `authselect with-fingerprint`, hints at `fprintd-enroll`.
+- `.chezmoiscripts/run_once_after_11-install-hyprlock-stack.sh.tmpl` — Gated on `hasFingerprintReader`. Layers `hyprlock` + `swayidle` because noctalia v5's built-in lockscreen does password-only PAM and can't share the fingerprint sensor with fprintd under Wayland's session-lock protocol. On these machines the locker becomes `hyprlock` (native fprintd integration) and idle timing (screen-off → lock → suspend) is owned by `swayidle` via `dot_local/bin/scripts/niri-idle-daemon.sh`; noctalia's own idle behaviors are disabled in `dot_config/noctalia/config.toml.tmpl`. Lock keybind `Ctrl+Alt+L` in niri swaps to `hyprlock` accordingly.
 
 ## Tech Stack
 
@@ -85,6 +88,7 @@ chezmoi data                          # Show template variables
 | `isBluefin` | `/etc/os-release` contains `VARIANT_ID="bluefin"` |
 | `isBazzite` | `/etc/os-release` contains `VARIANT_ID="bazzite"` |
 | `remote` | SSH_CONNECTION, CODESPACES, or container detected |
+| `hasFingerprintReader` | `lsusb` contains a libfprint-supported sensor ID (e.g. Synaptics `06cb:00f9` on ThinkPad P14s Gen 5) |
 
 **Auto-commit**: On local machines (`not .remote`), chezmoi auto-commits and auto-pushes changes.
 

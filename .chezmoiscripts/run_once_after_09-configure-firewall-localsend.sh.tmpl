@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ LocalSend firewall (Bluefin/firewalld) ------------------
+# LocalSend runs inside `data-toolbox` (distrobox) but distrobox uses host
+# networking, so the listening socket on :53317 is on the host's network stack.
+# Without this rule, peer discovery (UDP multicast) and transfer (TCP) silently
+# fail from other LAN devices.
+#
+# Port 53317 (TCP + UDP) is LocalSend's default. Multicast group 224.0.0.167.
+
+{{- if not (and .isBluefin (not .remote)) }}
+exit 0
+{{- end }}
+
+if ! command -v firewall-cmd >/dev/null 2>&1; then
+    echo "[localsend-fw] firewalld not present; skipping."
+    exit 0
+fi
+
+if ! systemctl is-active --quiet firewalld; then
+    echo "[localsend-fw] firewalld inactive; skipping."
+    exit 0
+fi
+
+changed=0
+for proto in tcp udp; do
+    if sudo firewall-cmd --permanent --query-port=53317/${proto} >/dev/null 2>&1; then
+        echo "[localsend-fw] 53317/${proto} already open"
+    else
+        echo "[localsend-fw] opening 53317/${proto}"
+        sudo firewall-cmd --permanent --add-port=53317/${proto}
+        changed=1
+    fi
+done
+
+if [ "$changed" = 1 ]; then
+    sudo firewall-cmd --reload
+    echo "[localsend-fw] firewalld reloaded"
+fi

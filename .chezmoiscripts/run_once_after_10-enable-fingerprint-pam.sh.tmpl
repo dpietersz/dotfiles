@@ -1,0 +1,87 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ Fingerprint reader: PAM wiring ------------------
+# Runs only on machines whose USB bus contains a libfprint-supported sensor
+# (see hasFingerprintReader in .chezmoi.toml.tmpl). The actual sensor on the
+# P14s Gen 5 is Synaptics 06cb:00f9; the gate also matches a few common Goodix
+# IDs so this script stays useful on other ThinkPads we may move to.
+#
+# What this script does (idempotent):
+#   1. Ensures fprintd + fprintd-pam are present. On Bluefin (rpm-ostree) it
+#      layers them if missing, which requires a reboot to take effect.
+#   2. Enables the authselect `with-fingerprint` feature so pam_fprintd.so is
+#      added to /etc/pam.d/system-auth and password-auth.
+#   3. Prints a one-line reminder if the current user hasn't enrolled a finger.
+#
+# What this script does NOT do:
+#   - Enroll fingers (fprintd-enroll is interactive — run it once manually).
+#   - Touch noctalia config. The lockscreen picks up pam_fprintd.so via PAM
+#      auto-detection; no extra noctalia setting is needed in the common case.
+
+{{- if or .remote .isMacOS (not .hasFingerprintReader) }}
+exit 0
+{{- end }}
+
+{{- if not (or .isBluefin .isFedora) }}
+echo "[fingerprint] not Bluefin/Fedora; skipping."
+exit 0
+{{- end }}
+
+echo "🔐 Configuring fingerprint authentication"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# --- 1. Ensure fprintd / fprintd-pam are installed -------------------------
+needs_reboot=0
+if ! rpm -q fprintd >/dev/null 2>&1 || ! rpm -q fprintd-pam >/dev/null 2>&1; then
+{{- if .isBluefin }}
+    echo "[fingerprint] layering fprintd + fprintd-pam via rpm-ostree (reboot required)..."
+    if sudo rpm-ostree install -y fprintd fprintd-pam; then
+        needs_reboot=1
+    else
+        echo "[fingerprint] rpm-ostree install failed; aborting (re-run after fixing)."
+        exit 1
+    fi
+{{- else }}
+    echo "[fingerprint] installing fprintd + fprintd-pam via dnf..."
+    sudo dnf install -y fprintd fprintd-pam
+{{- end }}
+else
+    echo "[fingerprint] fprintd + fprintd-pam already installed"
+fi
+
+if [ "$needs_reboot" = 1 ]; then
+    echo ""
+    echo "⚠️  REBOOT REQUIRED to load layered fprintd. Then re-run: chezmoi apply"
+    # Non-zero exit keeps this run_once unsatisfied so it re-fires after reboot.
+    exit 1
+fi
+
+# --- 2. Wire pam_fprintd.so via authselect ---------------------------------
+if ! command -v authselect >/dev/null 2>&1; then
+    echo "[fingerprint] authselect not present; skipping PAM wiring."
+    exit 0
+fi
+
+if authselect list-enabled 2>/dev/null | grep -q with-fingerprint; then
+    echo "[fingerprint] authselect: with-fingerprint already enabled"
+else
+    echo "[fingerprint] enabling authselect with-fingerprint feature..."
+    sudo authselect enable-feature with-fingerprint
+    sudo authselect apply-changes
+    echo "[fingerprint] ✓ PAM updated (system-auth, password-auth)"
+fi
+
+# --- 3. Enrollment reminder (one-shot, non-blocking) -----------------------
+if command -v fprintd-list >/dev/null 2>&1; then
+    # fprintd-list exits non-zero when no fingers enrolled; capture both streams.
+    if ! fprintd-list "$USER" 2>&1 | grep -q "Fingerprints for user"; then
+        echo ""
+        echo "👉 No fingers enrolled yet for $USER."
+        echo "   Run:  fprintd-enroll          (default: right index finger)"
+        echo "   Or:   fprintd-enroll -f left-index-finger"
+        echo "   Then test with: sudo -k && sudo -i"
+    else
+        echo "[fingerprint] $USER has fingers enrolled — ready to use on lockscreen"
+    fi
+fi

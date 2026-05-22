@@ -1,0 +1,66 @@
+#!/bin/bash
+# Settings revision: 1  -- bump to force re-apply when the DESIRED block changes.
+
+set -euo pipefail
+
+# ------------------ LocalSend authoritative settings ------------------
+# LocalSend (Flutter app) persists settings to a flat JSON file via
+# shared_preferences. Linux default path:
+#   ~/.local/share/com.localsend.localsend_app/shared_preferences.json
+#
+# LocalSend runs inside `data-toolbox` (distrobox), but $HOME is mounted from
+# the host, so the file lives on the host filesystem and chezmoi can manage it
+# directly. The block below is the cross-machine source of truth, deep-merged
+# into the existing config so per-machine state survives but every key we
+# declare here is enforced on each chezmoi apply.
+#
+# Intentionally NOT enforced (machine-specific / runtime state):
+#   - flutter.ls_security_context (TLS cert, generated on first run)
+#   - flutter.ls_favorites
+#   - flutter.ls_receive_history
+#   - window placement, last-seen release notes, etc.
+#
+# All keys are flat and prefixed `flutter.ls_*` (a SharedPreferences quirk).
+
+{{- if or .remote .isMacOS }}
+exit 0
+{{- end }}
+
+CONFIG="$HOME/.local/share/com.localsend.localsend_app/shared_preferences.json"
+if [ ! -f "$CONFIG" ]; then
+    echo "[localsend-config] config not yet created (launch LocalSend once, then re-apply); skipping."
+    exit 0
+fi
+command -v jq >/dev/null 2>&1 || { echo "[localsend-config] jq not installed; skipping."; exit 0; }
+
+DESIRED=$(cat <<JSON
+{
+  "flutter.ls_alias": "{{ .chezmoi.hostname }}",
+  "flutter.ls_port": 53317,
+  "flutter.ls_https": true,
+  "flutter.ls_quick_save": false,
+  "flutter.ls_quick_save_from_favorites": false,
+  "flutter.ls_save_to_history": true,
+  "flutter.ls_minimize_to_tray": true,
+  "flutter.ls_auto_finish": false,
+  "flutter.ls_share_via_link_auto_accept": false,
+  "flutter.ls_destination": "$HOME/dev/Downloads/LocalSend"
+}
+JSON
+)
+
+# Short-circuit if the file already contains every desired key with the desired
+# value. jq's `*` (deep merge) followed by a diff against the original tells us
+# whether anything would change.
+merged=$(jq --argjson d "$DESIRED" '. * $d' "$CONFIG")
+if [ "$merged" = "$(cat "$CONFIG")" ]; then
+    exit 0
+fi
+
+echo "[localsend-config] enforcing tracked settings (diff detected)"
+tmp=$(mktemp "${CONFIG}.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+printf '%s\n' "$merged" > "$tmp"
+mv -f "$tmp" "$CONFIG"
+trap - EXIT
+echo "[localsend-config] done."
