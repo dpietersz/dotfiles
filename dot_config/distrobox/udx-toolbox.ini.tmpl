@@ -1,0 +1,29 @@
+# udx-toolbox — companion distrobox to bluefin-udx (host image).
+# Holds GUI apps that don't have viable Fedora-native packaging:
+#   Storage Explorer (MS AppImage only), Obsidian (no maintained COPR/RPM),
+#   Polypane (no RPM), Bruno (no x86_64 RPM), LocalSend (no RPM),
+#   plus extras like Anytype, Legcord, Ferdium.
+# See boxkit/QUICK_START.md for the export-list contract.
+
+[udx-toolbox]
+container_name=udx-toolbox
+
+image=ghcr.io/dpietersz/udx-toolbox:latest
+
+container_manager=podman
+home_mount_path=$HOME
+privileged=false
+init=true
+pull=true
+
+# NVIDIA passthrough — distrobox-assemble's `nvidia=` flag mirrors the CLI
+# `--nvidia` flag (mounts host libcuda/libGL/libEGL/libnvidia-*). Required on
+# the P14s for OpenGL/Vulkan compositing of GUI apps; harmless to omit on
+# Intel-only boxes (T580). Driven by .hasNvidia template data populated by
+# .chezmoi.toml.tmpl (lspci probe).
+nvidia={{ if .hasNvidia }}true{{ else }}false{{ end }}
+
+# init_hooks runs the export script inside the container after distrobox-assemble
+# creates it, reading /etc/distrobox-export.list and exporting each .desktop to
+# the host launcher via distrobox-export.
+init_hooks="${HOME}/.local/bin/scripts/distrobox-auto-export.sh"

@@ -12,3 +12,10 @@
 .config/com.voquill.desktop
 .local/share/com.voquill.desktop
 .cache/com.voquill.desktop
+
+# Old per-domain toolboxes — consolidated into single udx-toolbox (2026-05-22).
+# Container images deleted from ghcr; local containers can be cleaned up with:
+#   distrobox rm browser-toolbox data-toolbox notetaking-toolbox
+.config/distrobox/browser-toolbox.ini
+.config/distrobox/data-toolbox.ini
+.config/distrobox/notetaking-toolbox.ini
