@@ -1,0 +1,53 @@
+#!/bin/bash
+{{- if .remote }}
+# Skip on remote environments
+exit 0
+{{- end }}
+
+# jmux — tmux session manager (https://github.com/jarredkenny/jmux)
+# Upstream install command is `bun install -g @jx0/jmux`. Mirrors the npm-global
+# pattern (run_onchange_after_07-install-auggie etc.) but uses bun:
+#   - bun is installed by run_once_before_01c-install-pai-deps (Linux ~/.bun)
+#     or Homebrew (macOS).
+#   - bun's global install dir is ~/.bun/bin on both platforms.
+#   - dot_config/shell/10-path.sh.tmpl prepends ~/.bun/bin to PATH.
+#
+# Re-runs when this script's hash changes (run_onchange_); the in-script
+# check_installed early-exit prevents redundant work on every apply once
+# jmux is present.
+
+set -euo pipefail
+
+# Locate bun. May not be on PATH during early chezmoi apply.
+BUN_BIN=""
+for candidate in \
+    "$(command -v bun 2>/dev/null || true)" \
+    "$HOME/.bun/bin/bun" \
+    "/opt/homebrew/bin/bun" \
+    "/usr/local/bin/bun"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+        BUN_BIN="$candidate"
+        break
+    fi
+done
+
+if [ -z "$BUN_BIN" ]; then
+    echo "[jmux] bun not found — install bun first (run_once_before_01c-install-pai-deps on Linux, brew on macOS). Skipping."
+    exit 0
+fi
+
+JMUX_BIN="$HOME/.bun/bin/jmux"
+if [ -x "$JMUX_BIN" ]; then
+    echo "[jmux] already installed: $JMUX_BIN"
+    exit 0
+fi
+
+echo "[jmux] installing @jx0/jmux globally via bun..."
+"$BUN_BIN" install -g @jx0/jmux
+
+if [ -x "$JMUX_BIN" ]; then
+    echo "[jmux] ✓ installed: $JMUX_BIN"
+else
+    echo "[jmux] ✗ install ran but $JMUX_BIN not found; check bun's global install dir"
+    exit 1
+fi
