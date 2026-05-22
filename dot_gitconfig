@@ -39,3 +39,10 @@
 
 [safe]
 	directory = /app
+
+# Transparently route every github.com HTTPS URL through SSH.
+# Tools that clone with HTTPS (chezmoi init, gh clone, npm/cargo/bun
+# fetching from github, etc.) still work but ride the SSH key instead
+# of asking for a password or PAT. Push works without `gh auth setup-git`.
+[url "git@github.com:"]
+	insteadOf = https://github.com/
