@@ -19,3 +19,9 @@
 .config/distrobox/browser-toolbox.ini
 .config/distrobox/data-toolbox.ini
 .config/distrobox/notetaking-toolbox.ini
+
+# Terax removed entirely (2026-05-22). Local RPM cleanup:
+#   sudo rpm-ostree uninstall terax && sudo systemctl reboot
+.local/share/applications/terax.desktop
+.local/state/terax
+.cache/terax
