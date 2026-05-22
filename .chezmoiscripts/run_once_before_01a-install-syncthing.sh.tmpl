@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+{{- if .isBluefinUdx }}
+# syncthing is baked into the bluefin-udx image.
+exit 0
+{{- end }}
+
 {{ if and .isBluefin (not .remote) -}}
 
 echo "🔄 Installing syncthing"

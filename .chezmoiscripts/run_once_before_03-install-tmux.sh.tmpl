@@ -1,4 +1,8 @@
 #!/bin/bash
+{{- if .isBluefinUdx }}
+# tmux is baked into the bluefin-udx image.
+exit 0
+{{- end }}
 {{- if not .remote }}
 
 set -euo pipefail

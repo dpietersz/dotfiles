@@ -1,4 +1,9 @@
 #!/bin/bash
+{{- if .isBluefinUdx }}
+# niri + waybar + pavucontrol + NetworkManager-tui + blueman + SwayNotificationCenter
+# are all baked into the bluefin-udx image (via yalter/niri COPR).
+exit 0
+{{- end }}
 {{- if not .remote }}
 
 {{- if or .isBluefin .isFedora }}

@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+{{- if .isBluefinUdx }}
+# espanso-wayland is baked into the bluefin-udx image (from Terra repo,
+# CAP_DAC_OVERRIDE already set by the Terra RPM).
+exit 0
+{{- end }}
+
 # ------------------ espanso install (Terra) ------------------
 # Installs espanso using Terra on Fedora/Bluefin (Wayland).
 # - On macOS: Installed via Homebrew (run_once_before_01b-install-homebrew-packages.sh.tmpl)

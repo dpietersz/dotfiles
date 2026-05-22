@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+{{- if .isBluefinUdx }}
+# mate-polkit is baked into the bluefin-udx image.
+exit 0
+{{- end }}
+
 {{- if or .remote (not .isBluefin) }}
 exit 0
 {{- end }}

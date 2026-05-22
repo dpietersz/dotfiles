@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ hyprlock + swayidle (fingerprint lockscreen stack) ------------------
+# noctalia v5's built-in lockscreen does password-only PAM and cannot share the
+# fingerprint sensor with fprintd under Wayland's session-lock protocol. We
+# replace it with hyprlock (native fprintd integration via libfprint) on
+# machines that have a supported sensor, and use swayidle to drive idle timing
+# (screen-off → lock → suspend).
+#
+# hyprlock ships via the Terra repo (already enabled by the espanso install
+# script). swayidle is in the Fedora base repos.
+
+{{- if .isBluefinUdx }}
+# hyprlock + swayidle are baked into the bluefin-udx image.
+exit 0
+{{- end }}
+
+{{- if or .remote .isMacOS (not .hasFingerprintReader) }}
+exit 0
+{{- end }}
+
+{{- if not .isBluefin }}
+echo "[hyprlock-stack] not Bluefin; skipping (Fedora non-atomic users: dnf install hyprlock swayidle)."
+exit 0
+{{- end }}
+
+echo "🔒 Installing fingerprint lockscreen stack (hyprlock + swayidle)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+missing=()
+rpm -q hyprlock >/dev/null 2>&1 || missing+=(hyprlock)
+rpm -q swayidle >/dev/null 2>&1 || missing+=(swayidle)
+
+if [ "${#missing[@]}" -eq 0 ]; then
+    echo "[hyprlock-stack] hyprlock + swayidle already installed"
+    exit 0
+fi
+
+echo "[hyprlock-stack] layering: ${missing[*]}"
+if ! sudo rpm-ostree install -y "${missing[@]}"; then
+    echo "[hyprlock-stack] rpm-ostree install failed."
+    echo "  Hint (Bluefin): if layering is locked, set LockLayering=false in"
+    echo "  /etc/rpm-ostreed.conf, reboot, and re-run 'chezmoi apply'."
+    exit 1
+fi
+
+echo ""
+echo "⚠️  REBOOT REQUIRED to load layered packages. Then re-run: chezmoi apply"
+# Non-zero exit keeps this run_once unsatisfied so it re-fires after reboot.
+exit 1
