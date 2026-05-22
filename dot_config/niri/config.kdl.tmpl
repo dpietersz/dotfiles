@@ -7,6 +7,16 @@ spawn-at-startup "noctalia"
 // GUI apps that invoke pkexec (vibe-typer setup, etc.) fail without this.
 spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
 
+// Vibe Typer voice dictation — runs in the background listening for its hotkey.
+// AppImage path is managed by run_after_14-install-vibe-typer.sh.tmpl.
+spawn-at-startup "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage"
+{{ if .hasFingerprintReader }}
+// Fingerprint lockscreen stack: swayidle drives screen-off / hyprlock / suspend.
+// noctalia's own idle handlers are disabled on these machines (see
+// dot_config/noctalia/config.toml.tmpl).
+spawn-at-startup "niri-idle-daemon.sh"
+{{ end -}}
+
 workspace "Terminal"
 workspace "Browser"
 workspace "Chat"
@@ -28,7 +38,11 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+Space hotkey-overlay-title="Run an Application: Noctalia launcher" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+Shift+V hotkey-overlay-title="Clipboard history" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
+    {{- if .hasFingerprintReader }}
+    Ctrl+Alt+L hotkey-overlay-title="Lock Screen (hyprlock + fingerprint)" { spawn "hyprlock"; }
+    {{- else }}
     Ctrl+Alt+L hotkey-overlay-title="Lock Screen" { spawn "noctalia" "msg" "screen-lock"; }
+    {{- end }}
     Mod+Backspace hotkey-overlay-title="Session menu" { spawn "noctalia" "msg" "panel-toggle" "session"; }
     Mod+Ctrl+Space hotkey-overlay-title="Toggle Noctalia bar" { spawn "noctalia" "msg" "bar-toggle"; }
     Mod+N hotkey-overlay-title="Control center / notifications" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
@@ -269,7 +283,7 @@ output "eDP-1" {
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 9
+    gaps 5
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
     //   or right edge of the screen.
@@ -308,7 +322,7 @@ layout {
     // Alternatively, you can override it with a window rule called
     // `draw-border-with-background`.
     border {
-        width 2
+        width 1
         active-color "#cba6f7"
         inactive-color "#45475a"
         urgent-color "#f5c2e7"
@@ -442,7 +456,7 @@ window-rule {
 
 // === Default window styling (matches Noctalia's recommended corner radius) ===
 window-rule {
-    geometry-corner-radius 20
+    geometry-corner-radius 10
     clip-to-geometry true
     draw-border-with-background false
 }
