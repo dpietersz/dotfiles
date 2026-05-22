@@ -1,0 +1,13 @@
+[Unit]
+Description=Periodic health check for pai-pulse.service
+Documentation=file:%h/.claude/PAI/DOCUMENTATION/Pulse/PulseSystem.md
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+Persistent=true
+AccuracySec=30s
+Unit=pai-pulse-watchdog.service
+
+[Install]
+WantedBy=timers.target

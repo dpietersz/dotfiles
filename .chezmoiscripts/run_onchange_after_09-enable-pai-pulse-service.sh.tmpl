@@ -1,0 +1,89 @@
+#!/bin/bash
+# pai-pulse.service hash:          {{ include "dot_config/systemd/user/pai-pulse.service" | sha256sum }}
+# pai-pulse-watchdog.service hash: {{ include "dot_config/systemd/user/pai-pulse-watchdog.service" | sha256sum }}
+# pai-pulse-watchdog.timer hash:   {{ include "dot_config/systemd/user/pai-pulse-watchdog.timer" | sha256sum }}
+# (Hashes above force this run_onchange script to re-fire whenever any unit file
+#  OR this script itself changes — so the daemon is re-enabled, reloaded, and
+#  restarted on every chezmoi apply that touches the pulse stack. Self-healing.)
+
+set -euo pipefail
+
+{{- if or .remote .isMacOS }}
+echo "[pai-pulse] Skipping: macOS uses launchd (PAI/PULSE/manage.sh install)."
+exit 0
+{{- end }}
+
+# ---------------------------------------------------------------------------
+# Bluefin/Fedora path — systemd user service + watchdog timer
+# ---------------------------------------------------------------------------
+
+# Bail gracefully if systemd-user is unavailable (containers, CI, minimal images)
+if ! command -v systemctl >/dev/null 2>&1; then
+    echo "[pai-pulse] systemctl not available — skipping (container/CI environment?)"
+    exit 0
+fi
+if ! systemctl --user show-environment >/dev/null 2>&1; then
+    echo "[pai-pulse] systemd --user not running — skipping."
+    exit 0
+fi
+
+SERVICE_FILE="$HOME/.config/systemd/user/pai-pulse.service"
+WATCHDOG_SERVICE="$HOME/.config/systemd/user/pai-pulse-watchdog.service"
+WATCHDOG_TIMER="$HOME/.config/systemd/user/pai-pulse-watchdog.timer"
+
+for f in "$SERVICE_FILE" "$WATCHDOG_SERVICE" "$WATCHDOG_TIMER"; do
+    if [ ! -f "$f" ]; then
+        echo "[pai-pulse] Missing unit file: $f — chezmoi may not have applied yet"
+        exit 1
+    fi
+done
+
+if [ ! -x "$HOME/.bun/bin/bun" ]; then
+    echo "[pai-pulse] bun not found at \$HOME/.bun/bin/bun — earlier install script should have set this up"
+    exit 1
+fi
+
+if [ ! -d "$HOME/.claude/PAI/PULSE" ]; then
+    echo "[pai-pulse] PAI/PULSE not synced yet — set up Syncthing share for ~/.claude first, then re-run"
+    exit 0  # not an error, just not ready yet
+fi
+
+if [ ! -f "/var/lib/systemd/linger/$USER" ]; then
+    echo "[pai-pulse] Enabling lingering (daemon runs without active login)…"
+    sudo -n loginctl enable-linger "$USER" 2>/dev/null || {
+        echo "[pai-pulse] WARNING: could not enable lingering non-interactively."
+        echo "[pai-pulse]          Run manually: sudo loginctl enable-linger $USER"
+        echo "[pai-pulse]          Continuing — service will work in current session."
+    }
+else
+    echo "[pai-pulse] Lingering already enabled — skipping."
+fi
+
+echo "[pai-pulse] Reloading user systemd daemon…"
+systemctl --user daemon-reload
+
+echo "[pai-pulse] Enabling pai-pulse.service…"
+systemctl --user enable pai-pulse.service
+
+echo "[pai-pulse] Enabling pai-pulse-watchdog.timer…"
+systemctl --user enable pai-pulse-watchdog.timer
+
+# Always restart so updated ExecStart / Environment edits land. Restart on an
+# inactive service is equivalent to start, so this works in both cases.
+echo "[pai-pulse] Restarting pai-pulse.service…"
+systemctl --user restart pai-pulse.service
+
+echo "[pai-pulse] Starting pai-pulse-watchdog.timer…"
+systemctl --user restart pai-pulse-watchdog.timer
+
+echo ""
+echo "[pai-pulse] Status:"
+systemctl --user --no-pager status pai-pulse.service          | head -n 10 || true
+systemctl --user --no-pager status pai-pulse-watchdog.timer   | head -n 10 || true
+
+echo ""
+echo "🌐 Voice/notify endpoint: http://localhost:31337/notify"
+echo "   Watchdog runs every 5 min; will restart pulse if endpoint becomes unresponsive."
+echo "   Logs:  journalctl --user -u pai-pulse -f"
+echo "          journalctl --user -u pai-pulse-watchdog -f"
+echo ""

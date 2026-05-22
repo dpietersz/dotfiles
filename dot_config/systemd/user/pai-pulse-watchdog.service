@@ -1,0 +1,29 @@
+[Unit]
+Description=PAI Pulse watchdog — health-checks pai-pulse and restarts if unresponsive
+Documentation=file:%h/.claude/PAI/DOCUMENTATION/Pulse/PulseSystem.md
+After=pai-pulse.service
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash -c '\
+  if ! systemctl --user is-enabled --quiet pai-pulse.service; then \
+    echo "[pai-pulse-watchdog] pai-pulse.service is not enabled — respecting user intent, skipping."; \
+    exit 0; \
+  fi; \
+  if systemctl --user is-active --quiet pai-pulse.service && \
+     curl -fsS --max-time 5 -o /dev/null http://localhost:31337/health 2>/dev/null; then \
+    exit 0; \
+  fi; \
+  if systemctl --user is-active --quiet pai-pulse.service && \
+     curl -fsS --max-time 5 -o /dev/null -X POST http://localhost:31337/notify \
+       -H "Content-Type: application/json" \
+       -d "{\\"message\\":\\"watchdog-ping\\",\\"voice_enabled\\":false}" 2>/dev/null; then \
+    exit 0; \
+  fi; \
+  echo "[pai-pulse-watchdog] pai-pulse unhealthy or dead — restarting."; \
+  systemctl --user restart pai-pulse.service; \
+'
+
+[Install]
+WantedBy=default.target
