@@ -15,8 +15,8 @@ if [[ -d $HOME/.local/share/npm/bin ]]; then
   prepend_path "$HOME/.local/share/npm/bin"
 fi
 
-# bun global packages (jmux, etc.). Bun manages this dir itself regardless
-# of whether bun came from the curl installer (~/.bun on Linux) or brew (macOS).
+# bun global packages. Bun manages this dir itself regardless of whether bun
+# came from the curl installer (~/.bun on Linux) or brew (macOS).
 if [[ -d $HOME/.bun/bin ]]; then
   prepend_path "$HOME/.bun/bin"
 fi

@@ -1,0 +1,39 @@
+#!/bin/bash
+{{- if .remote }}
+# Skip on remote environments
+exit 0
+{{- end }}
+
+# Paseo CLI (https://paseo.sh) — the server/CLI counterpart to the Paseo
+# desktop app. Desktop is baked into the bluefin-udx image; the CLI lives
+# here because it's a per-user, no-root install.
+#
+# Installs @getpaseo/cli into ~/.local/share/npm (the same npm-prefix pattern
+# as mcp-hub in run_once_after_06-install-cli-tools), so we don't touch the
+# immutable /usr on Bluefin. ~/.local/share/npm/bin is already on PATH via
+# dot_config/shell/10-path.sh.tmpl.
+#
+# Re-runs when this script's hash changes (run_onchange_); the @latest tag
+# means npm re-resolves to the newest published version on every re-run.
+
+set -euo pipefail
+
+if ! command -v npm >/dev/null 2>&1; then
+    echo "[paseo-cli] npm not found, skipping installation"
+    exit 0
+fi
+
+echo "[paseo-cli] Installing @getpaseo/cli@latest to ~/.local/share/npm..."
+npm install --prefix "$HOME/.local/share/npm" --no-save @getpaseo/cli@latest
+
+NPM_BIN_DIR="$HOME/.local/share/npm/bin"
+NPM_NODE_MODULES_BIN="$HOME/.local/share/npm/node_modules/.bin"
+
+if [[ -d "$NPM_NODE_MODULES_BIN" ]]; then
+    mkdir -p "$NPM_BIN_DIR"
+    ln -sf "$NPM_NODE_MODULES_BIN" "$NPM_BIN_DIR" 2>/dev/null || true
+    echo "[paseo-cli] ✓ installed: $NPM_BIN_DIR (symlink → node_modules/.bin)"
+else
+    echo "[paseo-cli] ✗ install ran but node_modules/.bin not found" >&2
+    exit 1
+fi
