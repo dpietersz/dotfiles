@@ -140,6 +140,19 @@ for ini in "$DISTROBOX_CONFIG_DIR"/*.ini; do
     echo "[toolboxes] $box missing -> creating from $ini_filename"
     distrobox-assemble create --file "$ini"
     run_exports_in_box "$box" || true
+    # Fresh container creation is flaky: init_hooks + the first explicit
+    # export call can race with the host home mount stabilizing, leading to
+    # some icons silently failing to copy (observed: only ferdium landed on
+    # first run; rerunning afterwards copied the rest). Sleep + second pass
+    # is cheap because the export script uses cp -n (no-clobber).
+    sleep 2
+    run_exports_in_box "$box" || true
+    # Refresh the host icon cache from outside the container too — inside
+    # the container we already do this, but doing it host-side ensures any
+    # icons newly landed by the second pass become visible immediately.
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+      gtk-update-icon-cache -t -q "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+    fi
     [ -x "$EXPORT_SCRIPT" ] && sha256sum "$EXPORT_SCRIPT" | cut -d' ' -f1 > "$HASH_DIR/$box.sha256"
   fi
 done
