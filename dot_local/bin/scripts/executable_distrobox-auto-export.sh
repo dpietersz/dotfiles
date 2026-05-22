@@ -79,6 +79,49 @@ export_app() {
   fi
 
   copy_app_icons "$desktop"
+  patch_host_desktop_env "$app"
+}
+
+# BRIDGE: remove once ghcr.io/dpietersz/udx-toolbox bakes the same env vars
+# into each in-container /usr/share/applications/<app>.desktop at image build
+# time (boxkit task already handed off). Until that image rolls out, this
+# host-side patcher keeps Storage Explorer + other distrobox Electron apps
+# able to reach the host's gnome-keyring. Grep for "BRIDGE:" to find me.
+#
+# distrobox-export drops the exported .desktop file in
+# $HOME/.local/share/applications/${CONTAINER}-${app}.desktop. Electron-family
+# GUI apps (Storage Explorer, Vibe Typer, etc.) inside a distrobox with
+# init=true talk to the *container's* dbus-broker on /run/user/$UID/bus, not
+# the host's — so they can't reach the host's gnome-keyring-daemon and refuse
+# to start with "name is not activatable" / "no password manager service".
+# The host's bus is bind-mounted inside the container at
+# /run/host/run/user/$UID/bus; pointing DBUS_SESSION_BUS_ADDRESS there gives
+# every exported GUI app access to the host keyring.
+# XDG_CURRENT_DESKTOP=niri:GNOME is the Chromium tag chain that makes
+# Electron's KeyStorageLinux pick gnome-libsecret instead of falling back to
+# the plaintext "basic" backend; harmless on real GNOME (already wins).
+patch_host_desktop_env() {
+  local app="$1"
+  local container="${CONTAINER_ID:-${HOSTNAME:-}}"
+  [ -z "$container" ] && return 0
+  local host_desktop="$HOME/.local/share/applications/${container}-${app}.desktop"
+  [ -f "$host_desktop" ] || return 0
+
+  # Idempotent: only inject if our marker isn't already present.
+  if grep -q 'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user' "$host_desktop"; then
+    return 0
+  fi
+
+  # distrobox-export emits one Exec= line of shape:
+  #   Exec=/usr/bin/distrobox-enter  -n <name>  --   env <VARS> <cmd> <args>
+  # Inject our two env assignments right after the literal "env " token so
+  # they apply to the in-container child without breaking any vars the
+  # original launcher already sets.
+  sed -i -E \
+    -e 's|(/usr/bin/distrobox-enter[[:space:]]+-n[[:space:]]+[^[:space:]]+[[:space:]]+--[[:space:]]+)env[[:space:]]+|\1env DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user/1000/bus XDG_CURRENT_DESKTOP=niri:GNOME |' \
+    -e 's|(/usr/bin/distrobox-enter[[:space:]]+-n[[:space:]]+[^[:space:]]+[[:space:]]+--[[:space:]]+)([^e ][^[:space:]]*)|\1env DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user/1000/bus XDG_CURRENT_DESKTOP=niri:GNOME \2|' \
+    "$host_desktop"
+  echo "    patched DBUS+XDG env into $host_desktop"
 }
 
 while IFS= read -r line || [ -n "$line" ]; do
