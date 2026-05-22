@@ -124,8 +124,12 @@ for ini in "$DISTROBOX_CONFIG_DIR"/*.ini; do
     if image_is_stale "$box" "$image"; then
       echo "[toolboxes] $box image is stale -> stopping and recreating"
       echo "  (in-container state will be lost; \$HOME is mounted from host so files are safe)"
-      distrobox stop "$box" >/dev/null 2>&1 || true
-      distrobox rm -f "$box" >/dev/null 2>&1 || true
+      # -Y skips the y/n confirmation that newer distrobox versions added on
+      # stop. Output redirection silences the prompt but stdin still reads
+      # from the terminal, causing chezmoi apply to hang invisibly.
+      # </dev/null is belt-and-suspenders if a future flag changes again.
+      distrobox stop -Y "$box" </dev/null >/dev/null 2>&1 || true
+      distrobox rm -f "$box" </dev/null >/dev/null 2>&1 || true
       distrobox-assemble create --file "$ini"
       # init_hooks declared in .ini only fires on first `distrobox enter`, not
       # on `distrobox-assemble create`. Invoke exports explicitly so a fresh
