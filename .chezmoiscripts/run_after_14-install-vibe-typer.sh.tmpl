@@ -81,6 +81,42 @@ Terminal=false
 EOF
 update-desktop-database "$(dirname "$DESKTOP_FILE")" 2>/dev/null || true
 
+# ------------------ Icon extraction ------------------
+# The AppImage bundles its icon set under squashfs-root/usr/share/icons/hicolor/.
+# .desktop references Icon=vibe-typer but the AppImage doesn't install icons
+# system-wide — without this extraction the launcher shows a blank fallback.
+# Re-extract on every version bump so refreshed icons land.
+ICON_BASE="$HOME/.local/share/icons/hicolor"
+ICON_MARKER="$STATE_DIR/icons-${remote_version}"
+if [ ! -f "$ICON_MARKER" ] || [ ! -f "$ICON_BASE/512x512/apps/vibe-typer.png" ]; then
+    echo "[vibe-typer] Extracting icons from AppImage..."
+    extract_dir=$(mktemp -d -t vibe-typer-icons.XXXXXX)
+    trap 'rm -rf "$extract_dir"' RETURN  # cleanup whether we return or exit
+    (
+        cd "$extract_dir"
+        "$APP_PATH" --appimage-extract 'usr/share/icons/hicolor/*' >/dev/null 2>&1 || true
+    )
+    copied=0
+    for src in "$extract_dir"/squashfs-root/usr/share/icons/hicolor/*/apps/vibe-typer.png; do
+        [ -f "$src" ] || continue
+        rel="${src#$extract_dir/squashfs-root/usr/share/icons/hicolor/}"
+        dest="$ICON_BASE/$rel"
+        mkdir -p "$(dirname "$dest")"
+        cp "$src" "$dest"
+        copied=$((copied + 1))
+    done
+    rm -rf "$extract_dir"
+    trap - RETURN
+    if [ "$copied" -gt 0 ]; then
+        echo "[vibe-typer] Installed $copied icon size(s) under $ICON_BASE"
+        touch "$ICON_MARKER"
+        command -v gtk-update-icon-cache >/dev/null && \
+            gtk-update-icon-cache -t -q "$ICON_BASE" 2>/dev/null || true
+    else
+        echo "[vibe-typer] WARN: could not extract icons from AppImage"
+    fi
+fi
+
 echo "[vibe-typer] Installed: $APP_PATH ($remote_version)"
 echo "[vibe-typer] Launcher entry: $DESKTOP_FILE"
 echo "[vibe-typer] First run: launch from your app launcher, configure the in-app hotkey."
