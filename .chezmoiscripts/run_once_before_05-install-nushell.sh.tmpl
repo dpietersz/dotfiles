@@ -1,4 +1,8 @@
 #!/bin/bash
+{{- if .isBluefinUdx }}
+# nushell is baked into the bluefin-udx image (Phase 2.5, atim/nushell COPR).
+exit 0
+{{- end }}
 {{- if not .remote }}
 
 set -euo pipefail
