@@ -1,0 +1,56 @@
+#!/bin/bash
+# Verify this Bluefin machine is rebased to the expected udx variant.
+# Warn-only — never mutates the system. The actual rebase is a one-time
+# manual step (sudo rpm-ostree rebase ostree-unverified-registry:<image>),
+# kept out of chezmoi by design (sudo + reboot are exactly what we're
+# trying to remove from `chezmoi apply`).
+#
+# Detection feeds .chezmoi.toml.tmpl's data.isBluefinUdx, which gates the
+# {{- if .isBluefinUdx }}exit 0{{ end }} short-circuit on migrated install
+# scripts. If you rebase a machine and chezmoi still tries to rpm-ostree
+# install pass etc., it means this verification thinks you're not on udx
+# — check the booted-image detection in .chezmoi.toml.tmpl.
+#
+# Re-runs when this template's hash changes (run_onchange_before_).
+
+{{- if or .isMacOS .remote }}
+exit 0
+{{- end }}
+
+{{- if not .isBluefin }}
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+EXPECTED={{ .expectedImage | quote }}
+BOOTED={{ .bootedImage | quote }}
+HAS_NVIDIA={{ if .hasNvidia }}true{{ else }}false{{ end }}
+IS_UDX={{ if .isBluefinUdx }}true{{ else }}false{{ end }}
+
+echo "🔎 udx image check"
+echo "   hardware:     $({{ if .hardwareModel }}echo '{{ .hardwareModel }}'{{ else }}echo unknown{{ end }})"
+echo "   has nvidia:   $HAS_NVIDIA"
+echo "   expected:     $EXPECTED"
+echo "   booted:       ${BOOTED:-<none / detection failed>}"
+
+if [ "$IS_UDX" = "true" ]; then
+    case "$BOOTED" in
+        *"$EXPECTED"*)
+            echo "✅ on the correct udx variant"
+            ;;
+        *)
+            echo "⚠️  on a udx image but NOT the expected variant for this hardware."
+            echo "   To switch: sudo rpm-ostree rebase ostree-unverified-registry:${EXPECTED}:stable && systemctl reboot"
+            ;;
+    esac
+else
+    echo "⚠️  not booted on a bluefin-udx image."
+    echo "   Migrated install scripts will fall back to rpm-ostree layering"
+    echo "   (slower, requires reboot). To rebase:"
+    echo ""
+    echo "     sudo rpm-ostree rebase ostree-unverified-registry:${EXPECTED}:stable"
+    echo "     systemctl reboot"
+    echo ""
+    echo "   This is a one-time per-machine step. After rebase, re-run chezmoi apply."
+fi

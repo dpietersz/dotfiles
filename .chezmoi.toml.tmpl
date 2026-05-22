@@ -5,6 +5,44 @@
 {{- $remote := and (not $isBluefin) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $containerName := output "hostname" | trim -}}
 {{- $hardwareModel := (and (stat "/sys/class/dmi/id/product_name") (output "cat" "/sys/class/dmi/id/product_name" | trim)) | default "" -}}
+{{/* Detect fingerprint reader by probing USB for known vendor:product IDs of
+     sensors supported by upstream libfprint. Gates on USB rather than DMI so
+     it correctly identifies SKUs of the same chassis that ship without a
+     reader, and stays useful across hardware changes. ~50ms cost per apply. */}}
+{{- $usbList := "" -}}
+{{- if and (not $isMacOS) (lookPath "lsusb") -}}
+{{-   $usbList = output "bash" "-c" "lsusb 2>/dev/null || true" -}}
+{{- end -}}
+{{- $hasFingerprintReader := or
+      (contains "06cb:00f9" $usbList)
+      (contains "27c6:6594" $usbList)
+      (contains "27c6:550a" $usbList)
+      (contains "27c6:5395" $usbList)
+      (contains "138a:0017" $usbList) -}}
+
+{{/* Detect NVIDIA GPU via lspci. Drives which udx variant we expect.
+     Cheap (~50ms) and works on Bluefin without root. */}}
+{{- $hasNvidia := false -}}
+{{- if and (not $isMacOS) (lookPath "lspci") -}}
+{{-   $hasNvidia = output "bash" "-c" "lspci 2>/dev/null | grep -qi 'nvidia' && echo true || echo false" | trim | eq "true" -}}
+{{- end -}}
+
+{{/* Expected udx image for this machine (used by verify-image script). */}}
+{{- $expectedImage := "ghcr.io/dpietersz/bluefin-udx" -}}
+{{- if $hasNvidia -}}
+{{-   $expectedImage = "ghcr.io/dpietersz/bluefin-udx-nvidia" -}}
+{{- end -}}
+
+{{/* Detect whether this machine is actually booted into a bluefin-udx image.
+     Bluefin pre-bootc-CLI uses `rpm-ostree status --json` to expose the booted
+     container origin. The container-image-reference field looks like
+     "ostree-unverified-registry:ghcr.io/dpietersz/bluefin-udx:stable" — we
+     match on the udx prefix to allow either variant. */}}
+{{- $bootedImage := "" -}}
+{{- if and (not $isMacOS) (lookPath "rpm-ostree") (lookPath "jq") -}}
+{{-   $bootedImage = output "bash" "-c" "rpm-ostree status --json 2>/dev/null | jq -r '.deployments[] | select(.booted==true) | .\"container-image-reference\" // \"\"' 2>/dev/null || echo ''" | trim -}}
+{{- end -}}
+{{- $isBluefinUdx := and $isBluefin (contains "ghcr.io/dpietersz/bluefin-udx" $bootedImage) -}}
 
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
@@ -16,6 +54,11 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
   isFedora = {{ if $isFedora }}true{{ else }}false{{ end }}
   gpgKeyId = "207F38BA91AB8330DBF08766B4320995C8E1D17D"
   hardwareModel = {{ $hardwareModel | quote }}
+  hasFingerprintReader = {{ if $hasFingerprintReader }}true{{ else }}false{{ end }}
+  hasNvidia = {{ if $hasNvidia }}true{{ else }}false{{ end }}
+  expectedImage = {{ $expectedImage | quote }}
+  bootedImage = {{ $bootedImage | quote }}
+  isBluefinUdx = {{ if $isBluefinUdx }}true{{ else }}false{{ end }}
 
 {{- if not $remote }}
 [git]
