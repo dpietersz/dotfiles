@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Vibe Typer
+Comment=Voice dictation — autostarted after graphical session is ready
+# env XDG_CURRENT_DESKTOP=niri:GNOME is what lets Electron's
+# KeyStorageLinux::SelectBackend pick gnome-keyring (it greps for the
+# substring "GNOME") instead of the plaintext fallback. Without it the
+# saved login token can't be decrypted and Vibe Typer shows the sign-in
+# screen on every launch. Same trick as udx-toolbox.sh applies to its
+# Electron apps.
+Exec=env XDG_CURRENT_DESKTOP=niri:GNOME "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage" --autostart
+X-GNOME-Autostart-enabled=true
+Terminal=false
+# No OnlyShowIn= here — the in-app "launch at start" toggle writes one
+# that excludes niri, which is why it never fired. By managing this file
+# via chezmoi we avoid that lockout. Keep the in-app toggle OFF so it
+# doesn't overwrite this file.
