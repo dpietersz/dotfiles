@@ -12,7 +12,7 @@ ExecStart=/bin/bash -c '\
     exit 0; \
   fi; \
   if systemctl --user is-active --quiet pai-pulse.service && \
-     curl -fsS --max-time 5 -o /dev/null http://localhost:31337/health 2>/dev/null; then \
+     curl -sS --max-time 5 -o /dev/null http://localhost:31337/ 2>/dev/null; then \
     exit 0; \
   fi; \
   echo "[pai-pulse-watchdog] pai-pulse unhealthy or dead — restarting."; \

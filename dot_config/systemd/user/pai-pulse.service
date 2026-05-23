@@ -9,10 +9,20 @@ StartLimitBurst=4
 Type=simple
 WorkingDirectory=%h/.claude/PAI/PULSE
 ExecStartPre=/bin/mkdir -p %h/.claude/PAI/PULSE/state %h/.claude/PAI/PULSE/logs
+# Belt-and-suspenders: if a previous bun is still bound to 31337 (stop-sigterm
+# timeouts can strand it outside this unit's cgroup), free the port before
+# starting so the new bun doesn't EADDRINUSE on launch. fuser exits non-zero
+# when nothing matches — `|| true` so a clean start isn't treated as failure.
+ExecStartPre=-/bin/sh -c '/usr/bin/fuser -k -TERM 31337/tcp 2>/dev/null; sleep 1; /usr/bin/fuser -k 31337/tcp 2>/dev/null; exit 0'
 ExecStart=%h/.bun/bin/bun run %h/.claude/PAI/PULSE/pulse.ts
 Restart=on-failure
 RestartSec=2
 SuccessExitStatus=0
+# bun is slow to release sockets on SIGTERM (~45s observed). Don't let a stuck
+# shutdown hold up the next start; SIGKILL after 10s so the new bun has a free
+# port. systemd's image-shipped 10-timeout-abort.conf will SIGABRT on top.
+TimeoutStopSec=10
+KillMode=control-group
 Environment=HOME=%h
 Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 
