@@ -59,7 +59,7 @@ return {
           callback = "mcphub.extensions.codecompanion",
           opts = {
             auto_approve = true,
-            make_vars = true,
+            make_vars = false, -- CodeCompanion v19 removed interactions.chat.variables; re-enable when mcphub upstream catches up
             make_slash_commands = true,
             show_result_in_chat = true,
           },
