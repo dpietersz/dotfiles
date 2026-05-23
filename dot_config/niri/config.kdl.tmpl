@@ -17,9 +17,12 @@ spawn-at-startup "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage"
 spawn-at-startup "niri-idle-daemon.sh"
 {{ end -}}
 
-workspace "Terminal"
-workspace "Browser"
-workspace "Chat"
+workspace "Terminals"
+workspace "Browsers"
+workspace "Editors"
+workspace "Tools"
+workspace "Chats"
+workspace "Notes"
 workspace "Misc"
 
 // Define keybindings
@@ -52,7 +55,7 @@ binds {
     // `notification-toggle-history`) or once `qs` (Quickshell) is on PATH.
     Mod+Comma hotkey-overlay-title="Noctalia Settings" { spawn "noctalia" "msg" "settings-toggle"; }
      XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator";}
-     Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "bash" "-c" "/usr/sbin/distrobox-enter -n browser-toolbox -- /usr/local/bin/helium"; }
+     Mod+B hotkey-overlay-title="Open Helium Browser" { spawn "helium-browser-bin"; }
 
     // === Voice Dictation (Vibe Typer) ===
     // Vibe Typer registers its own global hotkey internally (configured in its
@@ -170,24 +173,24 @@ binds {
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
     // === Numbered Workspaces ===
-    Mod+1 { focus-workspace "Terminal"; }
-    Mod+2 { focus-workspace "Browser"; }
-    Mod+3 { focus-workspace "Chat"; }
-    Mod+4 { focus-workspace "Misc"; }
-    Mod+5 { focus-workspace 5; }
-    Mod+6 { focus-workspace 6; }
-    Mod+7 { focus-workspace 7; }
+    Mod+1 { focus-workspace "Terminals"; }
+    Mod+2 { focus-workspace "Browsers"; }
+    Mod+3 { focus-workspace "Editors"; }
+    Mod+4 { focus-workspace "Tools"; }
+    Mod+5 { focus-workspace "Chats"; }
+    Mod+6 { focus-workspace "Notes"; }
+    Mod+7 { focus-workspace "Misc"; }
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 { move-column-to-workspace "Terminal"; }
-    Mod+Shift+2 { move-column-to-workspace "Browser"; }
-    Mod+Shift+3 { move-column-to-workspace "Chat"; }
-    Mod+Shift+4 { move-column-to-workspace "Misc"; }
-    Mod+Shift+5 { move-column-to-workspace 5; }
-    Mod+Shift+6 { move-column-to-workspace 6; }
-    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+1 { move-column-to-workspace "Terminals"; }
+    Mod+Shift+2 { move-column-to-workspace "Browsers"; }
+    Mod+Shift+3 { move-column-to-workspace "Editors"; }
+    Mod+Shift+4 { move-column-to-workspace "Tools"; }
+    Mod+Shift+5 { move-column-to-workspace "Chats"; }
+    Mod+Shift+6 { move-column-to-workspace "Notes"; }
+    Mod+Shift+7 { move-column-to-workspace "Misc"; }
     Mod+Shift+8 { move-column-to-workspace 8; }
     Mod+Shift+9 { move-column-to-workspace 9; }
 
@@ -368,90 +371,131 @@ screenshot-path "~/dev/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.pn
 // ============================================================================
 // Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
 
-// === Browsers → Browser Workspace ===
+// ----------------------------------------------------------------------------
+// App-id matching note: Wayland app-id is case-sensitive in niri's `match`.
+// `(?i)^name$` is used for any app whose StartupWMClass / actual app-id is
+// mixed-case (Bruno, Ferdium, Polypane, Paseo, Chromium-browser, Alacritty).
+// Lowercase-only app-ids match literally.
+// ----------------------------------------------------------------------------
+
+// === Terminal Workspace — terminals + Paseo ===
+window-rule {
+    match app-id="kitty"
+    open-on-workspace "Terminals"
+}
+
+window-rule {
+    match app-id="(?i)^alacritty$"
+    open-on-workspace "Terminals"
+}
+
+window-rule {
+    match app-id="gnome-terminal-server"
+    open-on-workspace "Terminals"
+}
+
+// Paseo lives here per Dimitri's grouping. It is a regular GUI window, not a
+// TUI — revisit if it ends up tiling awkwardly alongside kitty in practice.
+window-rule {
+    match app-id="(?i)^paseo$"
+    open-on-workspace "Terminals"
+}
+
+// === Browser Workspace — all rendering engines including Polypane ===
 window-rule {
     match app-id="zen"
-    open-on-workspace "Browser"
+    open-on-workspace "Browsers"
 }
 
 window-rule {
     match app-id="firefox"
-    open-on-workspace "Browser"
+    open-on-workspace "Browsers"
 }
 
 window-rule {
-    match app-id="chromium"
-    open-on-workspace "Browser"
+    match app-id="(?i)^chromium(-browser)?$"
+    open-on-workspace "Browsers"
     open-focused true
 }
 
 window-rule {
     match app-id="qutebrowser"
-    open-on-workspace "Browser"
+    open-on-workspace "Browsers"
 }
 
 window-rule {
     match app-id="helium"
-    open-on-workspace "Browser"
+    open-on-workspace "Browsers"
 }
 
 window-rule {
     match app-id="(?i)^polypane$"
-    open-on-workspace "Browser"
+    open-on-workspace "Browsers"
 }
 
-// === Chat apps → Chat Workspace ===
+// === Editor Workspace — Zed + VS Code ===
+// Zed's .desktop has empty StartupWMClass; dev.zed.Zed is the convention.
+// VERIFY post-launch: `niri msg windows | grep -A1 zed` — adjust if it
+// reports something else (e.g. `Zed`, `zeditor`).
 window-rule {
-    match app-id="legcord"
-    open-on-workspace "Chat"
-}
-
-window-rule {
-    match app-id="(?i)^teams-for-linux$"
-    open-on-workspace "Chat"
-}
-
-// === Notes / DB / API tools → Misc Workspace ===
-window-rule {
-    match app-id="obsidian"
-    open-on-workspace "Misc"
+    match app-id="(?i)^dev.zed.zed$"
+    open-on-workspace "Editors"
 }
 
 window-rule {
-    match app-id="anytype"
-    open-on-workspace "Misc"
+    match app-id="(?i)^code$"
+    open-on-workspace "Editors"
 }
 
+// === Tools Workspace — DB / API / cloud-storage clients ===
 window-rule {
     match app-id="(?i)^beekeeper-studio$"
-    open-on-workspace "Misc"
+    open-on-workspace "Tools"
 }
 
 window-rule {
     match app-id="(?i)^bruno$"
+    open-on-workspace "Tools"
+}
+
+window-rule {
+    match app-id="storageexplorer"
+    open-on-workspace "Tools"
+}
+
+// === Chat Workspace — sync communications ===
+window-rule {
+    match app-id="(?i)^teams-for-linux$"
+    open-on-workspace "Chats"
+}
+
+window-rule {
+    match app-id="(?i)^ferdium$"
+    open-on-workspace "Chats"
+}
+
+window-rule {
+    match app-id="legcord"
+    open-on-workspace "Chats"
+}
+
+// === Notes Workspace — knowledge management ===
+window-rule {
+    match app-id="obsidian"
+    open-on-workspace "Notes"
+}
+
+window-rule {
+    match app-id="anytype"
+    open-on-workspace "Notes"
+}
+
+// === Misc Workspace — utilities + everything uncategorized ===
+// LocalSend's .desktop has empty StartupWMClass — VERIFY post-launch with
+// `niri msg windows | grep -B1 -i localsend` and adjust if needed.
+window-rule {
+    match app-id="(?i)^localsend$"
     open-on-workspace "Misc"
-}
-
-// === Terminals → Terminal Workspace ===
-window-rule {
-    match app-id="kitty"
-    open-on-workspace "Terminal"
-}
-
-window-rule {
-    match app-id="Alacritty"
-    open-on-workspace "Terminal"
-}
-
-window-rule {
-    match app-id="gnome-terminal-server"
-    open-on-workspace "Terminal"
-}
-
-// === Code Editors → Terminal Workspace ===
-window-rule {
-    match app-id="Code"
-    open-on-workspace "Terminal"
 }
 
 // === Default window styling (matches Noctalia's recommended corner radius) ===
