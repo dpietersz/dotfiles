@@ -17,12 +17,12 @@ spawn-at-startup "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage"
 spawn-at-startup "niri-idle-daemon.sh"
 {{ end -}}
 
-workspace "Terminals"
-workspace "Browsers"
-workspace "Editors"
-workspace "Tools"
-workspace "Chats"
-workspace "Notes"
+workspace "Terminal"
+workspace "Browser"
+workspace "Editor"
+workspace "Tool"
+workspace "Chat"
+workspace "Note"
 workspace "Misc"
 
 // Define keybindings
@@ -173,23 +173,23 @@ binds {
     Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
 
     // === Numbered Workspaces ===
-    Mod+1 { focus-workspace "Terminals"; }
-    Mod+2 { focus-workspace "Browsers"; }
-    Mod+3 { focus-workspace "Editors"; }
-    Mod+4 { focus-workspace "Tools"; }
-    Mod+5 { focus-workspace "Chats"; }
-    Mod+6 { focus-workspace "Notes"; }
+    Mod+1 { focus-workspace "Terminal"; }
+    Mod+2 { focus-workspace "Browser"; }
+    Mod+3 { focus-workspace "Editor"; }
+    Mod+4 { focus-workspace "Tool"; }
+    Mod+5 { focus-workspace "Chat"; }
+    Mod+6 { focus-workspace "Note"; }
     Mod+7 { focus-workspace "Misc"; }
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 { move-column-to-workspace "Terminals"; }
-    Mod+Shift+2 { move-column-to-workspace "Browsers"; }
-    Mod+Shift+3 { move-column-to-workspace "Editors"; }
-    Mod+Shift+4 { move-column-to-workspace "Tools"; }
-    Mod+Shift+5 { move-column-to-workspace "Chats"; }
-    Mod+Shift+6 { move-column-to-workspace "Notes"; }
+    Mod+Shift+1 { move-column-to-workspace "Terminal"; }
+    Mod+Shift+2 { move-column-to-workspace "Browser"; }
+    Mod+Shift+3 { move-column-to-workspace "Editor"; }
+    Mod+Shift+4 { move-column-to-workspace "Tool"; }
+    Mod+Shift+5 { move-column-to-workspace "Chat"; }
+    Mod+Shift+6 { move-column-to-workspace "Note"; }
     Mod+Shift+7 { move-column-to-workspace "Misc"; }
     Mod+Shift+8 { move-column-to-workspace 8; }
     Mod+Shift+9 { move-column-to-workspace 9; }
@@ -381,56 +381,56 @@ screenshot-path "~/dev/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.pn
 // === Terminal Workspace — terminals + Paseo ===
 window-rule {
     match app-id="kitty"
-    open-on-workspace "Terminals"
+    open-on-workspace "Terminal"
 }
 
 window-rule {
     match app-id="(?i)^alacritty$"
-    open-on-workspace "Terminals"
+    open-on-workspace "Terminal"
 }
 
 window-rule {
     match app-id="gnome-terminal-server"
-    open-on-workspace "Terminals"
+    open-on-workspace "Terminal"
 }
 
 // Paseo lives here per Dimitri's grouping. It is a regular GUI window, not a
 // TUI — revisit if it ends up tiling awkwardly alongside kitty in practice.
 window-rule {
     match app-id="(?i)^paseo$"
-    open-on-workspace "Terminals"
+    open-on-workspace "Terminal"
 }
 
 // === Browser Workspace — all rendering engines including Polypane ===
 window-rule {
     match app-id="zen"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="firefox"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="(?i)^chromium(-browser)?$"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
     open-focused true
 }
 
 window-rule {
     match app-id="qutebrowser"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="helium"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
 }
 
 window-rule {
     match app-id="(?i)^polypane$"
-    open-on-workspace "Browsers"
+    open-on-workspace "Browser"
 }
 
 // === Editor Workspace — Zed + VS Code ===
@@ -439,55 +439,55 @@ window-rule {
 // reports something else (e.g. `Zed`, `zeditor`).
 window-rule {
     match app-id="(?i)^dev.zed.zed$"
-    open-on-workspace "Editors"
+    open-on-workspace "Editor"
 }
 
 window-rule {
     match app-id="(?i)^code$"
-    open-on-workspace "Editors"
+    open-on-workspace "Editor"
 }
 
 // === Tools Workspace — DB / API / cloud-storage clients ===
 window-rule {
     match app-id="(?i)^beekeeper-studio$"
-    open-on-workspace "Tools"
+    open-on-workspace "Tool"
 }
 
 window-rule {
     match app-id="(?i)^bruno$"
-    open-on-workspace "Tools"
+    open-on-workspace "Tool"
 }
 
 window-rule {
     match app-id="storageexplorer"
-    open-on-workspace "Tools"
+    open-on-workspace "Tool"
 }
 
 // === Chat Workspace — sync communications ===
 window-rule {
     match app-id="(?i)^teams-for-linux$"
-    open-on-workspace "Chats"
+    open-on-workspace "Chat"
 }
 
 window-rule {
     match app-id="(?i)^ferdium$"
-    open-on-workspace "Chats"
+    open-on-workspace "Chat"
 }
 
 window-rule {
     match app-id="legcord"
-    open-on-workspace "Chats"
+    open-on-workspace "Chat"
 }
 
 // === Notes Workspace — knowledge management ===
 window-rule {
     match app-id="obsidian"
-    open-on-workspace "Notes"
+    open-on-workspace "Note"
 }
 
 window-rule {
     match app-id="anytype"
-    open-on-workspace "Notes"
+    open-on-workspace "Note"
 }
 
 // === Misc Workspace — utilities + everything uncategorized ===
