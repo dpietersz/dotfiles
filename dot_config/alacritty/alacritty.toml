@@ -13,7 +13,9 @@
 # Any items in the `env` entry below will be added as
 # environment variables. Some entries may override variables
 # set by alacritty itself.
-# [env]
+[env]
+AUTO_START_ZELLIJ = "1"
+
 # TERM variable
 #
 # This value is used to set the `$TERM` environment variable for
@@ -414,9 +416,8 @@ save_to_clipboard = false
 #   - (macOS) /bin/bash --login
 #   - (Linux/BSD) user login shell
 #   - (Windows) powershell
-# [shell]
-# program = "/bin/bash"
-# args = ["--login"]
+[terminal]
+shell = { program = "/bin/bash", args = ["--login"] }
 
 # Startup directory
 #

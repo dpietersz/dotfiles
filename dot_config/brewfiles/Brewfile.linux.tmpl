@@ -1,0 +1,8 @@
+# Brewfile.linux.tmpl — Linux / Bluefin (Fedora atomic) only
+#
+# Runs alongside Brewfile.tmpl on Linux only.
+# Bluefin desktop apps come from Flathub / system layer; keep this CLI-only.
+
+# Java 17 (for android-sdk sdkmanager). On mac we use the temurin@17 cask;
+# on Linux, brew's openjdk@17 covers it cleanly.
+brew "openjdk@17"

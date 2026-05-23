@@ -1,0 +1,63 @@
+# Brewfile.tmpl — SHARED global tools (macOS + Linux/Bluefin)
+#
+# Runs on every machine via .chezmoiscripts/run_onchange_after_01b-brew-bundle-shared.sh.tmpl.
+# Mise is now project-only — global tools live here.
+#
+# Add OS-specific entries to Brewfile.darwin.tmpl or Brewfile.linux.tmpl.
+# To force re-run after edits: chezmoi re-applies on change automatically.
+#
+# Sources: homebrew/core unless noted.
+
+# ---- taps for non-core formulas ----
+tap "hashicorp/tap"     # terraform (left core after BSL relicense)
+tap "fluxcd/tap"        # flux (fluxcd v2 — distinct from core's old `flux` v1)
+tap "oven-sh/bun"       # bun runtime
+
+# ---- core CLI ----
+brew "age"
+brew "bat"
+brew "btop"
+brew "chezmoi"
+brew "cloudflared"
+brew "direnv"
+brew "docker-compose"
+brew "doppler"
+brew "doggo"
+brew "eza"
+brew "fd"
+brew "fzf"
+brew "gemini-cli"
+brew "gh"
+brew "gitui"
+brew "go"
+brew "gum"
+brew "k9s"
+brew "kind"
+brew "kubernetes-cli"   # provides `kubectl`
+brew "kubeseal"
+brew "lazydocker"
+brew "lazygit"
+brew "navi"
+brew "neovim"           # NOTE: brew tracks latest; pin to 0.11.4 lost in migration
+brew "opencode"
+brew "ripgrep"
+brew "starship"         # NOTE: brew tracks latest; pin to 1.23.0 lost in migration
+brew "swag"
+brew "uv"
+brew "yazi"
+brew "yq"
+brew "zellij"
+brew "zoxide"
+
+# ---- version-pinned languages ----
+brew "node@22"          # was mise node=22.21.0
+brew "python@3.12"      # was mise python=3.12.12
+
+# ---- tapped ----
+brew "hashicorp/tap/terraform"
+brew "fluxcd/tap/flux"  # was mise flux2
+brew "oven-sh/bun/bun"
+
+# ---- AI CLIs (casks; verified to install on both mac & linuxbrew) ----
+cask "claude-code"
+cask "codex"

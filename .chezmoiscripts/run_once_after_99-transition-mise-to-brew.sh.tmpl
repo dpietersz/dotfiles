@@ -1,0 +1,189 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# ---------------------------------------------------------------------------
+# Transition script: uninstall mise GLOBAL tools that brew now provides.
+#
+# Runs once per machine. If you bump TRANSITION_VERSION or rename the script,
+# chezmoi will re-run it (run_once tracks script content hash).
+#
+# Safety model:
+#  1. For each tool, verify brew (or bun) provides it.
+#  2. Only then `mise uninstall <tool> --all`.
+#  3. Never touch mise's per-project installs (different config scopes).
+#  4. Clean up legacy ~/.local/share/npm/@mariozechner residue if present.
+#
+# After this runs, the only mise tools remaining will be those declared in
+# per-project mise.toml files. Global ~/.config/mise/config.toml is empty.
+# ---------------------------------------------------------------------------
+
+TRANSITION_VERSION="1"
+
+set -euo pipefail
+
+if ! command -v mise >/dev/null 2>&1; then
+  echo "[transition] mise not on PATH — nothing to clean. Skipping."
+  exit 0
+fi
+
+# Tools that were in the old global mise config and are now provided elsewhere.
+# Key = mise tool key, Value = command to verify external availability.
+declare -A MIGRATED=(
+  [age]=age
+  [bat]=bat
+  [btop]=btop
+  [bun]=bun
+  [chezmoi]=chezmoi
+  [claude]=claude
+  [codex]=codex
+  [cloudflared]=cloudflared
+  [direnv]=direnv
+  [docker-compose]=docker-compose
+  [doppler]=doppler
+  [doggo]=doggo
+  [eza]=eza
+  [fd]=fd
+  [fzf]=fzf
+  [flux2]=flux
+  [gemini]=gemini
+  [go]=go
+  [gitui]=gitui
+  [gh]=gh
+  [gum]=gum
+  [k9s]=k9s
+  [kind]=kind
+  [kubectl]=kubectl
+  [kubeseal]=kubeseal
+  [lazydocker]=lazydocker
+  [lazygit]=lazygit
+  [navi]=navi
+  [neovim]=nvim
+  [node]=node
+  [python]=python3
+  [ripgrep]=rg
+  [starship]=starship
+  [swag]=swag
+  [terraform]=terraform
+  [uv]=uv
+  [yazi]=yazi
+  [yq]=yq
+  [zellij]=zellij
+  [zoxide]=zoxide
+)
+
+# Tools requiring backend-qualified mise key
+declare -A MIGRATED_BACKEND=(
+  ["github:sst/opencode"]=opencode
+  ["npm:@earendil-works/pi-coding-agent"]=pi
+)
+
+{{- if not .isMacOS }}
+# Linux/Bluefin: android-sdk + java are reinstalled by 07-install-android-sdk and Brewfile.linux
+MIGRATED[android-sdk]=sdkmanager
+MIGRATED[java]=java
+{{- else }}
+# macOS: android-commandlinetools + temurin@17 casks from Brewfile.darwin
+MIGRATED[android-sdk]=sdkmanager
+MIGRATED[java]=java
+{{- end }}
+
+# Does the binary exist OUTSIDE mise? We can't trust `command -v` alone because
+# mise's install dirs come before linuxbrew/homebrew in PATH — `command -v bat`
+# returns mise's copy even when brew also has it. Check known external prefixes
+# explicitly, then fall back to a non-mise PATH lookup for things like
+# ~/.bun/bin (npm globals).
+EXTERNAL_PREFIXES=(
+  /home/linuxbrew/.linuxbrew
+  /opt/homebrew
+  /usr/local
+)
+EXTERNAL_DIRS=(
+  "$HOME/.bun/bin"
+  "$HOME/.local/share/android-sdk/cmdline-tools/latest/bin"
+  "$HOME/.local/share/android-sdk/platform-tools"
+)
+
+has_external() {
+  local cmd="$1"
+  for prefix in "${EXTERNAL_PREFIXES[@]}"; do
+    if [[ -x "$prefix/bin/$cmd" ]]; then
+      return 0
+    fi
+  done
+  for d in "${EXTERNAL_DIRS[@]}"; do
+    if [[ -x "$d/$cmd" ]]; then
+      return 0
+    fi
+  done
+  # Last resort: PATH lookup that rejects mise paths
+  local resolved
+  resolved="$(command -v "$cmd" 2>/dev/null || true)"
+  if [[ -z "$resolved" ]]; then
+    return 1
+  fi
+  if [[ "$resolved" == *"/mise/installs/"* || "$resolved" == *"/mise/shims/"* ]]; then
+    return 1
+  fi
+  return 0
+}
+
+# Where did we actually find it? Used for the log line.
+external_path() {
+  local cmd="$1"
+  for prefix in "${EXTERNAL_PREFIXES[@]}"; do
+    [[ -x "$prefix/bin/$cmd" ]] && { echo "$prefix/bin/$cmd"; return 0; }
+  done
+  for d in "${EXTERNAL_DIRS[@]}"; do
+    [[ -x "$d/$cmd" ]] && { echo "$d/$cmd"; return 0; }
+  done
+  command -v "$cmd" 2>/dev/null || echo "(unknown)"
+}
+
+uninstall_if_present() {
+  local key="$1" verify_cmd="$2"
+  # Is it installed in mise at all?
+  if ! mise ls "$key" 2>/dev/null | grep -qE '[0-9]'; then
+    return 0  # not installed by mise; nothing to do
+  fi
+  if ! has_external "$verify_cmd"; then
+    echo "[transition] ⚠ SKIP $key — '$verify_cmd' not found outside mise. Brew install may have failed; leaving mise copy in place."
+    SKIPPED+=("$key")
+    return 0
+  fi
+  echo "[transition] uninstalling mise $key (provided externally at $(external_path "$verify_cmd"))"
+  mise uninstall "$key" --all 2>&1 | sed 's/^/  /' || true
+  REMOVED+=("$key")
+}
+
+REMOVED=()
+SKIPPED=()
+
+for k in "${!MIGRATED[@]}"; do
+  uninstall_if_present "$k" "${MIGRATED[$k]}"
+done
+
+for k in "${!MIGRATED_BACKEND[@]}"; do
+  uninstall_if_present "$k" "${MIGRATED_BACKEND[$k]}"
+done
+
+# Legacy npm cleanup (pre-migration leftovers)
+LEGACY_NPM="$HOME/.local/share/npm/node_modules/@mariozechner"
+if [[ -d "$LEGACY_NPM" ]]; then
+  echo "[transition] removing legacy npm install at $LEGACY_NPM"
+  rm -rf "$LEGACY_NPM"
+  rm -f "$HOME/.local/share/npm/node_modules/.bin/pi" \
+        "$HOME/.local/share/npm/node_modules/.bin/pi-ai" 2>/dev/null || true
+fi
+
+echo
+echo "[transition] ────────────────── summary ──────────────────"
+echo "[transition] removed (${#REMOVED[@]}): ${REMOVED[*]:-none}"
+echo "[transition] skipped (${#SKIPPED[@]}): ${SKIPPED[*]:-none}"
+if (( ${#SKIPPED[@]} > 0 )); then
+  echo "[transition] Re-run after fixing brew installs; this script is idempotent."
+  exit 1
+fi
+echo "[transition] ✓ mise globals migrated to brew. Global mise config is now empty."
+echo "[transition] Per-project mise.toml files (homelab, pai, etc.) are unaffected."

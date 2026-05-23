@@ -14,6 +14,11 @@ if command -v kubectl >/dev/null; then
   alias k="kubectl"
 fi
 
+if command -v zellij >/dev/null; then
+  alias zj="zellij"
+  alias zjd="zellij --layout ${XDG_CONFIG_HOME:-$HOME/.config}/zellij/layouts/dev.kdl"
+fi
+
 if command -v zoxide >/dev/null; then
   alias cd="z"
 fi

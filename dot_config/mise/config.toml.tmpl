@@ -1,55 +1,14 @@
-# Regular tools for all environments
+# Global mise config — intentionally empty.
+#
+# As of the brew migration (see ~/dotfiles/Plans/mise-to-brew if present),
+# mise is used ONLY for per-project tools, declared in each project's own
+# mise.toml (e.g. ~/dev/Projects/homelab/mise.toml).
+#
+# Global CLI tools live in ~/.config/brewfiles/Brewfile{,.darwin,.linux}.
+# AI/CLI npm tools (pi, auggie) live in
+#   .chezmoiscripts/run_onchange_after_13-install-npm-globals.sh.tmpl.
+#
+# Do NOT re-add tools here. If a tool genuinely should be global, add it to
+# the appropriate Brewfile instead.
+
 [tools]
-age = "latest"
-bat = "latest"
-{{- if not .isMacOS }}
-btop = "latest"
-{{- end }}
-{{- if not .remote }}
-android-sdk = "20.0"    # Android SDK command-line tools (host only; pin version - "latest" broken in plugin)
-{{- end }}
-bun = "latest"
-chezmoi = "latest"
-claude = "latest"
-codex = "latest"
-cloudflared = "latest"
-direnv = "latest"
-docker-compose = "latest"
-doppler = "latest"
-doggo = "latest"
-eza = "latest"
-fd = "latest"
-fzf = "latest"
-flux2 = "latest"
-gemini = "latest"
-go = "latest"
-gitui = "latest"
-gh = "latest"
-gum = "latest"
-{{- if not .remote }}
-java = "temurin-17"     # Java 17 (Temurin), required by Android SDK tools (host only)
-{{- end }}
-k9s = "latest"
-kubectl = "latest"
-kubeseal = "latest"
-lazydocker = "latest"
-lazygit = "latest"
-{{- if not .isMacOS }}
-navi = "latest"
-{{- end }}
-neovim = "0.11.4"
-node = "22.21.0"
-"github:sst/opencode" = "latest"
-pi = "latest"           # earendil-works/pi — OpenAI-focused terminal coding harness (Paseo native provider)
-python = "3.12.12"
-ripgrep = "latest"
-starship = "1.23.0"
-swag = "latest"
-terraform = "latest"
-uv = "latest"
-yazi = "latest"
-{{- if not .remote }}
-yq = "latest"           # YAML processor, required by mise android-sdk plugin (host only)
-{{- end }}
-zellij = "latest"
-zoxide = "latest"

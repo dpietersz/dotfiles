@@ -1,0 +1,28 @@
+#!/bin/bash
+{{- if .remote }}
+# Skip on remote environments
+exit 0
+{{- end }}
+
+# Shared Brewfile install — runs on every machine (macOS + Linux/Bluefin).
+# Hash trigger: re-runs when the Brewfile content changes.
+# Brewfile hash: {{ include "dot_config/brewfiles/Brewfile.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "[brew-shared] brew not found, skipping (01-install-homebrew.sh runs first)"
+  exit 0
+fi
+
+BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile"
+
+if [[ ! -f "$BREWFILE" ]]; then
+  echo "[brew-shared] $BREWFILE not found (chezmoi has not rendered it yet?)"
+  exit 1
+fi
+
+echo "[brew-shared] Installing/updating shared Brewfile..."
+brew bundle install --file="$BREWFILE"
+
+echo "[brew-shared] ✓ Done"

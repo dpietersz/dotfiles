@@ -1,5 +1,4 @@
 #!/bin/bash
-
 {{- if .remote }}
 exit 0
 {{- end }}
@@ -7,144 +6,125 @@ exit 0
 set -euo pipefail
 
 # ------------------ Android SDK Install ------------------
-# Installs Android SDK command-line tools and base packages.
-# Runs ONCE after mise has installed java, yq, and android-sdk.
+# No mise dependency. Java comes from brew (temurin@17 on mac, openjdk@17 on linux).
 #
-# - macOS:  installs via Homebrew casks (android-commandlinetools, android-platform-tools)
-# - Linux:  uses sdkmanager installed by mise android-sdk plugin
-# - Skips on remote environments (containers/devpods)
+# - macOS:  cmdline-tools + platform-tools installed via brew casks (Brewfile.darwin).
+#           This script then installs SDK platforms / build-tools via sdkmanager.
+# - Linux:  downloads Google cmdline-tools zip directly to $XDG_DATA_HOME/android-sdk,
+#           then uses sdkmanager to install platform-tools / platforms / build-tools / emulator.
 #
-# Packages installed: cmdline-tools;latest, platform-tools, platforms;android-35, platforms;android-36,
-#                     build-tools;35.0.0, build-tools;28.0.3, emulator
+# Packages installed: cmdline-tools;latest, platform-tools, platforms;android-35,
+#                     platforms;android-36, build-tools;35.0.0, build-tools;28.0.3, emulator
 #
 # License acceptance: writes known license hashes directly to $ANDROID_SDK_ROOT/licenses/
-# (avoids `yes | sdkmanager --licenses` which causes SIGPIPE/exit 141 in non-interactive shells)
+# (avoids `yes | sdkmanager --licenses` SIGPIPE in non-interactive shells)
+#
+# Bump CMDLINE_TOOLS_BUILD_ID to force re-download of cmdline-tools (Linux only).
+CMDLINE_TOOLS_BUILD_ID="13114758"
 
 {{- if .isMacOS }}
 
 # ------------------ macOS ------------------
-
-if command -v sdkmanager >/dev/null 2>&1; then
-  echo "[android-sdk] sdkmanager already available, skipping install"
-  exit 0
-fi
-
-echo "[android-sdk] Installing Android command-line tools via Homebrew..."
-brew install --cask android-commandlinetools
-brew install --cask android-platform-tools
-
-ANDROID_SDK_ROOT="$(brew --prefix)/share/android-commandlinetools"
-
-{{- else if or .isBluefin .isFedora }}
-
-# ------------------ Linux (Bluefin / Fedora) ------------------
-
-ANDROID_SDK_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/android-sdk"
-
-# ------------------ Locate sdkmanager ------------------
-# mise installs android-sdk to ~/.local/share/mise/installs/android-sdk/<version>/
-# The binary is at cmdline-tools/<version>/bin/sdkmanager
-# We find it via `mise which` or by searching the mise installs directory
-
-SDKMANAGER_BIN=""
-
-if command -v sdkmanager >/dev/null 2>&1; then
-  SDKMANAGER_BIN="$(command -v sdkmanager)"
-  echo "[android-sdk] Found sdkmanager on PATH: $SDKMANAGER_BIN"
-else
-  # Find sdkmanager in mise installs
-  MISE_ANDROID_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/mise/installs/android-sdk"
-  if [[ -d "$MISE_ANDROID_DIR" ]]; then
-    SDKMANAGER_BIN="$(find "$MISE_ANDROID_DIR" -name "sdkmanager" -type f 2>/dev/null | sort -V | tail -1)"
-  fi
-
-  if [[ -z "$SDKMANAGER_BIN" || ! -x "$SDKMANAGER_BIN" ]]; then
-    echo "[android-sdk] ERROR: sdkmanager not found. Ensure mise has installed android-sdk."
-    exit 1
-  fi
-  echo "[android-sdk] Found sdkmanager via mise: $SDKMANAGER_BIN"
-fi
-
-# ------------------ Locate JAVA_HOME ------------------
-# mise installs java but it may not be on PATH in this non-interactive script context.
-# Find it explicitly from the mise installs directory.
-
-if ! command -v java >/dev/null 2>&1; then
-  MISE_JAVA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/mise/installs/java"
-  if [[ -d "$MISE_JAVA_DIR" ]]; then
-    JAVA_HOME="$(find "$MISE_JAVA_DIR" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -1)"
-    if [[ -n "$JAVA_HOME" && -x "$JAVA_HOME/bin/java" ]]; then
-      export JAVA_HOME
-      export PATH="$JAVA_HOME/bin:$PATH"
-      echo "[android-sdk] Using Java from mise: $JAVA_HOME"
-    fi
-  fi
-fi
-
-if ! command -v java >/dev/null 2>&1; then
-  echo "[android-sdk] ERROR: java not found. Ensure mise has installed java (temurin-17)."
+if ! command -v brew >/dev/null 2>&1; then
+  echo "[android-sdk] brew not found — ensure Brewfile.darwin has installed android-commandlinetools first"
   exit 1
 fi
 
+# Casks are installed by Brewfile.darwin; this script just runs sdkmanager.
+ANDROID_SDK_ROOT="$(brew --prefix)/share/android-commandlinetools"
+SDKMANAGER_BIN="sdkmanager"
+
+if ! command -v "$SDKMANAGER_BIN" >/dev/null 2>&1; then
+  echo "[android-sdk] sdkmanager not on PATH. Brewfile.darwin should have installed android-commandlinetools."
+  echo "[android-sdk] Try: brew bundle install --file ~/.config/brewfiles/Brewfile.darwin"
+  exit 1
+fi
+
+{{- else if or .isBluefin .isFedora (eq .chezmoi.os "linux") }}
+
+# ------------------ Linux (Bluefin / Fedora) ------------------
+ANDROID_SDK_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/android-sdk"
+CMDLINE_TOOLS_DIR="$ANDROID_SDK_ROOT/cmdline-tools/latest"
+
+# -- Java from brew openjdk@17 --
+if ! command -v brew >/dev/null 2>&1; then
+  echo "[android-sdk] brew not found — Brewfile.linux installs openjdk@17 first"
+  exit 1
+fi
+
+if ! brew list openjdk@17 >/dev/null 2>&1; then
+  echo "[android-sdk] openjdk@17 not installed. Run: brew bundle install --file ~/.config/brewfiles/Brewfile.linux"
+  exit 1
+fi
+
+JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"
+# Linuxbrew layout differs from macOS — fall back to direct prefix.
+if [[ ! -x "$JAVA_HOME/bin/java" ]]; then
+  JAVA_HOME="$(brew --prefix openjdk@17)"
+fi
+if [[ ! -x "$JAVA_HOME/bin/java" ]]; then
+  echo "[android-sdk] Could not locate java under $(brew --prefix openjdk@17)"
+  exit 1
+fi
+export JAVA_HOME
+export PATH="$JAVA_HOME/bin:$PATH"
 echo "[android-sdk] Java: $(java -version 2>&1 | head -1)"
+echo "[android-sdk] JAVA_HOME=$JAVA_HOME"
+
+# -- Download cmdline-tools if missing --
+if [[ ! -x "$CMDLINE_TOOLS_DIR/bin/sdkmanager" ]]; then
+  echo "[android-sdk] Downloading cmdline-tools build $CMDLINE_TOOLS_BUILD_ID..."
+  mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+  TMPZIP="$(mktemp --suffix=.zip)"
+  trap 'rm -f "$TMPZIP"' EXIT
+  curl -fsSL \
+    "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_BUILD_ID}_latest.zip" \
+    -o "$TMPZIP"
+
+  EXTRACT_DIR="$(mktemp -d)"
+  unzip -q "$TMPZIP" -d "$EXTRACT_DIR"
+  # zip contains a top-level "cmdline-tools/" dir; rename to "latest"
+  rm -rf "$CMDLINE_TOOLS_DIR"
+  mv "$EXTRACT_DIR/cmdline-tools" "$CMDLINE_TOOLS_DIR"
+  rm -rf "$EXTRACT_DIR"
+  echo "[android-sdk] ✓ cmdline-tools extracted to $CMDLINE_TOOLS_DIR"
+fi
+
+SDKMANAGER_BIN="$CMDLINE_TOOLS_DIR/bin/sdkmanager"
 
 {{- else }}
 
-echo "[android-sdk] Skipping: unsupported OS (not macOS, Bluefin, or Fedora)"
+echo "[android-sdk] Unsupported OS; skipping"
 exit 0
 
 {{- end }}
 
 # ------------------ Accept licenses (write hash files directly) ------------------
-# Writing license hashes directly avoids `yes | sdkmanager --licenses` which
-# causes SIGPIPE (exit 141) in non-interactive shells when the pipe closes.
-# These are the standard Google Android SDK license hashes.
-
 echo "[android-sdk] Writing license acceptance files..."
 mkdir -p "$ANDROID_SDK_ROOT/licenses"
-
-# android-sdk-license (main SDK license)
 printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' \
   > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-
-# android-sdk-preview-license
 printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' \
   > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
-
-# android-sdk-arm-dbt-license
 printf '\n859f317696f67ef3d7f30a50a5560e7834b43903\n' \
   > "$ANDROID_SDK_ROOT/licenses/android-sdk-arm-dbt-license"
-
-# android-googletv-license
 printf '\n601085b94cd77f0b54ff86406957099ebe79c4d6\n' \
   > "$ANDROID_SDK_ROOT/licenses/android-googletv-license"
-
-# android-googlexr-license
 printf '\nceff83576aac4f7f37cb98fe189e9fb3c49d3b81\n' \
   > "$ANDROID_SDK_ROOT/licenses/android-googlexr-license"
-
-# google-gdk-license
 printf '\n33b6a2b64607f11b759f320ef9dff4ae5c47d97a\n' \
   > "$ANDROID_SDK_ROOT/licenses/google-gdk-license"
-
-# mips-android-sysimage-license
 printf '\ne9acab5b5fbb560a72cfaecce8946896ff6aab9d\n' \
   > "$ANDROID_SDK_ROOT/licenses/mips-android-sysimage-license"
-
 echo "[android-sdk] ✓ Licenses accepted"
 
-# Create repositories.cfg to suppress sdkmanager warning
-if [ ! -f "$HOME/.android/repositories.cfg" ]; then
+# Suppress sdkmanager warning about repositories.cfg
+if [[ ! -f "$HOME/.android/repositories.cfg" ]]; then
   mkdir -p "$HOME/.android"
   touch "$HOME/.android/repositories.cfg"
 fi
 
 # ------------------ Install SDK packages ------------------
-
-{{- if .isMacOS }}
-SDKMANAGER_BIN="sdkmanager"
-{{- end }}
-
 echo "[android-sdk] Installing SDK packages..."
 "$SDKMANAGER_BIN" --sdk_root="$ANDROID_SDK_ROOT" \
   "cmdline-tools;latest" \

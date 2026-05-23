@@ -1,0 +1,53 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# OS-specific Brewfile install — picks Brewfile.darwin or Brewfile.linux.
+# Hash trigger: re-runs when either OS Brewfile changes.
+# darwin hash: {{ include "dot_config/brewfiles/Brewfile.darwin.tmpl" | sha256sum }}
+# linux  hash: {{ include "dot_config/brewfiles/Brewfile.linux.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "[brew-os] brew not found, skipping"
+  exit 0
+fi
+
+{{- if .isMacOS }}
+BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile.darwin"
+LABEL="darwin"
+{{- else if or .isBluefin .isFedora (eq .chezmoi.os "linux") }}
+BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile.linux"
+LABEL="linux"
+{{- else }}
+echo "[brew-os] Unsupported OS, skipping"
+exit 0
+{{- end }}
+
+if [[ ! -f "$BREWFILE" ]]; then
+  echo "[brew-os] $BREWFILE not found"
+  exit 1
+fi
+
+echo "[brew-os] Installing/updating $LABEL Brewfile..."
+brew bundle install --file="$BREWFILE"
+
+{{- if or .isBluefin .isFedora (eq .chezmoi.os "linux") }}
+# Linux post-install: brew's openjdk@17 is keg-only (versioned formulas aren't
+# symlinked into brew's bin dir). Link java/javac into ~/.local/bin (already on
+# PATH) so the transition script and android-sdk find it without manual help.
+if brew list openjdk@17 >/dev/null 2>&1; then
+  JAVA_PREFIX="$(brew --prefix openjdk@17)"
+  mkdir -p "$HOME/.local/bin"
+  for bin in java javac; do
+    if [[ -x "$JAVA_PREFIX/bin/$bin" ]]; then
+      ln -sf "$JAVA_PREFIX/bin/$bin" "$HOME/.local/bin/$bin"
+    fi
+  done
+  echo "[brew-os] linked openjdk@17 binaries into ~/.local/bin (keg-only workaround)"
+fi
+{{- end }}
+
+echo "[brew-os] ✓ Done ($LABEL)"

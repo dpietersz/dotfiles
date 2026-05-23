@@ -1,0 +1,66 @@
+# Brewfile.darwin.tmpl — macOS-only tools
+#
+# Runs alongside Brewfile.tmpl on macOS only.
+# Folded from former run_once_before_01b-install-homebrew-packages.sh.tmpl.
+
+# ---- taps ----
+tap "nikitabobko/tap"
+tap "amar1729/formulae"
+
+# ---- core formulas (mac-only) ----
+brew "gnupg"
+brew "mise"             # still installed; used for per-project tools only
+brew "pass"
+brew "pinentry"
+
+# ---- dev tools ----
+brew "ghostty"
+brew "kitty"
+brew "zed"
+brew "vscodium"
+brew "browserpass"
+brew "espanso"
+brew "llm"
+brew "tailscale"
+brew "tldr"
+
+# ---- CLI extras ----
+brew "ffmpeg"
+brew "flyctl"
+brew "railway"
+brew "tmux"
+brew "tree"
+brew "yt-dlp"
+
+# ---- Docker stack ----
+brew "colima"
+brew "docker"
+brew "docker-buildx"
+brew "docker-credential-helper"
+
+# ---- Java / Android (mac) ----
+cask "temurin@17"                 # was mise java=temurin-17
+cask "android-commandlinetools"   # was mise android-sdk=20.0
+cask "android-platform-tools"     # adb/fastboot
+
+# ---- GUI casks ----
+cask "nikitabobko/tap/aerospace"
+cask "arq"
+cask "azure-data-studio"
+cask "beekeeper-studio"
+cask "bruno"
+cask "cleanmymac"
+cask "displaylink"
+cask "granola"
+cask "legcord"
+cask "microsoft-azure-storage-explorer"
+cask "microsoft-teams"
+cask "obsidian"
+cask "polypane"
+cask "rapidapi"
+cask "raycast"
+cask "superwhisper"
+cask "syncthing"
+cask "tailscale"
+cask "ungoogled-chromium"
+cask "zen"

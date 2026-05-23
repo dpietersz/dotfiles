@@ -56,11 +56,8 @@ fi
 #   eval "$(flux completion $CURRENT_SHELL)"
 # fi
 
-# zoxide - smarter cd command
-# Initialize zoxide but remove completion section (uses process substitution incompatible with macOS)
-if command -v zoxide >/dev/null; then
-  eval "$(zoxide init $CURRENT_SHELL | sed '/^# Load completions/,$d')"
-fi
+# zoxide moved to 90-zoxide.sh so it loads after all other PROMPT_COMMAND mutators
+# (starship, fabric, completions). Don't initialize it here.
 
 # bat - better cat with syntax highlighting
 if command -v bat >/dev/null; then

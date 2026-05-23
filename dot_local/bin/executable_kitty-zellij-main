@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+
+export AUTO_START_ZELLIJ=1
+export ZELLIJ_AUTO_MODE=main
+
+exec kitty "$@"

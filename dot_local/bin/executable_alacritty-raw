@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+export NO_AUTO_ZELLIJ=1
+
+exec alacritty "$@"

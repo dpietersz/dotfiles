@@ -1,0 +1,7 @@
+# Files chezmoi should NOT manage in the destination.
+#
+# .pi/agent/settings.json — pi mutates this at runtime (theme, default model,
+#   changelog version). Templating it would clobber user preferences on every
+#   apply. The starter template at dot_pi/agent/settings.json stays in source
+#   for documentation only and is not deployed.
+.pi/agent/settings.json

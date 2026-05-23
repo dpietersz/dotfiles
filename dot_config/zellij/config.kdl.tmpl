@@ -1,0 +1,26 @@
+// Minimal Zellij config for this dotfiles repo.
+// Uses built-in Gruvbox themes, keeps default keybindings,
+// and prefers a lower-chrome UI.
+
+theme "gruvbox-dark"
+theme_dark "gruvbox-dark"
+theme_light "gruvbox-light"
+
+default_layout "default"
+
+scroll_buffer_size 20000
+pane_frames false
+mouse_mode true
+
+session_serialization true
+pane_viewport_serialization false
+
+copy_on_select false
+{{- if .isMacOS }}
+copy_command "pbcopy"
+{{- else }}
+copy_command "wl-copy"
+{{- end }}
+
+show_startup_tips false
+show_release_notes false
