@@ -1,0 +1,7 @@
+[Unit]
+Description=Notify when an rpm-ostree deployment is staged
+ConditionPathExists=/run/ostree-booted
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/scripts/notify-pending-reboot.sh

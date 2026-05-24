@@ -1,0 +1,33 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+{{- if not (or .isBluefin .isFedora) }}
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# Hash of the .service + .timer + script content goes here so chezmoi re-runs
+# this script (and re-applies the daemon-reload) whenever any of the three
+# change. run_onchange_ keys off the rendered script body, so embedding the
+# hashes as a comment is how we hook into that.
+#
+# unit sha:   {{ include "dot_config/systemd/user/notify-pending-reboot.service" | sha256sum }}
+# timer sha:  {{ include "dot_config/systemd/user/notify-pending-reboot.timer" | sha256sum }}
+# script sha: {{ include "dot_local/bin/scripts/executable_notify-pending-reboot.sh" | sha256sum }}
+
+UNIT="notify-pending-reboot.timer"
+
+systemctl --user daemon-reload
+
+if ! systemctl --user is-enabled --quiet "$UNIT" 2>/dev/null; then
+  echo "[notify-pending-reboot] enabling $UNIT ..."
+  systemctl --user enable --now "$UNIT"
+else
+  # Already enabled; restart to pick up unit-file or script changes.
+  systemctl --user restart "$UNIT"
+fi
+
+echo "[notify-pending-reboot] $UNIT ready"
+systemctl --user list-timers "$UNIT" --no-pager 2>/dev/null | head -3 || true
