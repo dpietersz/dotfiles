@@ -39,41 +39,43 @@ if command -v rpm-ostree >/dev/null 2>&1 && [ -e /run/ostree-booted ]; then
     exit 0
   fi
 
-  # rpm-ostree refreshes ALL enabled rpm-md repos as part of any layering
-  # transaction. A single flaky mirror (typical symptom: curl error 23, zchunk
-  # write fail) takes the whole apply down. Try once, on failure clear the
-  # rpm-md cache and retry once; if it still fails treat it as transient and
-  # exit 0 so the rest of chezmoi keeps going. Next apply will retry.
-  ostree_install_with_retry() {
-    local action=$1
-    if sudo rpm-ostree $action; then return 0; fi
-    if sudo rpm-ostree status | grep -q equibop; then
-      echo "[equibop] Transaction staged despite warnings."
-      return 0
-    fi
-    echo "[equibop] First attempt failed; clearing rpm-md cache and retrying..."
-    sudo rpm-ostree cleanup -m >/dev/null 2>&1 || true
-    if sudo rpm-ostree $action; then return 0; fi
-    if sudo rpm-ostree status | grep -q equibop; then
-      echo "[equibop] Transaction staged on retry."
-      return 0
-    fi
-    return 1
-  }
+  # If a non-equibop deployment is already staged (e.g. an OS upgrade), refuse
+  # to layer on top of it. Stacking transactions compounds the rpm-md repo
+  # refresh that bombs on flaky mirrors and leaves the user with a deeper
+  # pending stack to reason about. Tell them to reboot first and bail cleanly.
+  if rpm-ostree status --json 2>/dev/null \
+    | jq -e '.deployments[0].booted == false' >/dev/null 2>&1; then
+    echo "[equibop] A deployment is already staged (likely an OS upgrade)."
+    echo "[equibop]   Reboot first, then re-run 'chezmoi apply' to layer equibop."
+    echo "[equibop]   Skipping for now."
+    exit 0
+  fi
 
+  # Single attempt. With the no-pending-deployment guard above, the most common
+  # cause of failure here is a transient mirror issue (e.g. curl 23 on a stale
+  # zchunk in /var/cache/rpm-ostree). Don't fail the whole apply on that --
+  # warn and exit 0 so the rest of chezmoi continues; next apply will retry.
   if rpm -q equibop >/dev/null 2>&1; then
     echo "[equibop] Updating equibop -> $WANT_VERSION ..."
     # update --uninstall X --install Y forces re-layer of a single package
     # from a new source; noctalia uses the same trick for COPR builds.
-    if ! ostree_install_with_retry "update --uninstall equibop --install $ASSET_URL"; then
-      echo "[equibop] WARN: update failed (likely transient mirror/cache issue); will retry on next apply."
-      exit 0
+    if ! sudo rpm-ostree update --uninstall equibop --install "$ASSET_URL"; then
+      if sudo rpm-ostree status | grep -q equibop; then
+        echo "[equibop] Update already pending."
+      else
+        echo "[equibop] WARN: update failed (likely transient); will retry on next apply."
+        exit 0
+      fi
     fi
   else
     echo "[equibop] Layering equibop ($WANT_VERSION) from $ASSET_URL ..."
-    if ! ostree_install_with_retry "install $ASSET_URL"; then
-      echo "[equibop] WARN: install failed (likely transient mirror/cache issue); will retry on next apply."
-      exit 0
+    if ! sudo rpm-ostree install "$ASSET_URL"; then
+      if sudo rpm-ostree status | grep -q equibop; then
+        echo "[equibop] Install already pending."
+      else
+        echo "[equibop] WARN: install failed (likely transient); will retry on next apply."
+        exit 0
+      fi
     fi
   fi
   echo "[equibop] Staged. Reboot when convenient:  systemctl reboot"
