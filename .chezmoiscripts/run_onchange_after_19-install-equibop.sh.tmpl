@@ -1,0 +1,74 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+{{- if not (or .isBluefin .isFedora) }}
+exit 0
+{{- end }}
+
+{{/*
+  Equibop ships as a one-off .rpm asset on each GitHub release -- no COPR, no
+  vendor repo. Mirror the noctalia pattern: ask GitHub at template-render time
+  for the latest release's x86_64 rpm asset URL and embed it in a comment.
+  When upstream tags a new release the URL changes, the rendered template hash
+  changes, and chezmoi re-runs this script. If we're offline at render time we
+  fall back to "offline" so apply doesn't break.
+*/ -}}
+{{- $equibopAsset := output "bash" "-c" "curl -fsSL --max-time 5 'https://api.github.com/repos/Equicord/Equibop/releases/latest' 2>/dev/null | python3 -c 'import sys,json; d=json.load(sys.stdin); print(next(a[\"browser_download_url\"] for a in d[\"assets\"] if a[\"name\"].endswith(\".x86_64.rpm\")))' 2>/dev/null || echo offline" | trim -}}
+# equibop latest asset: {{ $equibopAsset }}
+
+set -euo pipefail
+
+ASSET_URL="{{ $equibopAsset }}"
+
+if [ "$ASSET_URL" = "offline" ] || [ -z "$ASSET_URL" ]; then
+  echo "[equibop] Could not resolve latest release at render time; skipping."
+  exit 0
+fi
+
+if command -v rpm-ostree >/dev/null 2>&1 && [ -e /run/ostree-booted ]; then
+  # If the exact pending/booted deployment already layers an equibop matching
+  # this asset URL, do nothing. rpm-ostree status doesn't expose the source
+  # URL of locally-installed packages, so we approximate: extract the version
+  # token from the asset URL and compare against the layered NEVRA.
+  WANT_VERSION="$(printf '%s\n' "$ASSET_URL" | sed -n 's/.*\/equibop-\([^/]*\)\.x86_64\.rpm$/\1/p')"
+  HAVE_VERSION="$(rpm -q --queryformat '%{VERSION}' equibop 2>/dev/null || true)"
+
+  if [ -n "$WANT_VERSION" ] && [ -n "$HAVE_VERSION" ] && [ "$WANT_VERSION" = "$HAVE_VERSION" ]; then
+    echo "[equibop] Already at $WANT_VERSION (booted or pending); nothing to do."
+    exit 0
+  fi
+
+  if rpm -q equibop >/dev/null 2>&1; then
+    echo "[equibop] Updating equibop -> $WANT_VERSION ..."
+    # update --uninstall X --install Y forces re-layer of a single package
+    # from a new source; this is the same trick noctalia uses to pick up a
+    # newer COPR build.
+    sudo rpm-ostree update --uninstall equibop --install "$ASSET_URL" || {
+      if sudo rpm-ostree status | grep -q equibop; then
+        echo "[equibop] Update already pending."
+      else
+        exit 1
+      fi
+    }
+  else
+    echo "[equibop] Layering equibop ($WANT_VERSION) from $ASSET_URL ..."
+    sudo rpm-ostree install "$ASSET_URL" || {
+      if sudo rpm-ostree status | grep -q equibop; then
+        echo "[equibop] Install already pending."
+      else
+        exit 1
+      fi
+    }
+  fi
+  echo "[equibop] Staged. Reboot when convenient:  systemctl reboot"
+
+elif command -v dnf >/dev/null 2>&1; then
+  echo "[equibop] Standard Fedora -- installing via dnf from $ASSET_URL ..."
+  sudo dnf install -y "$ASSET_URL"
+  echo "[equibop] Done."
+
+else
+  echo "[equibop] No supported package manager; skipping."
+  exit 0
+fi
