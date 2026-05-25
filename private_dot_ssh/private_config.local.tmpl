@@ -1,0 +1,14 @@
+{{- /*
+   Homelab SSH aliases, rendered from pass entry `Homelab/ssh-config-local`.
+
+   Why pass-sourced: the snippet contains RFC1918 IPs for proxmox nodes and
+   K3s VMs that we keep out of the *public* dotfiles repository. Pass is
+   already on every fleet machine via run_once_before_10-clone-password-store,
+   already encrypted at rest, and edits propagate cleanly: change once with
+   `pass edit Homelab/ssh-config-local`, then `chezmoi apply` on each host.
+
+   Included from ~/.ssh/config (see private_dot_ssh/config.tmpl).
+*/ -}}
+{{ if not .remote -}}
+{{ output "pass" "show" "Homelab/ssh-config-local" -}}
+{{ end -}}

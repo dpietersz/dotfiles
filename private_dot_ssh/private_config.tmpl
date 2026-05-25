@@ -1,4 +1,13 @@
 {{ if not .remote -}}
+# Homelab + work aliases — content kept out of the public dotfiles repo by
+# living in pass (`pass show Homelab/ssh-config-local`), rendered into
+# ~/.ssh/config.local by chezmoi (see private_dot_ssh/private_config.local.tmpl).
+Include {{ .chezmoi.homeDir }}/.ssh/config.local
+{{ if .isMacOS -}}
+# colima ships an auto-managed ssh_config block for its lima VMs
+Include {{ .chezmoi.homeDir }}/.config/colima/ssh_config
+{{ end -}}
+
 # Added by Augment for remote agent SSH connections
 Include {{ .chezmoi.homeDir }}/.augment/ssh-config
 
@@ -100,5 +109,33 @@ Host Beelink
 # Then configure git credential helper:
 #   git config --global credential.https://dev.azure.com.provider generic
 # Or use environment variable: export AZURE_DEVOPS_PAT="$(pass show Logins/azure-devops/pat)"
+
+# ─── Personal fleet (lowercase aliases, tailscale hostnames as canonical) ───
+# Short aliases for quick `ssh p14`/`ssh t580` use. The TitleCase aliases above
+# keep dev port-forwarding behavior for explicit session work.
+# Tailscale hostnames resolve via MagicDNS when tailscaled is up.
+Host p14
+    HostName p14
+    User {{ .chezmoi.username }}
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+Host t580
+    HostName t580
+    User {{ .chezmoi.username }}
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+Host zandvoort
+    HostName zandvoort
+    User {{ .chezmoi.username }}
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+Host sync-vm
+    HostName sync-vm
+    User {{ .chezmoi.username }}
+    IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
+    IdentitiesOnly yes
 
 {{ end -}}

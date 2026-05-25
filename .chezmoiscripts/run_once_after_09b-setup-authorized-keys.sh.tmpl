@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ensure the shared ed25519 public key (decrypted from .encrypted/ in script
+# run_once_before_08-decrypt-keys) is present in authorized_keys so every
+# machine in the personal fleet (p14, t580, zandvoort, sync-vm) accepts
+# inbound SSH from any other peer using the same key.
+#
+# Idempotent: greps for the exact pubkey line before appending. Never removes
+# existing entries (devpod, deploy keys, etc. survive).
+#
+# Skip on .remote (codespaces/devcontainer) — those use their own auth flow.
+
+{{ if not .remote -}}
+
+PUBKEY_FILE="$HOME/.ssh/id_ed25519.pub"
+AUTH_KEYS="$HOME/.ssh/authorized_keys"
+
+[ -f "$PUBKEY_FILE" ] || { echo "[authorized_keys] $PUBKEY_FILE missing — decrypt-keys did not run yet, skipping"; exit 0; }
+
+mkdir -p "$HOME/.ssh"
+touch "$AUTH_KEYS"
+chmod 700 "$HOME/.ssh"
+chmod 600 "$AUTH_KEYS"
+
+PUBKEY_LINE=$(cat "$PUBKEY_FILE")
+
+if grep -qxF "$PUBKEY_LINE" "$AUTH_KEYS"; then
+    echo "[authorized_keys] shared fleet key already present"
+else
+    printf '\n# Personal fleet shared key (added by chezmoi)\n%s\n' "$PUBKEY_LINE" >> "$AUTH_KEYS"
+    echo "[authorized_keys] appended shared fleet key"
+fi
+
+{{ end -}}
