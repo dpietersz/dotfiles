@@ -19,9 +19,7 @@ spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
 //     touching the desktop hint, so both keyring AND tray icon work.
 //   --autostart tells vibe-typer to start minimized in the tray rather
 //     than opening its main window.
-// 5s sleep gives noctalia's StatusNotifierItem host a moment to register
-// before vibe-typer announces its SNI, avoiding the registration race.
-spawn-at-startup "sh" "-c" "sleep 5 && exec \"$HOME/Applications/VibeTyper.AppImage\" --password-store=gnome-libsecret --autostart"
+spawn-at-startup "$HOME/Applications/VibeTyper.AppImage" "--password-store=gnome-libsecret" "--autostart"
 {{ if .hasFingerprintReader }}
 // Fingerprint lockscreen stack: swayidle drives screen-off / hyprlock / suspend.
 // noctalia's own idle handlers are disabled on these machines (see
