@@ -9,7 +9,7 @@ set -euo pipefail
 # Per-device tailnet addresses must be set manually after pairing — see the
 # instructions printed at the end of this script.
 
-{{- if or .remote (not .isBluefin) }}
+{{- if or .remote (and (not .isBluefin) (not .isServer)) }}
 exit 0
 {{- end }}
 

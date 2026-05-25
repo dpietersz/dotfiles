@@ -18,10 +18,67 @@
 .local/bin/scripts/niri-idle-daemon.sh
 {{- end }}
 
+{{- if .isServer }}
+# Server/VM fleet members (currently sync-vm). Headless Debian — exclude all
+# GUI, Wayland, laptop hardware, and desktop-assistant config + scripts. The
+# server keeps shell, mise, brew CLI tools, nvim, tmux/zellij, syncthing,
+# tailscale, ssh, pass, gpg, and the synced .stignore files.
+
+# --- GUI / Wayland / desktop shells ---
+.config/niri/
+.config/noctalia/
+.config/ghostty/
+.config/kitty/
+.config/hypr/
+.config/hyprlock/
+.config/autostart/
+.config/systemd/
+.config/distrobox/
+.config/satty/
+.config/yazi/
+.config/vibe-typer/
+.config/espanso/
+.local/bin/scripts/niri-idle-daemon.sh
+.local/bin/scripts/dot-screenshot
+.local/bin/scripts/notify-pending-reboot.sh
+
+# --- GUI / desktop install + config scripts ---
+.chezmoiscripts/run_once_before_00b-install-polkit-agent.sh
+.chezmoiscripts/run_once_before_02-install-kitty.sh
+.chezmoiscripts/run_once_before_04-install-niri.sh
+.chezmoiscripts/run_once_before_05-install-nushell.sh
+.chezmoiscripts/run_once_after_02-install-espanso.sh
+.chezmoiscripts/run_once_after_07-install-android-sdk.sh
+.chezmoiscripts/run_once_after_09-configure-firewall-localsend.sh
+.chezmoiscripts/run_once_after_10-enable-fingerprint-pam.sh
+.chezmoiscripts/run_once_after_11-install-hyprlock-stack.sh
+.chezmoiscripts/run_after_11-create-toolboxes.sh
+.chezmoiscripts/run_after_14-install-vibe-typer.sh
+.chezmoiscripts/run_after_install-minion-daemon.sh
+.chezmoiscripts/run_onchange_after_03-enable-espanso-service.sh
+.chezmoiscripts/run_onchange_after_04-install-satty.sh
+.chezmoiscripts/run_onchange_after_06-setup-nushell-starship.sh
+.chezmoiscripts/run_onchange_after_09-enable-pai-pulse-service.sh
+.chezmoiscripts/run_onchange_after_12-enable-playwright-mcp-service.sh
+.chezmoiscripts/run_onchange_after_16-configure-vibe-typer.sh
+.chezmoiscripts/run_onchange_after_17-configure-localsend.sh
+.chezmoiscripts/run_onchange_after_19-install-equibop.sh
+.chezmoiscripts/run_onchange_after_20-enable-pending-reboot-notify.sh
+.chezmoiscripts/run_onchange_before_00a-verify-image.sh
+.chezmoiscripts/run_onchange_before_05-install-noctalia.sh
+
+# --- Bluefin-specific Brewfile (caskdef tools, GUI casks, etc.) ---
+.config/brewfiles/Brewfile.bluefin
+.config/brewfiles/Brewfile.macos
+.config/brewfiles/Brewfile.bluefin.tmpl
+.config/brewfiles/Brewfile.macos.tmpl
+{{- end }}
+
 .oh-my-zsh/cache/*
 **/*.zwc
 setup
 README.md
+HANDOFF-*.md
 .chezmoiscripts/create-arch-toolbox.sh
 .encrypted/
 lazy

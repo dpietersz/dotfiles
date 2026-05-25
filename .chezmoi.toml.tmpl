@@ -2,8 +2,15 @@
 {{- $isBluefin := and (stat "/etc/os-release") (contains "VARIANT_ID=bluefin" (output "cat" "/etc/os-release" | default "")) -}}
 {{- $isBazzite := and (stat "/etc/os-release") (contains "VARIANT_ID=bazzite" (output "cat" "/etc/os-release" | default "")) -}}
 {{- $isFedora := and (stat "/etc/os-release") (contains "ID=fedora" (output "cat" "/etc/os-release" | default "")) -}}
-{{- $remote := and (not $isBluefin) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $containerName := output "hostname" | trim -}}
+{{/* Always-on Tailscale VMs (Proxmox-hosted, Debian) treated as "the fleet"
+     even though they are SSH-accessed and not Bluefin. They get full chezmoi
+     bootstrap (pass, keys, mise, cli tools) but skip GUI/Wayland/laptop
+     configs via .chezmoiignore.tmpl. Extend this list when new server-class
+     fleet members come online. */}}
+{{- $serverHostnames := list "sync-vm" -}}
+{{- $isServer := has $containerName $serverHostnames -}}
+{{- $remote := and (not $isBluefin) (not $isServer) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $hardwareModel := (and (stat "/sys/class/dmi/id/product_name") (output "cat" "/sys/class/dmi/id/product_name" | trim)) | default "" -}}
 {{/* Detect fingerprint reader by probing USB for known vendor:product IDs of
      sensors supported by upstream libfprint. Gates on USB rather than DMI so
@@ -59,6 +66,7 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
   expectedImage = {{ $expectedImage | quote }}
   bootedImage = {{ $bootedImage | quote }}
   isBluefinUdx = {{ if $isBluefinUdx }}true{{ else }}false{{ end }}
+  isServer = {{ if $isServer }}true{{ else }}false{{ end }}
 
 {{- if not $remote }}
 [git]

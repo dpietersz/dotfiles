@@ -6,6 +6,22 @@ set -euo pipefail
 exit 0
 {{- end }}
 
+{{ if .isServer -}}
+# Debian server: install syncthing from apt. Bluefin's bluefin-udx image has
+# it baked; sync-vm needs the apt package. Debian trixie's syncthing is
+# recent enough (within a few minor versions of the laptop fleet) — if a
+# version mismatch ever causes wire issues, switch to the upstream apt repo
+# at apt.syncthing.net.
+if command -v syncthing >/dev/null 2>&1; then
+    echo "[syncthing] already installed"
+    exit 0
+fi
+echo "[syncthing] installing via apt..."
+sudo apt-get update -qq
+sudo apt-get install -y syncthing
+exit 0
+{{- end }}
+
 {{ if and .isBluefin (not .remote) -}}
 
 echo "🔄 Installing syncthing"

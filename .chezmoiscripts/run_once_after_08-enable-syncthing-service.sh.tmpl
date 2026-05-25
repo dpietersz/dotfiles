@@ -12,11 +12,16 @@ if ! command -v syncthing >/dev/null 2>&1; then
     exit 1
 fi
 
+{{- if .isServer }}
+# Debian apt ships /usr/lib/systemd/user/syncthing.service (system-wide
+# user unit), no need for a per-user copy under ~/.config/systemd/user/.
+{{- else }}
 SERVICE_FILE="$HOME/.config/systemd/user/syncthing.service"
 if [ ! -f "$SERVICE_FILE" ]; then
     echo "[syncthing-service] Service file not found at $SERVICE_FILE"
     exit 1
 fi
+{{- end }}
 
 echo "[syncthing-service] Enabling lingering so the service runs without an active login..."
 sudo loginctl enable-linger "$USER"
