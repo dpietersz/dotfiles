@@ -1,5 +1,5 @@
 #!/bin/bash
-{{- if not .isMacOS }}
+{{- if and (not .isMacOS) (not .isServer) }}
 exit 0
 {{- end }}
 
@@ -9,18 +9,27 @@ echo "🔐 Configuring GPG to use terminal-based pinentry..."
 
 # Create GPG config directory if it doesn't exist
 mkdir -p "$HOME/.gnupg"
+chmod 700 "$HOME/.gnupg"
 
 # Configure GPG to use terminal-based pinentry
 GPG_AGENT_CONF="$HOME/.gnupg/gpg-agent.conf"
 
+{{- if .isServer }}
+# Headless server: pinentry-curses needs a min terminal size and breaks on
+# narrow SSH sessions. Use pinentry-tty (plain readline prompt) instead.
+if ! command -v pinentry-tty >/dev/null 2>&1; then
+  echo "Installing pinentry-tty via apt..."
+  sudo apt-get install -y pinentry-tty
+fi
+PINENTRY_PATH="$(command -v pinentry-tty)"
+{{- else }}
 # Check if pinentry is installed
 if ! command -v pinentry >/dev/null 2>&1; then
   echo "❌ Error: pinentry is not installed"
   exit 1
 fi
-
-# Get the path to pinentry
 PINENTRY_PATH=$(which pinentry)
+{{- end }}
 
 # Kill any running gpg-agent to clear old configuration
 echo "Stopping gpg-agent to clear old configuration..."
@@ -29,8 +38,13 @@ sleep 1
 
 # Update or create gpg-agent.conf with pinentry
 if [ -f "$GPG_AGENT_CONF" ]; then
-  # Remove existing pinentry-program line if it exists
-  sed -i '' '/^pinentry-program/d' "$GPG_AGENT_CONF"
+  # Remove existing pinentry-program line. macOS sed needs '' after -i;
+  # GNU sed (Linux) does not. Detect once.
+  if sed --version >/dev/null 2>&1; then
+    sed -i '/^pinentry-program/d' "$GPG_AGENT_CONF"
+  else
+    sed -i '' '/^pinentry-program/d' "$GPG_AGENT_CONF"
+  fi
 else
   # Create new config file
   touch "$GPG_AGENT_CONF"
