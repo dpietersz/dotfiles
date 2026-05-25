@@ -9,8 +9,8 @@ set -euo pipefail
 # either this script or the service file changes — so ExecStart edits get
 # picked up via daemon-reload + restart, not just a no-op enable.
 
-{{- if .remote }}
-echo "[espanso-service] Skipping: remote environment (.remote=true)."
+{{- if or .remote .isMacOS .isServer }}
+echo "[espanso-service] Skipping: {{ if .remote }}remote{{ else if .isMacOS }}macOS{{ else }}server (headless){{ end }}."
 exit 0
 {{- end }}
 
