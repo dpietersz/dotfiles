@@ -42,14 +42,20 @@ Host sandbox.devpod
   User vscode
 # DevPod End sandbox.devpod
 
-# GitHub
+# GitHub — route through ssh.github.com:443 universally.
+# Official GitHub guidance for restrictive networks; works on any network
+# that allows outbound HTTPS (i.e. everywhere). Identical key auth, no
+# downside vs port 22. Fixes intermittent "Connection timed out" on networks
+# (e.g. p14's bluefin egress) that drop outbound port 22.
+# https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port
 Host github.com
-    HostName github.com
+    HostName ssh.github.com
+    Port 443
     User git
     IdentityFile {{ .chezmoi.homeDir }}/.ssh/id_ed25519
     IdentitiesOnly yes
 
-# GitLab
+# GitLab — keep on port 22 (no equivalent 443 endpoint documented)
 Host gitlab.com
     HostName gitlab.com
     User git
