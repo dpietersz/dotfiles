@@ -46,3 +46,11 @@
 # of asking for a password or PAT. Push works without `gh auth setup-git`.
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+
+# Self-hosted forgejo at git.surpassion.io
+# Forgejo has SSH disabled on the server side, so all auth goes HTTPS.
+# Token is a personal PAT with repository:rw + user:r + org:r scopes,
+# stored single-line in pass at Homelab/forgejo/dpietersz-git.
+[credential "https://git.surpassion.io"]
+	username = dpietersz
+	helper = "!f() { test \"$1\" = get && printf 'password=%s\\n' \"$(pass show Homelab/forgejo/dpietersz-git)\"; }; f"
