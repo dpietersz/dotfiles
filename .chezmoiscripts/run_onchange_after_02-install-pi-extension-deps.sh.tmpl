@@ -12,9 +12,19 @@ if [ ! -d "$EXT_DIR" ]; then
   exit 0
 fi
 
+# bun may live in ~/.bun/bin (pai-deps installer) or in brew. chezmoi's
+# subshell doesn't inherit user shell rc, so PATH may not include either.
 if ! command -v bun >/dev/null 2>&1; then
-  echo "[pi-extensions] bun not found; ensure Brewfile.tmpl has installed it"
-  exit 1
+  [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew; do
+    [ -x "$cand" ] && eval "$("$cand" shellenv bash)" && break
+  done
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  echo "[pi-extensions] bun not found on PATH, ~/.bun/bin, or brew prefix — skipping"
+  exit 0
 fi
 
 cd "$EXT_DIR"
