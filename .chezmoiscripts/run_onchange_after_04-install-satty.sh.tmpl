@@ -1,0 +1,81 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+{{- if .isMacOS }}
+exit 0
+{{- end }}
+
+{{/*
+  Satty (Wayland screenshot annotator) ships static x86_64 tarballs on GitHub.
+  We resolve the latest release's asset URL + sha256 digest at template-render
+  time via the GitHub API (digest field exposed since Oct 2024). When upstream
+  tags a new release, both values change, the rendered script hash changes,
+  and chezmoi re-fires this run_onchange_after_* script. Auto-latest with
+  upstream-published integrity verification, no manual version pinning.
+
+  Offline at render time -> "offline" sentinel -> script exits 0 (don't break
+  apply on a flaky network; next apply with connectivity will install).
+*/ -}}
+{{- $sattyJson := output "bash" "-c" "curl -fsSL --max-time 5 'https://api.github.com/repos/Satty-org/Satty/releases/latest' 2>/dev/null || echo offline" | trim -}}
+{{- $sattyUrl := "offline" -}}
+{{- $sattySha := "offline" -}}
+{{- $sattyVer := "offline" -}}
+{{- if ne $sattyJson "offline" -}}
+{{-   $sattyUrl = output "python3" "-c" (printf "import json; d=json.loads(r'''%s'''); print(next(a['browser_download_url'] for a in d['assets'] if a['name']=='satty-x86_64-unknown-linux-gnu.tar.gz'))" $sattyJson) | trim -}}
+{{-   $sattySha = output "python3" "-c" (printf "import json; d=json.loads(r'''%s'''); print(next(a['digest'].split(':',1)[1] for a in d['assets'] if a['name']=='satty-x86_64-unknown-linux-gnu.tar.gz'))" $sattyJson) | trim -}}
+{{-   $sattyVer = output "python3" "-c" (printf "import json; d=json.loads(r'''%s'''); print(d['tag_name'])" $sattyJson) | trim -}}
+{{- end -}}
+# satty release: {{ $sattyVer }}
+# satty asset:   {{ $sattyUrl }}
+# satty sha256:  {{ $sattySha }}
+
+set -euo pipefail
+
+VERSION="{{ $sattyVer }}"
+ASSET_URL="{{ $sattyUrl }}"
+SHA256="{{ $sattySha }}"
+
+if [ "$VERSION" = "offline" ] || [ "$ASSET_URL" = "offline" ] || [ "$SHA256" = "offline" ]; then
+  echo "[satty] Could not resolve latest release at render time; skipping."
+  exit 0
+fi
+
+BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
+TARGET="$BIN_DIR/satty"
+
+if [ -x "$TARGET" ]; then
+  HAVE="$("$TARGET" --version 2>/dev/null | awk '{print $2}' || true)"
+  WANT="${VERSION#v}"
+  if [ -n "$HAVE" ] && [ "$HAVE" = "$WANT" ]; then
+    echo "[satty] Already at $VERSION; nothing to do."
+    exit 0
+  fi
+fi
+
+mkdir -p "$BIN_DIR"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+TARBALL="$TMP/satty.tar.gz"
+echo "[satty] Downloading $VERSION from $ASSET_URL ..."
+curl -fsSL --retry 3 -o "$TARBALL" "$ASSET_URL"
+
+echo "[satty] Verifying sha256 ($SHA256) ..."
+echo "$SHA256  $TARBALL" | sha256sum -c -
+
+echo "[satty] Extracting ..."
+tar -xzf "$TARBALL" -C "$TMP"
+
+# Tarball layout: top-level binary named `satty`. Locate defensively.
+SRC="$(find "$TMP" -type f -name satty -perm -u+x -print -quit)"
+if [ -z "${SRC:-}" ]; then
+  SRC="$(find "$TMP" -type f -name satty -print -quit)"
+fi
+if [ -z "${SRC:-}" ]; then
+  echo "[satty] ERROR: satty binary not found in extracted archive" >&2
+  exit 1
+fi
+
+install -m 0755 "$SRC" "$TARGET"
+echo "[satty] ✓ installed $VERSION -> $TARGET"

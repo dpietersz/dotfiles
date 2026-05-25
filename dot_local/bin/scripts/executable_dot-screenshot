@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Capture a screenshot via grim/slurp/niri and pipe it into satty for
+# annotation. Save to $XDG_PICTURES_DIR/Screenshots (falls back to
+# $HOME/dev/Pictures/Screenshots) and copy the PNG to the clipboard.
+#
+# Modes: region (default) | window | monitor-focused | monitor-all
+# Wired to Mod+S, Mod+Shift+S, Mod+Ctrl+S, Mod+Ctrl+Shift+S in niri.
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+MODE="${1:-region}"
+OUTDIR="${XDG_PICTURES_DIR:-$HOME/dev/Pictures}/Screenshots"
+mkdir -p "$OUTDIR"
+
+case "$MODE" in
+  region)
+    grim -g "$(slurp -d)" -
+    ;;
+  window)
+    niri msg action screenshot-window
+    sleep 0.5
+    wl-paste --type image/png
+    ;;
+  monitor-focused)
+    grim -o "$(niri msg --json focused-output | jq --raw-output .name)" -
+    ;;
+  monitor-all)
+    grim -
+    ;;
+  *)
+    echo "'$MODE' is not supported, aborting!" >&2
+    exit 1
+    ;;
+esac | satty --filename - --output-filename "$OUTDIR/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png"

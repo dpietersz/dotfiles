@@ -1,0 +1,22 @@
+# Yazi configuration -- preview tuning for blurry image previews inside zellij.
+#
+# Background: zellij does not pass through the kitty graphics protocol
+# (upstream issue #2576, open since 2021). When yazi runs inside zellij inside
+# kitty, it falls back to chafa-style half-block rendering. That fallback is
+# never as crisp as native kitty graphics, but it can be tuned to be as
+# legible as half-blocks allow.
+#
+# image_filter: lanczos3 is the highest-quality resampler available.
+# image_quality: 90 is near-lossless JPEG intermediate.
+# max_width/max_height: caps the working-image dimensions in pixels. Higher =
+# more detail to feed into the half-block renderer at the cost of CPU. 1920
+# matches the larger of your two laptop screens.
+
+[mgr]
+ratio = [1, 3, 4]
+
+[preview]
+image_filter   = "lanczos3"
+image_quality  = 90
+max_width      = 1920
+max_height     = 1080
