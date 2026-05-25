@@ -1,6 +1,6 @@
 #!/bin/bash
-{{- if .remote }}
-# Skip on remote environments (containers, codespaces, SSH, etc.)
+{{- if or .remote .isServer }}
+# Skip on remote/server (PAI minion is a desktop tray app).
 exit 0
 {{- end }}
 

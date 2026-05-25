@@ -1,8 +1,6 @@
 #!/bin/bash
-{{- if .remote }}
-exit 0
-{{- end }}
-{{- if .isMacOS }}
+{{- if or .remote .isMacOS .isServer }}
+# Wayland screenshot annotator — no screenshots on headless server.
 exit 0
 {{- end }}
 

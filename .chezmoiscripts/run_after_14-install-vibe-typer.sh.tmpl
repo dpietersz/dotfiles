@@ -11,7 +11,7 @@ set -euo pipefail
 #   manifest: https://cdn.vibetyper.com/releases/latest.json
 #   binary:   https://cdn.vibetyper.com/releases/linux/VibeTyper.AppImage
 
-{{- if or .remote .isMacOS }}
+{{- if or .remote .isMacOS .isServer }}
 exit 0
 {{- end }}
 

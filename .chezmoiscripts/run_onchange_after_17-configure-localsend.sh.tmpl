@@ -1,6 +1,12 @@
 #!/bin/bash
 # Settings revision: 1  -- bump to force re-apply when the DESIRED block changes.
 
+{{- if or .remote .isMacOS .isServer }}
+# LocalSend runs in data-toolbox (distrobox) on Linux laptops; no distrobox on
+# headless server, none on macOS, skip on remote.
+exit 0
+{{- end }}
+
 set -euo pipefail
 
 # ------------------ LocalSend authoritative settings ------------------

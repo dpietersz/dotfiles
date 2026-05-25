@@ -1,4 +1,8 @@
 #!/bin/bash
+{{- if or .remote .isServer }}
+# Skip on remote or headless server (no browser GUI, no distrobox).
+exit 0
+{{- end }}
 
 set -euo pipefail
 

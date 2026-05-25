@@ -15,6 +15,17 @@ exit 0
 
 set -euo pipefail
 
+# bun lives in ~/.bun/bin (pai-deps installer) or brew. chezmoi's subshell
+# doesn't inherit user shell rc, so PATH may be missing it. Try both.
+if ! command -v bun >/dev/null 2>&1; then
+  [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew; do
+    [ -x "$cand" ] && eval "$("$cand" shellenv bash)" && break
+  done
+fi
+
 PKGS=( "@earendil-works/pi-coding-agent" "@augmentcode/auggie" "mcp-hub" )
 
 install_one() {

@@ -1,4 +1,9 @@
 #!/bin/bash
+{{- if or .remote .isMacOS .isServer }}
+# Skip on remote/macOS/server — hyprlock is a Wayland lockscreen for
+# fingerprint-equipped laptops. Headless VMs don't lock anything.
+exit 0
+{{- end }}
 set -euo pipefail
 
 # ------------------ hyprlock + swayidle (fingerprint lockscreen stack) ------------------

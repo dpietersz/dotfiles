@@ -8,8 +8,8 @@
 
 set -euo pipefail
 
-{{- if or .remote .isMacOS }}
-echo "[pai-pulse] Skipping: macOS uses launchd (PAI/PULSE/manage.sh install)."
+{{- if or .remote .isMacOS .isServer }}
+echo "[pai-pulse] Skipping: {{ if .remote }}remote{{ else if .isMacOS }}macOS (launchd){{ else }}server (no PAI Pulse on headless){{ end }}."
 exit 0
 {{- end }}
 
