@@ -31,32 +31,41 @@ case "$(uname -s)-$(uname -m)" in
 esac
 
 # ------------------ GitHub API helpers ------------------
+# Always pull token from pass so it works whether or not `gh auth login`
+# has been done on this host. `gh` reads $GH_TOKEN ahead of its own creds
+# store, so this also covers the case where gh is installed but unauth'd
+# (zandvoort hit that on first apply).
+if [ -z "${GH_TOKEN:-}" ] && command -v pass >/dev/null 2>&1; then
+  GH_TOKEN="$(pass show Sites/github.com/pat/host-machine 2>/dev/null || true)"
+  export GH_TOKEN
+fi
+
 gh_api() {
   local endpoint="$1"
-  if command -v gh >/dev/null 2>&1; then
+  if command -v gh >/dev/null 2>&1 && [ -n "${GH_TOKEN:-}" ]; then
     gh api "$endpoint" 2>/dev/null
-  else
-    local token
-    token="$(pass show Sites/github.com/pat/host-machine)"
+  elif [ -n "${GH_TOKEN:-}" ]; then
     curl -fsSL \
-      -H "Authorization: token $token" \
+      -H "Authorization: token $GH_TOKEN" \
       -H "Accept: application/vnd.github+json" \
       "https://api.github.com$endpoint" 2>/dev/null
+  else
+    return 1
   fi
 }
 
 gh_download() {
   local url="$1" dest="$2"
-  if command -v gh >/dev/null 2>&1; then
+  if command -v gh >/dev/null 2>&1 && [ -n "${GH_TOKEN:-}" ]; then
     # Must request octet-stream to get actual file content, not JSON metadata
     gh api -H "Accept: application/octet-stream" "$url" > "$dest" 2>/dev/null
-  else
-    local token
-    token="$(pass show Sites/github.com/pat/host-machine)"
+  elif [ -n "${GH_TOKEN:-}" ]; then
     curl -fsSL -L \
-      -H "Authorization: token $token" \
+      -H "Authorization: token $GH_TOKEN" \
       -H "Accept: application/octet-stream" \
       "$url" -o "$dest" 2>/dev/null
+  else
+    return 1
   fi
 }
 
