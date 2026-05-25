@@ -16,9 +16,15 @@ fi
 # macOS: Use Homebrew's age directly
 AGE_CMD="age"
 {{- else }}
-# Linux: Use mise to manage age
-MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
-AGE_CMD="$MISE_BIN_PATH exec age -- age"
+# Linux: prefer a system age (apt/bluefin-baked) — that's where it lives on
+# Debian server (ansible installs via apt) and on bluefin-udx. Only fall back
+# to mise on pre-brew-migration Bluefin laptops.
+if command -v age >/dev/null 2>&1; then
+    AGE_CMD="age"
+else
+    MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+    AGE_CMD="$MISE_BIN_PATH exec age -- age"
+fi
 {{- end }}
 
 # Prompt for passphrase
