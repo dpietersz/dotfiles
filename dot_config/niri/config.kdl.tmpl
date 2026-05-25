@@ -7,14 +7,21 @@ spawn-at-startup "noctalia"
 // GUI apps that invoke pkexec (vibe-typer setup, etc.) fail without this.
 spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
 
-// Vibe Typer voice dictation, with a 5s prelaunch delay so noctalia's
-// StatusNotifierItem host is registered BEFORE vibe-typer announces its
-// tray icon. Without the delay, noctalia falls back to a generic glyph
-// (hamburger). systemd-xdg-autostart-generator (which would normally run
-// the XDG .desktop) does NOT honor X-GNOME-Autostart-Delay, so the XDG
-// autostart file is marked Hidden=true and we launch vibe-typer here via
-// shell instead. The 5s also covers gnome-keyring becoming reachable.
-spawn-at-startup "sh" "-c" "sleep 5 && exec env XDG_CURRENT_DESKTOP=niri:GNOME \"$HOME/Applications/VibeTyper.AppImage\" --autostart"
+// Vibe Typer voice dictation. Two non-obvious flags:
+//   --password-store=gnome-libsecret forces Electron's safeStorage to use
+//     gnome-keyring (so the saved login token can be decrypted). We use
+//     this flag INSTEAD OF env XDG_CURRENT_DESKTOP=niri:GNOME because
+//     when Electron sees "GNOME" in XDG_CURRENT_DESKTOP it switches its
+//     tray-icon path from raw IconPixmap (noctalia renders correctly) to
+//     IconThemePath+IconName (a flat /tmp/...status_icon_0.png that
+//     noctalia's SNI host cannot find, fallback = hamburger glyph).
+//     The --password-store flag flips the keyring backend without
+//     touching the desktop hint, so both keyring AND tray icon work.
+//   --autostart tells vibe-typer to start minimized in the tray rather
+//     than opening its main window.
+// 5s sleep gives noctalia's StatusNotifierItem host a moment to register
+// before vibe-typer announces its SNI, avoiding the registration race.
+spawn-at-startup "sh" "-c" "sleep 5 && exec \"$HOME/Applications/VibeTyper.AppImage\" --password-store=gnome-libsecret --autostart"
 {{ if .hasFingerprintReader }}
 // Fingerprint lockscreen stack: swayidle drives screen-off / hyprlock / suspend.
 // noctalia's own idle handlers are disabled on these machines (see
