@@ -1,5 +1,5 @@
 #!/bin/bash
-# Settings revision: 3  -- bump to force re-apply when the DESIRED block changes.
+# Settings revision: 4  -- bump to force re-apply when the DESIRED block changes.
 
 set -euo pipefail
 
@@ -20,6 +20,14 @@ set -euo pipefail
 # releases/latest.json on every apply (see run_after_14-install-vibe-typer.sh.
 # tmpl) and re-downloads the AppImage when a new version ships. Vibe Typer's
 # built-in updater would race with that and clobber our managed install.
+#
+# launchAtStartup is FALSE on purpose: vibe-typer is launched by niri's
+# spawn-at-startup with a 5s sleep (see dot_config/niri/config.kdl.tmpl).
+# If we let vibe-typer enable its own startup, it writes an autostart
+# entry whose Exec line is built by the app (no sleep, no XDG_CURRENT_DESKTOP
+# override) and that competes with our managed launch. The Hidden=true
+# XDG file at dot_config/autostart/vibe-typer.desktop.tmpl keeps the
+# systemd-xdg-autostart-generator out of the picture.
 
 {{- if or .remote .isMacOS }}
 exit 0
@@ -38,7 +46,7 @@ DESIRED=$(cat <<'JSON'
     "toggleRecordingHotkey": true,
     "cancelTranscriptionHotkey": "Escape",
     "repasteTranscriptionHotkey": "F8",
-    "launchAtStartup": true,
+    "launchAtStartup": false,
     "releaseChannel": "stable",
     "automaticUpdatesEnabled": false,
     "aiCommandModesEnabled": true,

@@ -9,14 +9,11 @@ Comment=Voice dictation — autostarted after graphical session is ready
 # screen on every launch. Same trick as udx-toolbox.sh applies to its
 # Electron apps.
 Exec=env XDG_CURRENT_DESKTOP=niri:GNOME "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage" --autostart
-X-GNOME-Autostart-enabled=true
-# 5s delay lets noctalia's StatusNotifierItem host finish startup before
-# vibe-typer registers its tray icon. Without this, the SNI registration
-# races and noctalia falls back to a generic glyph (the hamburger) instead
-# of the vibe-typer logo. 5s is empirically enough on niri+noctalia v5.
-X-GNOME-Autostart-Delay=5
+# Hidden=true so systemd-xdg-autostart-generator skips this entry. We launch
+# Vibe Typer from niri's spawn-at-startup with a 5s sleep instead, because
+# the systemd generator IGNORES X-GNOME-Autostart-Delay (a gnome-session-
+# only extension) and would otherwise launch vibe-typer before noctalia's
+# StatusNotifierItem host is ready, causing a hamburger tray icon fallback.
+# The .desktop is kept for documentation + manual launch via app launcher.
+Hidden=true
 Terminal=false
-# No OnlyShowIn= here — the in-app "launch at start" toggle writes one
-# that excludes niri, which is why it never fired. By managing this file
-# via chezmoi we avoid that lockout. Keep the in-app toggle OFF so it
-# doesn't overwrite this file.

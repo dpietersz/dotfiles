@@ -7,13 +7,14 @@ spawn-at-startup "noctalia"
 // GUI apps that invoke pkexec (vibe-typer setup, etc.) fail without this.
 spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
 
-// Vibe Typer voice dictation is autostarted via XDG (dot_config/autostart/
-// vibe-typer.desktop.tmpl) instead of spawn-at-startup. spawn-at-startup
-// fires too early — the secret-service / gnome-keyring socket isn't ready
-// yet, so Electron's KeyStorageLinux can't decrypt the saved login token
-// and prompts for sign-in on every boot. XDG autostart runs via
-// xdg-desktop-autostart.target which is After=graphical-session.target,
-// so the keyring is reachable by the time Vibe Typer launches.
+// Vibe Typer voice dictation, with a 5s prelaunch delay so noctalia's
+// StatusNotifierItem host is registered BEFORE vibe-typer announces its
+// tray icon. Without the delay, noctalia falls back to a generic glyph
+// (hamburger). systemd-xdg-autostart-generator (which would normally run
+// the XDG .desktop) does NOT honor X-GNOME-Autostart-Delay, so the XDG
+// autostart file is marked Hidden=true and we launch vibe-typer here via
+// shell instead. The 5s also covers gnome-keyring becoming reachable.
+spawn-at-startup "sh" "-c" "sleep 5 && exec env XDG_CURRENT_DESKTOP=niri:GNOME \"$HOME/Applications/VibeTyper.AppImage\" --autostart"
 {{ if .hasFingerprintReader }}
 // Fingerprint lockscreen stack: swayidle drives screen-off / hyprlock / suspend.
 // noctalia's own idle handlers are disabled on these machines (see
