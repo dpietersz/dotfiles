@@ -27,8 +27,15 @@ if [ ! -f "$SERVICE_FILE" ]; then
 fi
 {{- end }}
 
-echo "[syncthing-service] Enabling lingering so the service runs without an active login..."
-sudo loginctl enable-linger "$USER"
+# Idempotent linger enable — skip the sudo call if already on. Important
+# for re-applies over SSH where sudo can't prompt without a TTY.
+if loginctl show-user "$USER" --property=Linger --value 2>/dev/null | grep -qx yes; then
+    echo "[syncthing-service] Lingering already enabled."
+else
+    echo "[syncthing-service] Enabling lingering so the service runs without an active login..."
+    sudo -n loginctl enable-linger "$USER" 2>/dev/null \
+      || { echo "[syncthing-service] sudo requires password; enable manually: sudo loginctl enable-linger $USER"; exit 1; }
+fi
 
 echo "[syncthing-service] Reloading user systemd daemon..."
 systemctl --user daemon-reload
