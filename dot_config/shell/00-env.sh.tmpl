@@ -89,18 +89,10 @@ if [[ $- == *i* ]] && command -v pass &>/dev/null; then
   export GH_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
   export GITHUB_TOKEN="$(pass show Sites/github.com/pat/host-machine)"
 
-  # SSH agent — pick up the systemd-user ssh-agent socket if no other
-  # provider (gnome-keyring, KDE wallet) has already set SSH_AUTH_SOCK.
-  # Provisioned by .chezmoiscripts/run_once_after_12-enable-ssh-agent.sh.tmpl.
-  _xdg_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-  if [ -z "${SSH_AUTH_SOCK:-}" ] && [ -S "${_xdg_runtime}/ssh-agent.socket" ]; then
-    export SSH_AUTH_SOCK="${_xdg_runtime}/ssh-agent.socket"
-    # Load the decrypted key on first login if it's not already in the agent.
-    if [ -f "$HOME/.ssh/id_ed25519" ] && ! ssh-add -l 2>/dev/null | grep -q id_ed25519; then
-      ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null || true
-    fi
-  fi
-  unset _xdg_runtime
+  # GitHub authentication: Use SSH keys instead of token caching
+  # SSH is configured in ~/.ssh/config for github.com
+  # For new machines: ensure SSH key is added to ssh-agent before git operations
+  # If needed, manually add key: ssh-add ~/.ssh/id_ed25519
 fi
 {{ end }}
 

@@ -109,21 +109,8 @@ echo ""
 echo "✅ All keys decrypted and installed successfully!"
 echo ""
 
-# Load the SSH key into the agent if one is reachable. On headless
-# machines without gnome-keyring (e.g. sync-vm) the systemd-user
-# ssh-agent.service ships via this repo and the agent will pick the
-# key up automatically on next login. ssh-add here is convenience-
-# only, never fatal — bootstrap must complete without an agent.
-ssh-add -l >/dev/null 2>&1
-_ssh_add_rc=$?
-if [ -n "${SSH_AUTH_SOCK:-}" ] && { [ $_ssh_add_rc -eq 0 ] || [ $_ssh_add_rc -eq 1 ]; }; then
-  echo "Adding SSH key to agent..."
-  ssh-add ~/.ssh/id_ed25519 || echo "⚠  ssh-add failed (non-fatal)"
-else
-  echo "ℹ  No ssh-agent in this session — key on disk only."
-  echo "   It will be loaded automatically on next login if the systemd"
-  echo "   ssh-agent.service is enabled (see run_once_after_12-enable-ssh-agent)."
-fi
-unset _ssh_add_rc
+echo "Adding SSH key to agent..."
+ssh-add ~/.ssh/id_ed25519
+echo "SSH key added to agent"
 
 {{ end -}}
