@@ -1,26 +1,11 @@
-# 25-zellij-autostart.sh - Auto-start Zellij in opted-in local GUI terminals
+# 25-zellij-autostart.sh - Auto-attach to the "main" Zellij session in opted-in local GUI terminals.
+# Wrappers (kitty-zellij, alacritty-zellij) set AUTO_START_ZELLIJ=1.
+# `zellij attach -c main` creates the session if missing, attaches if present.
 
-if command -v zellij >/dev/null 2>&1 && [[ $- == *i* ]]; then
-  if [[ -n "${AUTO_START_ZELLIJ:-}" ]] \
-    && [[ -z "${NO_AUTO_ZELLIJ:-}" ]] \
-    && [[ -z "${ZELLIJ:-}" ]] \
-    && [[ -z "${SSH_CONNECTION:-}" ]]; then
-
-    zellij_auto_mode="${ZELLIJ_AUTO_MODE:-new-or-main}"
-
-    case "$zellij_auto_mode" in
-      main)
-        zellij attach -c main
-        ;;
-      new-or-main|*)
-        if zellij list-sessions --short 2>/dev/null | grep -Fxq "main"; then
-          zellij
-        else
-          zellij attach -c main
-        fi
-        ;;
-    esac
-
-    unset zellij_auto_mode
-  fi
+if command -v zellij >/dev/null 2>&1 && [[ $- == *i* ]] \
+  && [[ -n "${AUTO_START_ZELLIJ:-}" ]] \
+  && [[ -z "${NO_AUTO_ZELLIJ:-}" ]] \
+  && [[ -z "${ZELLIJ:-}" ]] \
+  && [[ -z "${SSH_CONNECTION:-}" ]]; then
+  exec zellij attach -c main
 fi

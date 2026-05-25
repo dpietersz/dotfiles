@@ -1,0 +1,26 @@
+#!/bin/bash
+# kitty-zellij-pick - Floating picker for Mod+Return.
+# Reads one keypress:
+#   Enter  → attach/create zellij session "main"
+#   1..9   → attach/create zellij session "session<N>"
+#   other  → cancel (close without spawning)
+# The spawned terminal is a fresh kitty with the default class, so niri
+# tiles it normally; only this picker window is floating (see niri
+# window-rule for app-id "zellij-picker").
+
+set -euo pipefail
+
+exec kitty --class=zellij-picker --title="zellij: pick session" \
+  --override close_on_child_death=yes \
+  bash -c '
+    printf "\n  🎯 zellij session picker\n\n  Enter   → main\n  1 - 9   → sessionN\n  other   → cancel\n\n  > "
+    read -rsn1 key
+    if [[ -z "$key" ]]; then
+      session="main"
+    elif [[ "$key" =~ ^[1-9]$ ]]; then
+      session="session${key}"
+    else
+      exit 0
+    fi
+    setsid -f kitty -- zellij attach -c "$session" </dev/null >/dev/null 2>&1
+  '

@@ -25,3 +25,8 @@
 .local/share/applications/terax.desktop
 .local/state/terax
 .cache/terax
+
+# kitty-zellij-main / alacritty-zellij-main wrappers collapsed into the
+# base wrappers (2026-05-25). kitty-zellij now always attaches to "main".
+.local/bin/kitty-zellij-main
+.local/bin/alacritty-zellij-main

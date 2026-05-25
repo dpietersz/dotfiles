@@ -86,8 +86,7 @@ binds {
     Mod+Escape allow-inhibiting=false hotkey-overlay-title="Toggle keyboard-shortcut inhibitor (always processed)" { toggle-keyboard-shortcuts-inhibit; }
 
     // === Launchers & Shell ===
-    Mod+Return       hotkey-overlay-title="Open a Terminal: kitty + zellij" { spawn "kitty-zellij"; }
-    Mod+Shift+Return hotkey-overlay-title="Open main Zellij session in kitty" { spawn "kitty-zellij-main"; }
+    Mod+Return hotkey-overlay-title="Pick a Zellij session: Enter → main, 1-9 → sessionN" { spawn "kitty-zellij-pick"; }
     Mod+Space        hotkey-overlay-title="Run an Application: Noctalia launcher" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+Shift+V      hotkey-overlay-title="Clipboard history" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
     {{- if .hasFingerprintReader }}
@@ -495,6 +494,16 @@ window-rule {
 window-rule {
     match app-id="(?i)^beekeeper-studio$"
     open-on-workspace "Tool"
+}
+
+// Floating session picker spawned by Mod+Return (kitty-zellij-pick).
+// Centered on a 2048x1280 logical output: (2048-480)/2=784, (1280-180)/2=550.
+window-rule {
+    match app-id="^zellij-picker$"
+    open-floating true
+    default-column-width { fixed 480; }
+    default-window-height { fixed 180; }
+    default-floating-position x=784 y=550 relative-to="top-left"
 }
 
 window-rule {

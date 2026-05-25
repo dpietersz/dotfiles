@@ -2,6 +2,5 @@
 set -euo pipefail
 
 export AUTO_START_ZELLIJ=1
-export ZELLIJ_AUTO_MODE="${ZELLIJ_AUTO_MODE:-new-or-main}"
 
 exec alacritty "$@"

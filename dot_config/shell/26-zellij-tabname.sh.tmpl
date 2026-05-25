@@ -1,0 +1,14 @@
+# 26-zellij-tabname.sh - Name the current Zellij tab after the shell's startup dir.
+# Fires once per shell init (not per prompt). New panes inherit their parent's CWD,
+# so subsequent shells in the same tab rename to the same name — effectively a no-op.
+# The first pane's startup dir therefore wins for the tab's name.
+
+if [[ -n "${ZELLIJ:-}" ]] && [[ $- == *i* ]] && command -v zellij >/dev/null 2>&1; then
+  if [[ "$PWD" == "$HOME" ]]; then
+    _zellij_tabname="Home"
+  else
+    _zellij_tabname="$(basename "$PWD")"
+  fi
+  zellij action rename-tab "$_zellij_tabname" 2>/dev/null || true
+  unset _zellij_tabname
+fi
