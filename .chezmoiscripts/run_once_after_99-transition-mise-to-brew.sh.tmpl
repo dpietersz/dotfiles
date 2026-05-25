@@ -1,13 +1,22 @@
-#!/bin/bash
-{{- if or .remote .isMacOS .isServer }}
+#!/usr/bin/env bash
+# Use env-bash so macOS picks up brew's bash 5+ (shellenv'd into PATH by the
+# brew-bundle scripts that ran earlier). System /bin/bash on macOS is 3.2
+# and can't handle `declare -A KEY=value` reliably under set -u.
+
+{{- if or .remote .isServer }}
 # Skip on:
 #   - remote: ephemeral, no migration history
-#   - macOS: never had the Bluefin mise-global setup to migrate FROM,
-#     plus macOS ships bash 3.2 which doesn't handle the declare -A
-#     [key]=value syntax with set -u nounset reliably
 #   - server: fresh Debian install, no mise migration needed
 exit 0
 {{- end }}
+
+# Refuse to run on bash < 4 (no associative arrays). On macOS this means brew
+# bash isn't on PATH yet — print the fix and exit non-zero so user retries.
+if (( BASH_VERSINFO[0] < 4 )); then
+  echo "[transition] bash $BASH_VERSION too old; need >=4 for associative arrays."
+  echo "[transition] On macOS: ensure brew shellenv is sourced (eval \"\$(brew shellenv)\") then re-apply."
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Transition script: uninstall mise GLOBAL tools that brew now provides.
