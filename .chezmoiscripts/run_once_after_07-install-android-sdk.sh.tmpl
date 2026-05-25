@@ -1,5 +1,6 @@
 #!/bin/bash
-{{- if .remote }}
+{{- if or .remote .isServer }}
+# Server: no Android SDK on headless VMs. No mobile dev there.
 exit 0
 {{- end }}
 
