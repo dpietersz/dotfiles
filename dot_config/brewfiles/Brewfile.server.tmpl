@@ -1,0 +1,40 @@
+# Brewfile.server.tmpl — generic always-on VM (isServer=true) only
+#
+# Runs on top of Brewfile.tmpl (shared) via run_onchange_after_01c-brew-bundle-os.
+# Headless Debian VM accessed primarily over SSH (and tailscale-SSH from iPad).
+# Focus: terminal-first debugging, ops, dev. NO GUI. NO casks.
+#
+# Brewfile (shared) already covers: nvim, tmux, zellij, lazygit, lazydocker,
+# gitui, k9s, kubectl, kubeseal, kind, terraform, flux, gh, ripgrep, bat,
+# fd, fzf, eza, yazi, zoxide, btop, navi, gum, go, node@22, python@3.12,
+# uv, docker-compose, doppler, doggo, cloudflared, age, direnv, chezmoi,
+# starship, opencode, gemini-cli, yq, swag.
+#
+# Below: extras that are server-specific or particularly valuable headless.
+
+# --- system + disk diagnostics ---
+brew "htop"             # canonical interactive process viewer
+brew "ncdu"             # interactive disk usage navigator
+brew "duf"              # df, but pretty (filesystem usage)
+brew "dust"             # du, but readable (per-dir disk usage)
+
+# --- network diagnostics ---
+brew "mtr"              # combined traceroute + ping
+brew "iperf3"           # network throughput testing
+brew "nmap"             # port scanner / service discovery
+brew "httpie"           # ergonomic HTTP client (better curl for poking APIs)
+
+# --- file ops + sync ---
+brew "tree"             # directory tree visualization
+brew "rsync"            # incremental file copy / sync
+
+# --- text / JSON / data ---
+brew "tldr"             # short man-page-like cheatsheets
+brew "miller"           # awk for CSV/JSON/TSV
+
+# --- monitor / introspect ---
+brew "glances"          # python-based system monitor (alternative to btop)
+brew "lazyssh"          # interactive SSH host picker
+
+# --- editor reinforcement (nvim is in shared) ---
+brew "neovim-remote"    # send commands to running nvim from outside

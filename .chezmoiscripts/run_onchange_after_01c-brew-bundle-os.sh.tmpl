@@ -3,10 +3,12 @@
 exit 0
 {{- end }}
 
-# OS-specific Brewfile install — picks Brewfile.darwin or Brewfile.linux.
-# Hash trigger: re-runs when either OS Brewfile changes.
+# OS-specific Brewfile install — picks Brewfile.darwin, Brewfile.linux,
+# or Brewfile.server based on host profile.
+# Hash trigger: re-runs when any candidate Brewfile changes.
 # darwin hash: {{ include "dot_config/brewfiles/Brewfile.darwin.tmpl" | sha256sum }}
 # linux  hash: {{ include "dot_config/brewfiles/Brewfile.linux.tmpl" | sha256sum }}
+# server hash: {{ include "dot_config/brewfiles/Brewfile.server.tmpl" | sha256sum }}
 
 set -euo pipefail
 
@@ -18,6 +20,9 @@ fi
 {{- if .isMacOS }}
 BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile.darwin"
 LABEL="darwin"
+{{- else if .isServer }}
+BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile.server"
+LABEL="server"
 {{- else if or .isBluefin .isFedora (eq .chezmoi.os "linux") }}
 BREWFILE="{{ .chezmoi.homeDir }}/.config/brewfiles/Brewfile.linux"
 LABEL="linux"

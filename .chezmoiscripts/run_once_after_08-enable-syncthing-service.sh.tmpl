@@ -13,6 +13,10 @@ if ! command -v syncthing >/dev/null 2>&1; then
 fi
 
 {{- if .isServer }}
+{{- if not .runsSyncthing }}
+# Server without syncthing role — skip.
+exit 0
+{{- end }}
 # Debian apt ships /usr/lib/systemd/user/syncthing.service (system-wide
 # user unit), no need for a per-user copy under ~/.config/systemd/user/.
 {{- else }}

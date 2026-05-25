@@ -80,6 +80,17 @@
 .config/brewfiles/Brewfile.macos
 .config/brewfiles/Brewfile.bluefin.tmpl
 .config/brewfiles/Brewfile.macos.tmpl
+
+# --- Brewfile.linux is for Bluefin laptops (chafa = GUI img viewer, openjdk = android-sdk).
+#     Servers use Brewfile.server (loaded by the OS-brew-bundle script via isServer branch).
+.config/brewfiles/Brewfile.linux
+
+# --- Scripts that need GUI/desktop integration ---
+# secret-service-alias: relies on a systemd-user unit (excluded above), and
+#   gnome-keyring isn't running on headless server anyway.
+.chezmoiscripts/run_onchange_after_15-enable-secret-service-alias.sh
+# paseo-cli: substrate/polkadot chain dev tool — specialized, skip on server.
+.chezmoiscripts/run_onchange_after_18-install-paseo-cli.sh
 {{- end }}
 
 .oh-my-zsh/cache/*
