@@ -19,7 +19,12 @@
 -}}
 {{- $myRoles := (index $serverRoles $containerName) | default (list) -}}
 {{- $runsSyncthing := has "syncthing" $myRoles -}}
-{{- $remote := and (not $isBluefin) (not $isServer) (or (env "CODESPACES" | not | not) (env "SSH_CONNECTION" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
+{{- /* macOS is always a real personal device in this fleet (zandvoort).
+       Bluefin + isServer ditto. None of them should be treated as
+       "remote" just because chezmoi was invoked over SSH. The .remote
+       flag exists for ephemeral containers (codespaces, devcontainers,
+       docker.io), not for SSH'd-in fleet machines. */ -}}
+{{- $remote := and (not $isBluefin) (not $isServer) (not $isMacOS) (or (env "CODESPACES" | not | not) (env "KUBERNETES_SERVICE_HOST" | not | not) (env "container" | not | not) (env "REMOTE_CONTAINERS" | not | not) (stat "/.dockerenv" | not | not)) -}}
 {{- $hardwareModel := (and (stat "/sys/class/dmi/id/product_name") (output "cat" "/sys/class/dmi/id/product_name" | trim)) | default "" -}}
 {{/* Detect fingerprint reader by probing USB for known vendor:product IDs of
      sensors supported by upstream libfprint. Gates on USB rather than DMI so

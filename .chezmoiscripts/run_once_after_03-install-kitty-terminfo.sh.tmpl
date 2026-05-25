@@ -1,0 +1,33 @@
+#!/bin/bash
+# Install kitty terminfo (xterm-kitty) into ~/.terminfo so that ncurses tools
+# (`clear`, `tput`, vim, less, htop, etc.) work when SSHing in from a kitty
+# client. Skipped on Bluefin laptops because the kitty package there installs
+# terminfo system-wide.
+{{- if or .remote (and (not .isMacOS) (not .isServer)) }}
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+if infocmp -x xterm-kitty >/dev/null 2>&1; then
+  echo "[kitty-terminfo] xterm-kitty terminfo already present."
+  exit 0
+fi
+
+mkdir -p "$HOME/.terminfo"
+TMP=$(mktemp -t kitty-terminfo.XXXXXX)
+trap 'rm -f "$TMP"' EXIT
+
+if ! curl -fsSL --max-time 15 \
+    https://raw.githubusercontent.com/kovidgoyal/kitty/master/terminfo/kitty.terminfo \
+    -o "$TMP"; then
+  echo "[kitty-terminfo] download failed (non-fatal — clear/tput will fall back to xterm)"
+  exit 0
+fi
+
+tic -x -o "$HOME/.terminfo" "$TMP" >/dev/null 2>&1
+if infocmp -x xterm-kitty >/dev/null 2>&1; then
+  echo "[kitty-terminfo] installed to ~/.terminfo (xterm-kitty)."
+else
+  echo "[kitty-terminfo] install reported success but infocmp can't find it; check ~/.terminfo permissions."
+fi

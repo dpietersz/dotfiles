@@ -23,15 +23,16 @@ if ! command -v pinentry-tty >/dev/null 2>&1; then
 fi
 PINENTRY_PATH="$(command -v pinentry-tty)"
 {{- else if .isMacOS }}
-# macOS: pinentry-mac shows a native macOS dialog (works in GUI sessions
-# AND over SSH because the dialog pops on the local console). Plain
-# `pinentry` from brew resolves to pinentry-curses which fails over SSH
-# with "Screen or window too small" on standard tmux/terminal widths.
-if ! command -v pinentry-mac >/dev/null 2>&1; then
-  echo "Installing pinentry-mac via brew..."
-  brew install pinentry-mac
+# macOS: use pinentry-tty so SSH'd-in sessions can enter the GPG passphrase
+# right in the terminal (no GUI dialog needing to pop on the local console,
+# no pinentry-curses "Screen or window too small" issue). Brew's `pinentry`
+# package ships pinentry-tty alongside pinentry-curses + pinentry — same
+# install, just different binary.
+if ! command -v pinentry-tty >/dev/null 2>&1; then
+  echo "Installing pinentry via brew (provides pinentry-tty)..."
+  brew install pinentry
 fi
-PINENTRY_PATH="$(command -v pinentry-mac)"
+PINENTRY_PATH="$(command -v pinentry-tty)"
 {{- else }}
 # Check if pinentry is installed
 if ! command -v pinentry >/dev/null 2>&1; then
