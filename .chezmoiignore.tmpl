@@ -6,6 +6,9 @@
 .config/distrobox/
 .config/hypr/
 .local/bin/scripts/niri-idle-daemon.sh
+# Vibe Typer is Linux-only (AppImage); the parent dir doesn't exist on macOS
+.config/vibe-typer/
+.config/autostart/
 {{- end }}
 
 {{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
