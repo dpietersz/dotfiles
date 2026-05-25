@@ -14,14 +14,31 @@ if command -v llm >/dev/null 2>&1; then
   exit 0
 fi
 
-# Install llm via uv (managed by mise on Linux)
-MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+# Source brew shellenv if uv isn't on PATH yet (uv is provided by the
+# shared Brewfile; chezmoi's subshell doesn't inherit user shell rc).
+if ! command -v uv >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew; do
+    if [[ -x "$cand" ]]; then
+      eval "$("$cand" shellenv bash)"
+      break
+    fi
+  done
+fi
 
-if [ -x "$MISE_BIN_PATH" ]; then
-  echo "Installing llm via uv..."
-  $MISE_BIN_PATH exec -- uv tool install llm
+# Prefer brew-installed uv (post-mise-to-brew migration). Fall back to
+# mise-managed uv on pre-migration hosts.
+if command -v uv >/dev/null 2>&1; then
+  echo "Installing llm via uv (brew-installed)..."
+  uv tool install llm
   echo "llm installed successfully"
 else
-  echo "Error: mise not found. Cannot install llm."
-  exit 1
+  MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+  if [ -x "$MISE_BIN_PATH" ]; then
+    echo "Installing llm via mise-managed uv (fallback)..."
+    $MISE_BIN_PATH exec -- uv tool install llm
+    echo "llm installed successfully"
+  else
+    echo "Error: neither brew-installed nor mise-managed uv found."
+    exit 1
+  fi
 fi
