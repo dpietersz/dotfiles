@@ -56,8 +56,8 @@ else
 fi
 
 {{- else }}
-echo "Nushell installation is not supported on this distribution"
-exit 1
+echo "Nushell installation skipped: distribution not supported (server/Debian)"
+exit 0
 
 {{- end }}
 {{- end }}
