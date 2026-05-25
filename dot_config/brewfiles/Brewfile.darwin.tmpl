@@ -16,14 +16,16 @@ brew "pinentry-mac"     # native macOS passphrase dialog — used by gpg-agent
                         # (configure-gpg-pinentry script wires it in)
 
 # ---- dev tools ----
-brew "ghostty"
-brew "kitty"
-brew "zed"
-brew "vscodium"
+# ghostty / kitty / zed / vscodium are Mac casks (no formula version);
+# espanso is also cask-only on macOS. tailscale is a cask (CLI shipped
+# inside the .app bundle and exposed by the cask installer).
+cask "ghostty"
+cask "kitty"
+cask "zed"
+cask "vscodium"
+cask "espanso"
 brew "browserpass"
-brew "espanso"
 brew "llm"
-brew "tailscale"
 brew "tldr"
 
 # ---- CLI extras ----
@@ -62,7 +64,7 @@ cask "polypane"
 cask "rapidapi"
 cask "raycast"
 cask "superwhisper"
-cask "syncthing"
-cask "tailscale"
+cask "syncthing-app"           # was "syncthing" — homebrew renamed
+cask "tailscale-app"           # was "tailscale" — homebrew renamed
 cask "ungoogled-chromium"
 cask "zen"
