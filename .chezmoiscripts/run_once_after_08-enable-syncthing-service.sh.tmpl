@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-{{- if .remote }}
-echo "[syncthing-service] Skipping: remote environment."
+{{- if or .remote .isMacOS }}
+echo "[syncthing-service] Skipping: {{ if .remote }}remote{{ else }}macOS (Syncthing.app uses launchd, managed by the cask){{ end }}."
 exit 0
 {{- end }}
 
