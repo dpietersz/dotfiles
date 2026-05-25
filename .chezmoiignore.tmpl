@@ -8,9 +8,9 @@
 .local/bin/scripts/niri-idle-daemon.sh
 {{- end }}
 
-{{- if not .hasFingerprintReader }}
-# Fingerprint lockscreen stack — only deploy on machines with a supported sensor.
-# Other Linux machines keep noctalia v5's built-in lockscreen.
+{{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
+# Fingerprint lockscreen stack — only deploy on Linux machines with a supported sensor.
+# Other Linux machines keep noctalia v5's built-in lockscreen. macOS skips entirely.
 .config/hypr/
 .local/bin/scripts/niri-idle-daemon.sh
 {{- end }}
