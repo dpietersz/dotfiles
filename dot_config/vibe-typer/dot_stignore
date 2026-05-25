@@ -1,0 +1,6 @@
+// Syncthing ignore list for ~/.config/vibe-typer
+// Whitelist pattern: ignore everything EXCEPT config.json. The dictionary
+// lives inside config.json so it rides along automatically. Per-machine
+// state (logs, cache, IPC sockets, electron's chromium temp) stays local.
+!config.json
+*

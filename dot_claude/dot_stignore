@@ -1,0 +1,80 @@
+// Syncthing ignore list for ~/.claude
+// Synced across machines so all hosts use the same exclusions.
+
+// Caches and ephemeral state
+cache
+telemetry
+debug
+file-history
+plugins/cache
+
+// Per-machine session/project state (absolute-path-bound)
+projects
+sessions
+session-env
+
+// Pulse runtime state (PIDs, logs, sockets)
+PAI/PULSE/state
+PAI/PULSE/logs
+PAI/PULSE/.pulse.pid
+
+// macOS-only build artifacts
+PAI/PULSE/MenuBar/build
+PAI/PULSE/MenuBar/.build
+PAI/PULSE/MenuBar/*.app
+
+// Node/Bun artifacts containing native binaries
+**/node_modules
+PAI/PAI-Install/electron
+
+// Per-machine observability ledger
+PAI/MEMORY/OBSERVABILITY
+
+// macOS iMessage plugin — won't work on Linux
+plugins/marketplaces/*/external_plugins/imessage
+
+// OS cruft and transient files
+.DS_Store
+**/*.pid
+**/*.sock
+**/*.swp
+.lock
+**/*.lock-info
+
+// Per-machine settings — Claude Code does NOT expand $HOME in env block values
+// (only in hook command strings), so this file must hold absolute paths and
+// therefore differs between macOS (/Users/...) and Linux (/home/...).
+// Each machine maintains its own copy.
+settings.json
+settings.local.json
+settings.json.bak
+**/settings.json.bak.*
+
+// Per-machine derived state caches. Both machines write these every few seconds
+// (statusline tick, prompt/response capture, weather/location refresh), so syncing
+// just produces a steady stream of .sync-conflict-* files with no real value:
+// the data is either ephemeral, IP-bound (geo lookup), or trivially regenerable
+// from the synced sources of truth (e.g. learning-cache.sh is derived from
+// LEARNING/SIGNALS/ratings.jsonl which IS synced).
+PAI/MEMORY/STATE
+PAI/.quote-cache
+mcp-needs-auth-cache.json
+history.jsonl
+stats-cache.json
+.last-cleanup
+.update.lock
+
+// Per-machine OAuth credentials — NEVER sync these. Each device has its own
+// Claude.ai OAuth token (different installation IDs). Syncing crosses tokens
+// and corrupts auth state across the fleet. macOS keeps these in Keychain, so
+// the file only exists on Linux — which is exactly when this rule matters.
+.credentials.json
+
+// Syncthing internal artifacts — never sync these
+**/.syncthing.*.tmp
+**/*.sync-conflict-*
+
+// Garbage paths created when an upstream script expanded $HOME as a literal
+// string instead of the variable (e.g. a path like "~/.claude/$HOME/.claude/...").
+// Once it exists, Syncthing happily replicates it; the ignore stops the spread.
+**/$HOME

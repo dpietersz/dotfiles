@@ -1,0 +1,84 @@
+// Syncthing ignore list for ~/dev
+// Synced across machines (p14, t580, zandvoort) so the same exclusions apply
+// everywhere. macOS-Linux platform mismatch makes some entries non-optional
+// (native binaries under node_modules will NOT work cross-platform).
+
+// ─── Build outputs (always-regenerable, often huge) ─────────────────────
+**/node_modules
+**/.next
+**/.nuxt
+**/.turbo
+**/.vite
+**/.svelte-kit
+**/.angular
+**/.expo
+**/dist
+**/build
+**/out
+**/target            // Rust
+**/.cargo            // local cargo cache
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.tox
+**/.venv
+**/venv
+**/.gradle
+**/.dart_tool
+**/coverage
+**/.coverage
+**/.nyc_output
+
+// ─── Package manager state (per-machine / per-arch) ─────────────────────
+**/.pnpm-store
+**/.yarn/cache
+**/.yarn/install-state.gz
+**/.bun
+**/.npm
+**/.local-chromium
+
+// ─── Git transient files (mid-operation, would corrupt other clones) ────
+**/.git/index.lock
+**/.git/objects/pack/tmp_*
+**/.git/HEAD.lock
+
+// ─── direnv / asdf / mise caches ────────────────────────────────────────
+**/.envrc.cache
+**/.direnv
+
+// ─── Editor / IDE per-machine state ─────────────────────────────────────
+**/.idea/workspace.xml
+**/.idea/shelf
+**/.idea/usage.statistics.xml
+**/.vscode/.ropeproject
+**/.history
+
+// ─── macOS cruft (would litter Linux machines) ──────────────────────────
+.DS_Store
+**/.DS_Store
+**/._*
+**/.AppleDouble
+**/.LSOverride
+**/.fseventsd
+**/.Spotlight-V100
+**/.Trashes
+**/.VolumeIcon.icns
+**/.DocumentRevisions-V100
+**/.TemporaryItems
+**/.com.apple.timemachine.donotpresent
+
+// ─── Windows cruft ──────────────────────────────────────────────────────
+**/Thumbs.db
+**/ehthumbs.db
+
+// ─── General junk ───────────────────────────────────────────────────────
+**/*.pid
+**/*.sock
+**/*.swp
+**/*.swo
+**/*.log.gz
+
+// ─── Syncthing internal artifacts ───────────────────────────────────────
+**/.syncthing.*.tmp
+**/*.sync-conflict-*

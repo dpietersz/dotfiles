@@ -1,0 +1,36 @@
+// Syncthing ignore list for ~/.config/PAI
+// Synced across machines so all hosts use the same exclusions.
+// PAI's main system tree lives under ~/.claude/PAI; this directory holds
+// install state and a few config files. Keep exclusions conservative.
+
+// Runtime state, PIDs, sockets, lockfiles
+**/state
+**/logs
+**/cache
+**/*.pid
+**/*.sock
+**/*.lock
+**/*.lock-info
+**/.last-cleanup
+**/.update.lock
+
+// Per-machine OAuth / credential blobs
+**/.credentials.json
+**/auth.json
+
+// Native binaries / build artifacts
+**/node_modules
+**/electron
+**/build
+**/.build
+**/*.app
+
+// OS cruft
+.DS_Store
+**/.DS_Store
+**/*.swp
+**/Thumbs.db
+
+// Syncthing internal artifacts
+**/.syncthing.*.tmp
+**/*.sync-conflict-*
