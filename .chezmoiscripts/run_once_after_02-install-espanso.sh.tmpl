@@ -19,8 +19,8 @@ exit 0
 # - Wayland build of espanso requires setting CAP_DAC_OVERRIDE capability.
 # - On Bluefin, package layering might be locked by default. If so, set LockLayering=false in /etc/rpm-ostreed.conf and reboot.
 
-{{- if or .remote .isMacOS }}
-echo "[espanso] Skipping install: {{ if .remote }}remote environment (.remote=true){{ else }}macOS (installed via Homebrew){{ end }}"
+{{- if or .remote .isMacOS .isServer }}
+echo "[espanso] Skipping install: {{ if .remote }}remote{{ else if .isMacOS }}macOS (via Homebrew){{ else }}server (headless, no espanso){{ end }}"
 exit 0
 {{- end }}
 

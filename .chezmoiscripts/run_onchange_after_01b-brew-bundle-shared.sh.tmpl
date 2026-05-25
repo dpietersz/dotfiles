@@ -10,6 +10,18 @@ exit 0
 
 set -euo pipefail
 
+# Source brew shellenv if brew isn't on PATH yet (Linux: linuxbrew installs
+# to /home/linuxbrew/.linuxbrew/bin/brew but chezmoi's subshell doesn't
+# inherit the user's shell rc). Idempotent — no-op if already on PATH.
+if ! command -v brew >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ -x "$cand" ]]; then
+      eval "$("$cand" shellenv bash)"
+      break
+    fi
+  done
+fi
+
 if ! command -v brew >/dev/null 2>&1; then
   echo "[brew-shared] brew not found, skipping (01-install-homebrew.sh runs first)"
   exit 0

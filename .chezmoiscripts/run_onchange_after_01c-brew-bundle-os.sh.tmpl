@@ -12,6 +12,16 @@ exit 0
 
 set -euo pipefail
 
+# Source brew shellenv if brew isn't on PATH (see 01b for rationale).
+if ! command -v brew >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ -x "$cand" ]]; then
+      eval "$("$cand" shellenv bash)"
+      break
+    fi
+  done
+fi
+
 if ! command -v brew >/dev/null 2>&1; then
   echo "[brew-os] brew not found, skipping"
   exit 0
