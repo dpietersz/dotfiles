@@ -9,11 +9,20 @@ exit 0
 # Bluefin/Fedora — atomic FS, so install bun to user-writable path only.
 
 {{- if .isServer }}
-# Debian server: bun's installer extracts a zip — fails on a fresh VM where
-# unzip isn't preinstalled.
-if ! command -v unzip >/dev/null 2>&1; then
-    echo "[pai-deps] Installing unzip (required by bun installer)..."
-    sudo apt-get install -y unzip
+# Debian server: install small apt deps that the rest of the bootstrap
+# (and day-to-day use over SSH) assume are present:
+#   - unzip:        bun's installer extracts a zip
+#   - kitty-terminfo: lets `clear`, `tput`, etc. work when the SSH client
+#                   sets TERM=xterm-kitty (kitty client → server)
+#   - jq:           used by several PAI scripts (esp. fix-pai-settings-paths)
+#                   and as a general-purpose tool
+APT_NEEDED=()
+command -v unzip >/dev/null 2>&1                                    || APT_NEEDED+=(unzip)
+[ -d /usr/share/terminfo/x ] && infocmp xterm-kitty >/dev/null 2>&1 || APT_NEEDED+=(kitty-terminfo)
+command -v jq >/dev/null 2>&1                                       || APT_NEEDED+=(jq)
+if [ ${#APT_NEEDED[@]} -gt 0 ]; then
+    echo "[pai-deps] apt-installing: ${APT_NEEDED[*]}"
+    sudo apt-get install -y "${APT_NEEDED[@]}"
 fi
 {{- end }}
 
