@@ -1,5 +1,11 @@
 #!/bin/bash
-{{- if .remote }}
+{{- if or .remote .isMacOS .isServer }}
+# Skip on:
+#   - remote: ephemeral, no migration history
+#   - macOS: never had the Bluefin mise-global setup to migrate FROM,
+#     plus macOS ships bash 3.2 which doesn't handle the declare -A
+#     [key]=value syntax with set -u nounset reliably
+#   - server: fresh Debian install, no mise migration needed
 exit 0
 {{- end }}
 
