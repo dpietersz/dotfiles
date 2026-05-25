@@ -28,7 +28,16 @@ echo "[fabric] Installing fabric CLI..."
 curl -fsSL https://raw.githubusercontent.com/danielmiessler/fabric/main/scripts/installer/install.sh | bash
 
 # ------------------ Install shell completions ------------------
+# Non-fatal: the completions installer expects an interactive shell to detect
+# default-shell choice and write to that shell's completion dir. In chezmoi's
+# non-interactive subshell it often errors out. fabric binary works without
+# completions; surface the failure but don't break the bootstrap chain.
 echo "[fabric] Installing shell completions..."
-curl -fsSL https://raw.githubusercontent.com/danielmiessler/Fabric/refs/heads/main/completions/setup-completions.sh | sh
+if curl -fsSL https://raw.githubusercontent.com/danielmiessler/Fabric/refs/heads/main/completions/setup-completions.sh | sh; then
+  echo "[fabric] Completions installed."
+else
+  echo "[fabric] Completions install failed (non-fatal). Re-run interactively if you want tab-completion:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/danielmiessler/Fabric/refs/heads/main/completions/setup-completions.sh | sh"
+fi
 
 echo "[fabric] Installation complete."
