@@ -10,6 +10,11 @@ Comment=Voice dictation — autostarted after graphical session is ready
 # Electron apps.
 Exec=env XDG_CURRENT_DESKTOP=niri:GNOME "{{ .chezmoi.homeDir }}/Applications/VibeTyper.AppImage" --autostart
 X-GNOME-Autostart-enabled=true
+# 5s delay lets noctalia's StatusNotifierItem host finish startup before
+# vibe-typer registers its tray icon. Without this, the SNI registration
+# races and noctalia falls back to a generic glyph (the hamburger) instead
+# of the vibe-typer logo. 5s is empirically enough on niri+noctalia v5.
+X-GNOME-Autostart-Delay=5
 Terminal=false
 # No OnlyShowIn= here — the in-app "launch at start" toggle writes one
 # that excludes niri, which is why it never fired. By managing this file
