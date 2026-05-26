@@ -10,6 +10,14 @@ if command -v lazygit >/dev/null; then
   alias lg="lazygit"
 fi
 
+if command -v kondo >/dev/null; then
+  # cln — interactive cleaner over the dev tree. kondo scans for project
+  # build/cache dirs (node_modules, target/, .venv, .gradle, etc.) and lets
+  # you Space-select what to delete per project. Default root is ~/dev so
+  # repos, projects, and toolboxes all get scanned.
+  alias cln='kondo "$HOME/dev"'
+fi
+
 if command -v kubectl >/dev/null; then
   alias k="kubectl"
 fi
