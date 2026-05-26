@@ -1,0 +1,68 @@
+#!/bin/bash
+# Searchable niri keybinding cheatsheet. Parses ~/.config/niri/config.kdl,
+# pipes every bind (chord + title or action, including ones hidden from the
+# Mod+Shift+/ overlay) into fzf. Bound to Mod+Slash in the niri config and
+# spawned inside a floating kitty window (see window-rule app-id="cheatsheet").
+set -euo pipefail
+
+CONFIG="${NIRI_CONFIG:-$HOME/.config/niri/config.kdl}"
+[ -r "$CONFIG" ] || { echo "niri config not readable: $CONFIG" >&2; exit 1; }
+
+python3 - "$CONFIG" <<'PY' | \
+    fzf --prompt='keybind ❯ ' \
+        --layout=reverse \
+        --info=inline \
+        --header='Search niri keybindings — Enter/Esc to close' \
+        --bind='enter:abort' \
+        --no-mouse \
+        --ansi \
+        --tiebreak=begin >/dev/null || true
+import re, sys, pathlib
+
+# Match `<chord> [props] { <action> [; ...] }`.
+# Chord = one + chain of [A-Za-z0-9_+].
+BIND = re.compile(
+    r'^[ \t]*'
+    r'(?P<chord>[A-Za-z0-9_+]+(?:\+[A-Za-z0-9_+]+)*)'
+    r'[ \t]+(?P<props>[^{]*)\{(?P<body>[^}]*)\}',
+    re.MULTILINE,
+)
+
+text = pathlib.Path(sys.argv[1]).read_text()
+# Strip line comments so they don't trip the parser.
+text = re.sub(r'//[^\n]*', '', text)
+
+# Confine to the `binds { ... }` block only.
+binds_block = re.search(r'\bbinds\s*\{', text)
+if not binds_block:
+    sys.exit(0)
+depth, start = 1, binds_block.end()
+i = start
+while i < len(text) and depth:
+    if text[i] == '{':
+        depth += 1
+    elif text[i] == '}':
+        depth -= 1
+    i += 1
+block = text[start:i-1]
+
+GREEN = '\033[32m'
+DIM = '\033[2m'
+RESET = '\033[0m'
+
+rows = []
+for m in BIND.finditer(block):
+    chord = m.group('chord').replace('Mod+', 'Super+')
+    props = m.group('props')
+    body = m.group('body').strip().rstrip(';').strip()
+    title_m = re.search(r'hotkey-overlay-title="([^"]+)"', props)
+    if title_m:
+        label = title_m.group(1)
+    else:
+        label = body  # e.g. `focus-column-left` or `spawn "noctalia" ...`
+    rows.append((chord, label))
+
+# Sort by chord for stable, scannable output.
+for chord, label in sorted(rows, key=lambda r: (r[0].lower(), r[1].lower())):
+    print(f'{GREEN}{chord:<28}{RESET}  {label}')
+PY

@@ -1,0 +1,96 @@
+#!/bin/bash
+# zellij-switch — Mod+Z handler.
+# Requirements before doing anything:
+#   1. The currently focused niri window is kitty.
+#   2. That kitty has a zellij client process running inside it.
+# If both hold: opens zellij's built-in floating Session Manager plugin in
+# that exact session, where the user can pick/create/kill a session. zellij
+# itself handles the actual detach+reattach and marks the current session.
+# If either fails: emit a desktop notification and exit cleanly.
+set -euo pipefail
+
+notify() {
+    notify-send -a 'zellij-switch' -u low "$@" 2>/dev/null || true
+}
+
+# --- 1. focused window ----------------------------------------------------
+read -r app_id pid < <(
+    niri msg --json focused-window 2>/dev/null \
+    | python3 -c 'import json,sys
+try:
+    d = json.load(sys.stdin)
+    print(d.get("app_id") or "", d.get("pid") or "")
+except Exception:
+    print("", "")' \
+)
+
+if [ "$app_id" != "kitty" ] || [ -z "$pid" ]; then
+    notify 'Mod+Z' "Focus a kitty window running a zellij session first.\n(Currently focused: ${app_id:-nothing})"
+    exit 0
+fi
+
+# --- 2. find zellij client in kitty's descendant tree, read its session ---
+# The session name is NOT in the client's env (only the server has it).
+# We parse it from the client's argv ('attach -c <name>', '-s <name>', etc.)
+# and as a fallback intersect connected zellij servers with the running list.
+session=$(python3 - "$pid" <<'PY' || true
+import os, sys, pathlib
+
+root = int(sys.argv[1])
+
+def comm(p):
+    try: return pathlib.Path(f'/proc/{p}/comm').read_text().strip()
+    except OSError: return ''
+
+def cmdline(p):
+    try: return pathlib.Path(f'/proc/{p}/cmdline').read_bytes().split(b'\x00')
+    except OSError: return []
+
+def children(p):
+    try: return pathlib.Path(f'/proc/{p}/task/{p}/children').read_text().split()
+    except OSError: return []
+
+def session_from_argv(argv):
+    args = [a.decode(errors='ignore') for a in argv if a]
+    flags = {'-c', '-s', '--session', '--session-name'}
+    for i, a in enumerate(args):
+        if a in flags and i + 1 < len(args):
+            return args[i + 1]
+    for i, a in enumerate(args):
+        if a == 'attach' and i + 1 < len(args) and not args[i + 1].startswith('-'):
+            return args[i + 1]
+    return None
+
+# BFS descendants of the kitty pid; first zellij client (not server) wins.
+stack = [root]
+seen = set()
+while stack:
+    cur = stack.pop()
+    if cur in seen: continue
+    seen.add(cur)
+    for child in children(cur):
+        child = int(child)
+        if comm(child) == 'zellij':
+            argv = cmdline(child)
+            # Skip the zellij server (its argv has --server).
+            if any(a == b'--server' for a in argv):
+                stack.append(child)
+                continue
+            s = session_from_argv(argv)
+            if s:
+                print(s); sys.exit(0)
+        stack.append(child)
+sys.exit(1)
+PY
+)
+if [ -z "$session" ]; then
+    notify 'Mod+Z' 'Focused kitty is not running a zellij session.'
+    exit 0
+fi
+
+# --- 3. open built-in session manager in that session ---------------------
+# This routes the action via zellij's IPC to the named session's server, which
+# spawns the session-manager plugin as a floating pane in that session. The
+# user's working kitty pane gets the popup; current session is shown by the
+# plugin itself, no extra UI code needed here.
+zellij -s "$session" action launch-or-focus-plugin session-manager --floating

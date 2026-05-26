@@ -77,8 +77,42 @@ gestures {
 // Define keybindings
 binds {
     // === Session & Overview ===
-    Ctrl+Alt+Delete hotkey-overlay-title="Exit niri session" { quit; }
+    Ctrl+Alt+Delete hotkey-overlay-title=null { quit; }
     Mod+Shift+Slash hotkey-overlay-title="Show hotkey overlay" { show-hotkey-overlay; }
+    // Searchable keybinding cheatsheet — floating kitty + fzf over the parsed
+    // niri config (see dot_local/bin/scripts/executable_niri-cheatsheet and the
+    // window-rule below matching app-id="cheatsheet").
+    Mod+Slash hotkey-overlay-title="fzf: search keybindings" { spawn "kitty" "--class" "cheatsheet" "--" "niri-cheatsheet"; }
+    // Searchable bash aliases + functions cheatsheet — same pattern as the
+    // niri keybind search, but for shell shortcuts. See
+    // dot_local/bin/scripts/executable_niri-shell-cheatsheet and the
+    // window-rule for app-id="shell-cheatsheet".
+    Mod+A hotkey-overlay-title="fzf: search bash aliases & functions" { spawn "kitty" "--class" "shell-cheatsheet" "--" "niri-shell-cheatsheet"; }
+    // fpass popup — pick a pass(1) entry and copy the password to clipboard.
+    Mod+P hotkey-overlay-title="fzf: pick pass entry → copy password" { spawn "kitty" "--class" "fpass-popup" "--" "niri-fpass-popup"; }
+    // fssh popup — pick an SSH host and open a new kitty connected to it.
+    Mod+G hotkey-overlay-title="fzf: pick SSH host → open kitty" { spawn "kitty" "--class" "fssh-popup" "--" "niri-fssh-popup"; }
+    // fabric popup — pipe input through one or more fabric patterns, with
+    // per-pattern variable prompts (zenity), and copy result to clipboard.
+    // The popup script never exits on its own (it `exec sleep infinity`s at
+    // the end), so kitty stays open until Ctrl+Shift+W. We don't use kitty's
+    // `--hold` because in some kitty versions a held window briefly closes
+    // before re-rendering, which on niri exposes whatever sits behind it
+    // (e.g. the zellij-main pane) and looks like a spontaneous respawn.
+    Mod+F hotkey-overlay-title="fzf+fabric: pick pattern(s) → run → copy" { spawn "kitty" "--class" "fabric-popup" "--" "niri-fabric-popup"; }
+    // kondo popup — pick a scan root via fzf, then kondo TUI cleans build
+    // dirs (node_modules, target/, .venv, .gradle, …) interactively.
+    Mod+C hotkey-overlay-title="fzf+kondo: pick scan root → clean build dirs" { spawn "kitty" "--class" "kondo-popup" "--" "niri-kondo-popup"; }
+    // Zellij session switcher — opens zellij's built-in floating Session
+    // Manager plugin INSIDE the focused kitty's zellij session. Requires:
+    //   (1) focused niri window is kitty, (2) that kitty has a zellij
+    //   client running inside. Otherwise emits a notification and exits.
+    // See dot_local/bin/executable_zellij-switch for the eligibility checks.
+    Mod+Z hotkey-overlay-title="fzf: switch zellij session (in focused kitty)" { spawn "zellij-switch"; }
+    // Window switcher — fzf over `niri msg windows`. See
+    // dot_local/bin/executable_niri-window-switch and the window-rule for
+    // app-id="window-switcher".
+    Mod+T hotkey-overlay-title="fzf: switch focused window" { spawn "kitty" "--class" "window-switcher" "--" "niri-window-switch"; }
     Mod+O hotkey-overlay-title="Toggle overview" { toggle-overview; }
     // Escape hatch for apps that grab keyboard shortcuts (Looking Glass,
     // Moonlight, remote-desktop, software KVM). allow-inhibiting=false makes
@@ -96,13 +130,11 @@ binds {
     {{- end }}
     Mod+Backspace  hotkey-overlay-title="Session menu" { spawn "noctalia" "msg" "panel-toggle" "session"; }
     Mod+Ctrl+Space hotkey-overlay-title="Toggle Noctalia bar" { spawn "noctalia" "msg" "bar-toggle"; }
-    Mod+N          hotkey-overlay-title="Control center / notifications" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
     // Mod+Shift+N for notification history: noctalia v5's CLI does not yet expose
     // a command for notifications.toggleHistory() — only the underlying QML IPC
     // handler exists. Reinstate this binding once `noctalia msg` adds it (e.g.
     // `notification-toggle-history`) or once `qs` (Quickshell) is on PATH.
-    XF86Calculator hotkey-overlay-title="Calculator: galculator" { spawn "galculator"; }
-    Mod+B          hotkey-overlay-title="Open Helium Browser" { spawn "helium-browser-bin"; }
+    XF86Calculator hotkey-overlay-title=null { spawn "galculator"; }
 
     // === Voice Dictation (Vibe Typer) ===
     // Vibe Typer registers its own global hotkey internally (configured in its
@@ -111,28 +143,28 @@ binds {
     // XF86Favorites (the ThinkPad star key) via Vibe Typer's preferences.
 
     // === Volume Controls (F2/F3/F4) — Noctalia provides the OSD ===
-    XF86AudioRaiseVolume allow-when-locked=true hotkey-overlay-title="Raise volume" { spawn "noctalia" "msg" "volume-up"; }
-    XF86AudioLowerVolume allow-when-locked=true hotkey-overlay-title="Lower volume" { spawn "noctalia" "msg" "volume-down"; }
-    XF86AudioMute        allow-when-locked=true hotkey-overlay-title="Mute playback" { spawn "noctalia" "msg" "volume-mute"; }
-    XF86AudioMicMute     allow-when-locked=true hotkey-overlay-title="Mute microphone" { spawn "noctalia" "msg" "mic-mute"; }
+    XF86AudioRaiseVolume allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "volume-down"; }
+    XF86AudioMute        allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "volume-mute"; }
+    XF86AudioMicMute     allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "mic-mute"; }
 
     // === Brightness Controls (F5/F6) — via Noctalia ===
-    XF86MonBrightnessDown allow-when-locked=true hotkey-overlay-title="Decrease brightness" { spawn "noctalia" "msg" "brightness-down"; }
-    XF86MonBrightnessUp   allow-when-locked=true hotkey-overlay-title="Increase brightness" { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "brightness-down"; }
+    XF86MonBrightnessUp   allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "brightness-up"; }
 
     // === Media Player Controls (F7 = play/pause on most ThinkPads) ===
-    XF86AudioNext  allow-when-locked=true hotkey-overlay-title="Next track" { spawn "noctalia" "msg" "media" "next"; }
-    XF86AudioPause allow-when-locked=true hotkey-overlay-title="Pause / play track" { spawn "noctalia" "msg" "media" "toggle"; }
-    XF86AudioPlay  allow-when-locked=true hotkey-overlay-title="Play / pause track" { spawn "noctalia" "msg" "media" "toggle"; }
-    XF86AudioPrev  allow-when-locked=true hotkey-overlay-title="Previous track" { spawn "noctalia" "msg" "media" "previous"; }
+    XF86AudioNext  allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "media" "next"; }
+    XF86AudioPause allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioPlay  allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioPrev  allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "media" "previous"; }
 
     // === Wireless Controls (F8 = WiFi, F10 = Bluetooth) ===
     // v5 IPC doesn't expose wifi/bluetooth toggles yet; use system tools directly.
-    XF86Bluetooth hotkey-overlay-title="Toggle Bluetooth" { spawn "bash" "-c" "bluetoothctl show | grep -q 'Powered: yes' && bluetoothctl power off || bluetoothctl power on"; }
-    XF86WLAN      hotkey-overlay-title="Toggle WiFi"      { spawn "nmcli" "radio" "wifi"; }
+    XF86Bluetooth hotkey-overlay-title=null { spawn "bash" "-c" "bluetoothctl show | grep -q 'Powered: yes' && bluetoothctl power off || bluetoothctl power on"; }
+    XF86WLAN      hotkey-overlay-title=null      { spawn "nmcli" "radio" "wifi"; }
 
     // === Window Management ===
-    Mod+Q repeat=false hotkey-overlay-title="Close window" { close-window; }
+    Mod+Q repeat=false hotkey-overlay-title=null { close-window; }
     Mod+Alt+F   hotkey-overlay-title="Maximize column" { maximize-column; }
     Mod+Shift+F hotkey-overlay-title="Full screen window" { fullscreen-window; }
     Mod+W       hotkey-overlay-title="Toggle floating window" { toggle-window-floating; }
@@ -141,100 +173,68 @@ binds {
     Mod+I       hotkey-overlay-title="Focus previously focused window" { focus-window-previous; }
 
     // === Focus Navigation ===
-    Mod+Left  hotkey-overlay-title="Focus column left" { focus-column-left; }
     Mod+Down  hotkey-overlay-title="Focus window down" { focus-window-down; }
     Mod+Up    hotkey-overlay-title="Focus window up" { focus-window-up; }
-    Mod+Right hotkey-overlay-title="Focus column right" { focus-column-right; }
-    Mod+H     hotkey-overlay-title="Focus column left" { focus-column-left; }
+    Mod+H     hotkey-overlay-title=null { focus-column-left; }
+    Mod+L     hotkey-overlay-title=null { focus-column-right; }
     // Mod+J / Mod+K are bound to workspace navigation below.
-    Mod+L     hotkey-overlay-title="Focus column right" { focus-column-right; }
 
     // === Window Movement ===
-    Mod+Shift+Left  hotkey-overlay-title="Move column left" { move-column-left; }
     Mod+Shift+Down  hotkey-overlay-title="Move window down" { move-window-down; }
     Mod+Shift+Up    hotkey-overlay-title="Move window up" { move-window-up; }
-    Mod+Shift+Right hotkey-overlay-title="Move column right" { move-column-right; }
-    Mod+Shift+H     hotkey-overlay-title="Move column left" { move-column-left; }
+    Mod+Shift+H     hotkey-overlay-title=null { move-column-left; }
     // Mod+Shift+J / Mod+Shift+K are bound to move-workspace below.
-    Mod+Shift+L     hotkey-overlay-title="Move column right" { move-column-right; }
+    Mod+Shift+L     hotkey-overlay-title=null { move-column-right; }
 
     // === Column Navigation ===
     Mod+Home      hotkey-overlay-title="Focus first column" { focus-column-first; }
     Mod+End       hotkey-overlay-title="Focus last column" { focus-column-last; }
-    Mod+Ctrl+Home hotkey-overlay-title="Move column to first" { move-column-to-first; }
-    Mod+Ctrl+End  hotkey-overlay-title="Move column to last" { move-column-to-last; }
 
     // === Monitor Navigation ===
-    Mod+Ctrl+Left  hotkey-overlay-title="Focus left monitor" { focus-monitor-left; }
     //Mod+Ctrl+Down  { focus-monitor-down; }
     //Mod+Ctrl+Up    { focus-monitor-up; }
-    Mod+Ctrl+Right hotkey-overlay-title="Focus right monitor" { focus-monitor-right; }
     Mod+Ctrl+H     hotkey-overlay-title="Focus left monitor" { focus-monitor-left; }
     Mod+Ctrl+J     hotkey-overlay-title="Focus lower monitor" { focus-monitor-down; }
     Mod+Ctrl+K     hotkey-overlay-title="Focus upper monitor" { focus-monitor-up; }
     Mod+Ctrl+L     hotkey-overlay-title="Focus right monitor" { focus-monitor-right; }
 
     // === Move to Monitor ===
-    Mod+Shift+Ctrl+Left  hotkey-overlay-title="Move column to left monitor" { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+Down  hotkey-overlay-title="Move column to lower monitor" { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+Up    hotkey-overlay-title="Move column to upper monitor" { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+Right hotkey-overlay-title="Move column to right monitor" { move-column-to-monitor-right; }
     Mod+Shift+Ctrl+H     hotkey-overlay-title="Move column to left monitor" { move-column-to-monitor-left; }
     Mod+Shift+Ctrl+J     hotkey-overlay-title="Move column to lower monitor" { move-column-to-monitor-down; }
     Mod+Shift+Ctrl+K     hotkey-overlay-title="Move column to upper monitor" { move-column-to-monitor-up; }
     Mod+Shift+Ctrl+L     hotkey-overlay-title="Move column to right monitor" { move-column-to-monitor-right; }
 
     // === Workspace Navigation ===
-    Mod+J             hotkey-overlay-title="Focus next workspace" { focus-workspace-down; }
-    Mod+K             hotkey-overlay-title="Focus previous workspace" { focus-workspace-up; }
-    Mod+Ctrl+Down     hotkey-overlay-title="Focus next workspace" { focus-workspace-down; }
-    Mod+Ctrl+Up       hotkey-overlay-title="Focus previous workspace" { focus-workspace-up; }
+    Mod+J             hotkey-overlay-title=null { focus-workspace-down; }
+    Mod+K             hotkey-overlay-title=null { focus-workspace-up; }
     Mod+Ctrl+Alt+Down hotkey-overlay-title="Move column to next workspace" { move-column-to-workspace-down; }
     Mod+Ctrl+Alt+Up   hotkey-overlay-title="Move column to previous workspace" { move-column-to-workspace-up; }
 
     // === Move Workspaces ===
-    Mod+Shift+Page_Down hotkey-overlay-title="Move workspace down" { move-workspace-down; }
-    Mod+Shift+Page_Up   hotkey-overlay-title="Move workspace up" { move-workspace-up; }
-    Mod+Shift+J         hotkey-overlay-title="Move workspace down" { move-workspace-down; }
-    Mod+Shift+K         hotkey-overlay-title="Move workspace up" { move-workspace-up; }
+    Mod+Shift+J         hotkey-overlay-title=null { move-workspace-down; }
+    Mod+Shift+K         hotkey-overlay-title=null { move-workspace-up; }
 
-    // === Mouse Wheel Navigation ===
-    Mod+WheelScrollDown      cooldown-ms=150 hotkey-overlay-title="Focus next workspace" { focus-workspace-down; }
-    Mod+WheelScrollUp        cooldown-ms=150 hotkey-overlay-title="Focus previous workspace" { focus-workspace-up; }
-    Mod+Ctrl+WheelScrollDown cooldown-ms=150 hotkey-overlay-title="Move column to next workspace" { move-column-to-workspace-down; }
-    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 hotkey-overlay-title="Move column to previous workspace" { move-column-to-workspace-up; }
-
-    Mod+WheelScrollRight      hotkey-overlay-title="Focus column right" { focus-column-right; }
-    Mod+WheelScrollLeft       hotkey-overlay-title="Focus column left" { focus-column-left; }
-    Mod+Ctrl+WheelScrollRight hotkey-overlay-title="Move column right" { move-column-right; }
-    Mod+Ctrl+WheelScrollLeft  hotkey-overlay-title="Move column left" { move-column-left; }
-
-    Mod+Shift+WheelScrollDown      hotkey-overlay-title="Focus column right" { focus-column-right; }
-    Mod+Shift+WheelScrollUp        hotkey-overlay-title="Focus column left" { focus-column-left; }
-    Mod+Ctrl+Shift+WheelScrollDown hotkey-overlay-title="Move column right" { move-column-right; }
-    Mod+Ctrl+Shift+WheelScrollUp   hotkey-overlay-title="Move column left" { move-column-left; }
-
-    // === Numbered Workspaces ===
-    Mod+1 hotkey-overlay-title="Focus Terminal workspace" { focus-workspace "Terminal"; }
-    Mod+2 hotkey-overlay-title="Focus Browser workspace"  { focus-workspace "Browser"; }
-    Mod+3 hotkey-overlay-title="Focus Editor workspace"   { focus-workspace "Editor"; }
-    Mod+4 hotkey-overlay-title="Focus Tool workspace"     { focus-workspace "Tool"; }
-    Mod+5 hotkey-overlay-title="Focus Chat workspace"     { focus-workspace "Chat"; }
-    Mod+6 hotkey-overlay-title="Focus Note workspace"     { focus-workspace "Note"; }
-    Mod+7 hotkey-overlay-title="Focus Misc workspace"     { focus-workspace "Misc"; }
-    Mod+8 hotkey-overlay-title="Focus workspace 8"        { focus-workspace 8; }
-    Mod+9 hotkey-overlay-title="Focus workspace 9"        { focus-workspace 9; }
+        // === Numbered Workspaces ===
+    Mod+1 hotkey-overlay-title=null { focus-workspace "Terminal"; }
+    Mod+2 hotkey-overlay-title=null  { focus-workspace "Browser"; }
+    Mod+3 hotkey-overlay-title=null   { focus-workspace "Editor"; }
+    Mod+4 hotkey-overlay-title=null     { focus-workspace "Tool"; }
+    Mod+5 hotkey-overlay-title=null     { focus-workspace "Chat"; }
+    Mod+6 hotkey-overlay-title=null     { focus-workspace "Note"; }
+    Mod+7 hotkey-overlay-title=null     { focus-workspace "Misc"; }
+    Mod+8 hotkey-overlay-title=null        { focus-workspace 8; }
+    Mod+9 hotkey-overlay-title=null        { focus-workspace 9; }
 
     // === Move to Numbered Workspaces ===
-    Mod+Shift+1 hotkey-overlay-title="Move column to Terminal workspace" { move-column-to-workspace "Terminal"; }
-    Mod+Shift+2 hotkey-overlay-title="Move column to Browser workspace"  { move-column-to-workspace "Browser"; }
-    Mod+Shift+3 hotkey-overlay-title="Move column to Editor workspace"   { move-column-to-workspace "Editor"; }
-    Mod+Shift+4 hotkey-overlay-title="Move column to Tool workspace"     { move-column-to-workspace "Tool"; }
-    Mod+Shift+5 hotkey-overlay-title="Move column to Chat workspace"     { move-column-to-workspace "Chat"; }
-    Mod+Shift+6 hotkey-overlay-title="Move column to Note workspace"     { move-column-to-workspace "Note"; }
-    Mod+Shift+7 hotkey-overlay-title="Move column to Misc workspace"     { move-column-to-workspace "Misc"; }
-    Mod+Shift+8 hotkey-overlay-title="Move column to workspace 8"        { move-column-to-workspace 8; }
-    Mod+Shift+9 hotkey-overlay-title="Move column to workspace 9"        { move-column-to-workspace 9; }
+    Mod+Shift+1 hotkey-overlay-title=null { move-column-to-workspace "Terminal"; }
+    Mod+Shift+2 hotkey-overlay-title=null  { move-column-to-workspace "Browser"; }
+    Mod+Shift+3 hotkey-overlay-title=null   { move-column-to-workspace "Editor"; }
+    Mod+Shift+4 hotkey-overlay-title=null     { move-column-to-workspace "Tool"; }
+    Mod+Shift+5 hotkey-overlay-title=null     { move-column-to-workspace "Chat"; }
+    Mod+Shift+6 hotkey-overlay-title=null     { move-column-to-workspace "Note"; }
+    Mod+Shift+7 hotkey-overlay-title=null     { move-column-to-workspace "Misc"; }
+    Mod+Shift+8 hotkey-overlay-title=null        { move-column-to-workspace 8; }
+    Mod+Shift+9 hotkey-overlay-title=null        { move-column-to-workspace 9; }
 
     // === Column Management ===
     Mod+BracketLeft  hotkey-overlay-title="Consume or expel window left" { consume-or-expel-window-left; }
@@ -425,6 +425,74 @@ screenshot-path null
 window-rule {
     match app-id="kitty"
     open-on-workspace "Terminal"
+}
+
+// Floating, centered keybind cheatsheet (kitty --class cheatsheet).
+window-rule {
+    match app-id="cheatsheet"
+    open-floating true
+    default-column-width { fixed 900; }
+    default-window-height { fixed 700; }
+}
+
+// Floating shell aliases/functions cheatsheet (kitty --class shell-cheatsheet).
+// Wider than the keybind one to fit alias bodies + preview pane.
+window-rule {
+    match app-id="shell-cheatsheet"
+    open-floating true
+    default-column-width { fixed 1200; }
+    default-window-height { fixed 700; }
+}
+
+// Floating pass(1) entry picker (kitty --class fpass-popup).
+window-rule {
+    match app-id="fpass-popup"
+    open-floating true
+    default-column-width { fixed 700; }
+    default-window-height { fixed 500; }
+}
+
+// Floating SSH host picker (kitty --class fssh-popup).
+window-rule {
+    match app-id="fssh-popup"
+    open-floating true
+    default-column-width { fixed 700; }
+    default-window-height { fixed 500; }
+}
+
+// Floating fabric pattern picker (kitty --class fabric-popup). Bigger because
+// it shows pattern previews + final transcribed/processed output before close.
+window-rule {
+    match app-id="fabric-popup"
+    open-floating true
+    default-column-width { fixed 1200; }
+    default-window-height { fixed 800; }
+}
+
+// Floating kondo cleaner (kitty --class kondo-popup). Tall to fit kondo's
+// per-project size+confirm UI without truncation.
+window-rule {
+    match app-id="kondo-popup"
+    open-floating true
+    default-column-width { fixed 1100; }
+    default-window-height { fixed 750; }
+}
+
+
+// Floating zellij session switcher (kitty --class zellij-switcher).
+window-rule {
+    match app-id="zellij-switcher"
+    open-floating true
+    default-column-width { fixed 700; }
+    default-window-height { fixed 500; }
+}
+
+// Floating window switcher (kitty --class window-switcher).
+window-rule {
+    match app-id="window-switcher"
+    open-floating true
+    default-column-width { fixed 900; }
+    default-window-height { fixed 600; }
 }
 
 window-rule {

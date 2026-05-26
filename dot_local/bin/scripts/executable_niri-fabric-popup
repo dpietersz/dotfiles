@@ -1,0 +1,217 @@
+#!/bin/bash
+# niri-fabric-popup — floating fzf picker for fabric patterns.
+#
+# Flow:
+#   1. Choose input source (clipboard / paste / file).
+#   2. Multi-select one or more patterns in fzf (Tab to add, Enter to confirm).
+#      Patterns run in the order picked, piped output → next pattern's input.
+#   3. For each pattern that uses `{{var}}` placeholders (other than `{{input}}`,
+#      which is supplied automatically), prompt for the value via zenity.
+#   4. Execute the pipeline, copy final output to clipboard via wl-copy, and
+#      hold the kitty window open until any key is pressed so the user can
+#      review the result.
+#
+# Spawned by Mod+F in the niri config inside a floating kitty with app-id
+# "fabric-popup" (see window-rule).
+set -euo pipefail
+
+PATTERNS_DIR="${FABRIC_PATTERNS_DIR:-$HOME/.config/fabric/patterns}"
+
+if ! command -v fabric >/dev/null 2>&1; then
+    echo "fabric is not installed (add it via mise or brew)" >&2
+    # kitty --hold keeps the window open — Ctrl+Shift+W to close.
+    exit 1
+fi
+if [ ! -d "$PATTERNS_DIR" ] || [ -z "$(ls -A "$PATTERNS_DIR" 2>/dev/null)" ]; then
+    echo "No patterns found in $PATTERNS_DIR. Run: fabric --updatepatterns" >&2
+    # kitty --hold keeps the window open — Ctrl+Shift+W to close.
+    exit 1
+fi
+
+# ─── 1. INPUT SOURCE ───────────────────────────────────────────────────────────
+source_pick=$(printf 'clipboard (wl-paste)\nfile (pick via fzf)\npaste now (read until Ctrl-D)\nempty (just run pattern)\n' \
+    | fzf --prompt='input ❯ ' \
+          --layout=reverse \
+          --no-multi \
+          --header='Where does the input data come from?' \
+          --no-mouse \
+    || true)
+
+[ -z "$source_pick" ] && exit 0
+
+case "$source_pick" in
+    clipboard*)
+        INPUT=$(wl-paste 2>/dev/null || true)
+        [ -z "$INPUT" ] && { echo "Clipboard is empty. Ctrl+Shift+W to close."; exit 0; }
+        ;;
+    file*)
+        file=$(fd --type f --hidden --exclude .git . "$HOME" 2>/dev/null \
+            | fzf --prompt='file ❯ ' --layout=reverse --no-multi \
+                  --preview='bat --style=plain --color=always --line-range=:200 {} 2>/dev/null || head -200 {}' \
+            || true)
+        [ -z "$file" ] && exit 0
+        INPUT=$(cat "$file")
+        ;;
+    paste*)
+        echo "Paste content (Ctrl-D to finish):"
+        INPUT=$(cat)
+        ;;
+    empty*)
+        INPUT=""
+        ;;
+esac
+
+# Auto-detect YouTube URLs in the captured input. If the WHOLE input is just
+# a YouTube URL (with optional surrounding whitespace), switch the pipeline
+# producer from `cat <<INPUT` to `fabric -y URL --transcript`. That way you
+# can: copy URL → Mod+F → clipboard → extract_wisdom → done, with no extra
+# clicks or special source-picker entry. If the input is mixed content
+# (e.g. paragraph that mentions a URL), we treat it as text as normal.
+YOUTUBE_URL=""
+YT_URL_RX='^[[:space:]]*(https?://)?(www\.)?(youtube\.com/(watch\?v=|shorts/)|youtu\.be/)[A-Za-z0-9_-]+([?&#][^[:space:]]*)?[[:space:]]*$'
+if [[ "$INPUT" =~ $YT_URL_RX ]]; then
+    # Strip whitespace; the regex anchors guarantee nothing else is there.
+    YOUTUBE_URL=$(printf '%s' "$INPUT" | tr -d '[:space:]')
+    INPUT=""  # producer switches to `fabric -y`, no heredoc needed
+    echo "→ detected YouTube URL — using \`fabric -y\` as producer"
+fi
+
+# ─── 2. PICK PATTERNS (multi-select, ordered) ─────────────────────────────────
+patterns_pick=$(
+    ls "$PATTERNS_DIR" 2>/dev/null \
+    | sort \
+    | fzf --prompt='fabric ❯ ' \
+          --layout=reverse \
+          --multi \
+          --info=inline \
+          --header='Tab → add to pipeline, Enter → run, Esc → cancel' \
+          --preview="cat '$PATTERNS_DIR'/{}/system.md 2>/dev/null | head -60 | bat --style=plain --color=always --language=markdown --paging=never 2>/dev/null" \
+          --preview-window='right,55%,border-left' \
+          --no-mouse \
+          --tiebreak=begin \
+    || true
+)
+
+# Patterns are required for text input; for an auto-detected YouTube URL,
+# zero patterns is fine (just dump the transcript).
+if [ -z "$patterns_pick" ]; then
+    if [ -z "$YOUTUBE_URL" ]; then
+        exit 0
+    fi
+    PATTERNS=()
+else
+    # Preserve user's selection order (fzf --multi outputs in selection order).
+    mapfile -t PATTERNS <<< "$patterns_pick"
+fi
+
+# ─── 3. PROMPT FOR PATTERN VARIABLES ──────────────────────────────────────────
+# Build per-pattern arrays of -v "#name:value" args.
+declare -A VARS_FOR  # pattern_name → space-separated "-v=#a:va -v=#b:vb"
+
+for pat in "${PATTERNS[@]}"; do
+    sysfile="$PATTERNS_DIR/$pat/system.md"
+    [ -f "$sysfile" ] || continue
+
+    # Extract unique {{var}} placeholders. Skip {{input}} (auto-supplied) and
+    # skip any with dots/spaces inside (those are template expressions, not
+    # fabric vars).
+    mapfile -t vars < <(
+        grep -oE '\{\{[a-zA-Z_][a-zA-Z0-9_]*\}\}' "$sysfile" 2>/dev/null \
+            | sort -u \
+            | sed -E 's/^\{\{//; s/\}\}$//' \
+            | grep -vxE 'input'
+    )
+
+    var_args=()
+    for var in "${vars[@]}"; do
+        if command -v zenity >/dev/null 2>&1; then
+            value=$(zenity --entry \
+                --title="fabric → $pat" \
+                --text="Value for {{$var}}:" \
+                --width=420 \
+                2>/dev/null || echo "")
+        else
+            read -rp "[$pat] {{$var}} = " value || value=""
+        fi
+        [ -n "$value" ] && var_args+=("-v=#$var:$value")
+    done
+    VARS_FOR["$pat"]="${var_args[*]}"
+done
+
+# ─── 4. BUILD AND RUN THE PIPELINE ────────────────────────────────────────────
+echo
+echo "─── Running pipeline ─────────────────────────────────────"
+if [ -n "$YOUTUBE_URL" ]; then
+    printf '  → youtube --transcript\n    %s\n' "$YOUTUBE_URL"
+fi
+for pat in "${PATTERNS[@]}"; do
+    printf '  → %s' "$pat"
+    [ -n "${VARS_FOR[$pat]}" ] && printf ' (%s)' "${VARS_FOR[$pat]}"
+    echo
+done
+echo "──────────────────────────────────────────────────────────"
+echo
+
+# Two producer shapes:
+#   YouTube:  fabric -y "$URL" --transcript --stream | fabric -p p1 --stream | …
+#   Heredoc:  cat <<INPUT | fabric -p p1 --stream | …
+# %q-quote the URL so '&', '?', '=' survive the bash -c eval. Every fabric
+# call gets --stream so tokens appear live.
+if [ -n "$YOUTUBE_URL" ]; then
+    cmd=$(printf 'fabric -y %q --transcript --stream' "$YOUTUBE_URL")
+    for pat in "${PATTERNS[@]}"; do
+        args="${VARS_FOR[$pat]}"
+        cmd+=" | fabric -p $pat --stream"
+        [ -n "$args" ] && cmd+=" $args"
+    done
+else
+    cmd="cat <<'__FABRIC_INPUT__' | "
+    for i in "${!PATTERNS[@]}"; do
+        pat="${PATTERNS[$i]}"
+        if [ "$i" -gt 0 ]; then cmd+=" | "; fi
+        args="${VARS_FOR[$pat]}"
+        cmd+="fabric -p $pat --stream"
+        [ -n "$args" ] && cmd+=" $args"
+    done
+fi
+
+# Tee captures the full stream into OUTFILE while echoing live to the terminal,
+# so the user sees tokens as the LLM generates them and we still have the
+# complete text to copy to the clipboard once the pipeline finishes.
+OUTFILE=$(mktemp -t fabric-popup-XXXXXX.txt)
+trap 'rm -f "$OUTFILE"' EXIT
+
+set +e
+if [ -n "$YOUTUBE_URL" ]; then
+    bash -c "$cmd" 2>&1 | tee "$OUTFILE"
+else
+    bash -c "$cmd
+$INPUT
+__FABRIC_INPUT__" 2>&1 | tee "$OUTFILE"
+fi
+status=${PIPESTATUS[0]}
+set -e
+
+if [ "$status" -ne 0 ]; then
+    echo
+    echo "Pipeline failed (exit $status). Output above."
+    # kitty --hold keeps the window open — Ctrl+Shift+W to close.
+    exit 1
+fi
+
+# ─── 5. COPY ──────────────────────────────────────────────────────────────────
+# Streamed output is already on screen via the `tee` above. Read the captured
+# file back, push to clipboard, print a small confirmation footer.
+OUTPUT=$(cat "$OUTFILE")
+printf '%s' "$OUTPUT" | wl-copy
+echo
+echo "─── ✓ copied to clipboard ($(echo -n "$OUTPUT" | wc -c) bytes) — Ctrl+Shift+W to close ──"
+
+# Hang forever so kitty stays open until the user kills the window with
+# Ctrl+Shift+W. We use `exec sleep infinity` rather than relying on kitty's
+# `--hold` flag because on some kitty versions a held window momentarily
+# closes-and-redraws after the child exits, briefly exposing whatever sits
+# behind it on the niri workspace (e.g. the zellij-main kitty) — which looks
+# like a spontaneous "zellij appears in the popup" bug. `exec` replaces this
+# script's PID with sleep, so SIGHUP from kitty closing reliably kills it.
+exec sleep infinity

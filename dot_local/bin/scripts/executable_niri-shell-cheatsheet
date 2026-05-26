@@ -1,0 +1,97 @@
+#!/bin/bash
+# Searchable bash aliases + functions cheatsheet — parses the user's shell
+# config files DIRECTLY (no bash subshell, no GPG calls, no extdebug). Bound
+# to Mod+A in niri inside a floating kitty with app-id "shell-cheatsheet".
+#
+# Why parse files instead of sourcing bashrc?
+#   1. Speed: avoids the GPG-pass startup chain entirely. No source step.
+#   2. Reliability: brew's bash 5.3.9 lacks bashdb files (extdebug warns) and
+#      `bash --rcfile <(...) -i -c ''` was flaky enough to produce
+#      "input/output error" inside the kitty popup.
+#   3. Source location: extdebug was only needed to get name+lineno+file —
+#      we now derive that trivially from the file we're reading.
+set -euo pipefail
+
+HOME_DIR="$HOME"
+
+python3 - "$HOME_DIR" <<'PY' | fzf \
+        --prompt='shell ❯ ' \
+        --layout=reverse \
+        --info=inline \
+        --header='Search bash aliases & functions  —  Enter/Esc to close  —  ? toggles preview' \
+        --ansi \
+        --delimiter=$'\t' \
+        --with-nth=2.. \
+        --no-mouse \
+        --tiebreak=begin \
+        --preview-window='right,55%,border-left' \
+        --bind='enter:abort' \
+        --bind='?:toggle-preview' \
+        --preview='
+            line={2}
+            plain=$(printf "%s" "$line" | sed "s/\x1b\[[0-9;]*m//g")
+            tail=$(printf "%s" "$plain" | awk "{print \$NF}")
+            file=$(printf "%s" "$tail" | sed "s/:[0-9]*$//; s|^~|'"$HOME_DIR"'|")
+            lineno=$(printf "%s" "$tail" | grep -oE "[0-9]+$")
+            if [ -f "$file" ] && [ -n "$lineno" ]; then
+                start=$((lineno > 2 ? lineno - 2 : 1))
+                end=$((lineno + 30))
+                sed -n "${start},${end}p" "$file" \
+                  | bat --style=plain --color=always --language=bash --paging=never 2>/dev/null \
+                  || sed -n "${start},${end}p" "$file"
+            fi
+        ' \
+        >/dev/null || true
+import os, re, sys
+from pathlib import Path
+
+HOME = sys.argv[1]
+home_path = Path(HOME)
+
+SOURCES = [
+    home_path / '.bashrc',
+    *sorted((home_path / '.config' / 'shell').glob('*.sh')),
+    *sorted((home_path / '.config' / 'bash').glob('*.sh')),
+]
+
+ALIAS_RX = re.compile(r'^\s*alias\s+([A-Za-z_][\w-]*)=(.*)$')
+FUNC_RX = re.compile(r'^\s*(?:function\s+)?([A-Za-z_][\w-]*)\s*\(\)\s*\{?\s*(?:#.*)?$')
+
+GREEN = '\033[32m'
+YELLOW = '\033[33m'
+DIM = '\033[2m'
+RESET = '\033[0m'
+
+rows = []
+for path in SOURCES:
+    if not path.is_file():
+        continue
+    try:
+        lines = path.read_text(errors='replace').splitlines()
+    except OSError:
+        continue
+    short = str(path).replace(HOME, '~', 1)
+    for i, line in enumerate(lines, 1):
+        m = ALIAS_RX.match(line)
+        if m:
+            name = m.group(1)
+            value = m.group(2).strip().strip("'").strip('"')
+            rows.append(('ALIAS', name, value, short, i))
+            continue
+        m = FUNC_RX.match(line)
+        if m:
+            name = m.group(1)
+            if name.startswith('_'):
+                continue
+            if name.endswith(('_completion', '_complete')):
+                continue
+            rows.append(('FUNC', name, '', short, i))
+
+rows.sort(key=lambda r: (0 if r[0] == 'ALIAS' else 1, r[1].lower()))
+
+for kind, name, value, file, lineno in rows:
+    if kind == 'ALIAS':
+        print(f'alias\t{YELLOW}{name:<22}{RESET}  {DIM}={RESET} {value}  {DIM}{file}:{lineno}{RESET}')
+    else:
+        print(f'func\t{GREEN}{name:<22}{RESET}  {DIM}{file}:{lineno}{RESET}')
+PY

@@ -1,0 +1,36 @@
+#!/bin/bash
+# niri-window-switch — floating fzf window switcher. Lists all open niri
+# windows (app-id + title), focuses the picked one. Spawned by Mod+T inside
+# a floating kitty with app-id "window-switcher" (see niri window-rule).
+set -euo pipefail
+
+pick=$(
+    niri msg --json windows | python3 -c '
+import json, sys
+windows = json.load(sys.stdin)
+# Focused first, then alpha by app_id for stable scanning.
+windows.sort(key=lambda w: (not w.get("is_focused"), (w.get("app_id") or "").lower()))
+for w in windows:
+    app = w.get("app_id") or "?"
+    if app == "window-switcher":
+        continue
+    title = (w.get("title") or "").replace("\t", " ").strip() or "(no title)"
+    marker = "● " if w.get("is_focused") else "  "
+    wid = w["id"]
+    print(f"{wid}\t{marker}{app:<22}  {title}")
+' \
+    | fzf --prompt='window ❯ ' \
+          --layout=reverse \
+          --info=inline \
+          --header='Pick a window to focus. Esc to cancel.' \
+          --with-nth=2.. \
+          --delimiter='\t' \
+          --no-mouse \
+          --tiebreak=begin \
+    || true
+)
+
+[ -n "$pick" ] || exit 0
+id=$(printf '%s' "$pick" | cut -f1)
+[ -n "$id" ] || exit 0
+niri msg action focus-window --id "$id"

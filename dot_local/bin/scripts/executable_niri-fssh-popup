@@ -1,0 +1,32 @@
+#!/bin/bash
+# niri-fssh-popup — floating fzf SSH host picker. Parses Host entries from
+# ~/.ssh/config (and ~/.ssh/config.d/*), pipes through fzf, and on selection
+# spawns a new regular (non-floating) kitty window running `ssh <host>`. The
+# picker kitty then exits, so the popup disappears. Bound to Mod+G in niri,
+# spawned with app-id "fssh-popup" (see window-rule).
+set -euo pipefail
+
+# Gather Host entries, excluding wildcard patterns (Host *, Host *.example).
+host=$(
+    awk '/^[Hh]ost / {
+        for (i = 2; i <= NF; i++) {
+            if ($i !~ /[*?]/) print $i
+        }
+    }' ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null \
+    | sort -u \
+    | fzf --prompt='ssh ❯ ' \
+          --layout=reverse \
+          --info=inline \
+          --header='Enter → open new kitty with `ssh <host>`. Esc → cancel.' \
+          --no-mouse \
+          --tiebreak=begin \
+    || true
+)
+
+[ -n "$host" ] || exit 0
+
+# `setsid -f` detaches the new kitty so it survives this popup's exit. The new
+# kitty has the default app-id ("kitty") so niri tiles it normally into the
+# Terminal workspace via the existing window-rule.
+setsid -f kitty --title="ssh: $host" -- ssh "$host" \
+    </dev/null >/dev/null 2>&1

@@ -1,0 +1,54 @@
+#!/bin/bash
+# niri-fpass-popup — floating fzf pass(1) picker. Lists every encrypted entry
+# in $PASSWORD_STORE_DIR (or ~/.password-store), pipes through fzf, and on
+# selection copies the password to the clipboard via `pass -c <entry>`.
+# Spawned by Mod+P in niri inside a floating kitty with app-id "fpass-popup"
+# (see window-rule). On selection the kitty exits, so the popup disappears
+# automatically. The decrypted password never echoes to the terminal.
+set -euo pipefail
+
+store="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+
+if ! command -v pass >/dev/null 2>&1; then
+    echo "pass(1) is not installed" >&2
+    sleep 2
+    exit 1
+fi
+
+if [ ! -d "$store" ]; then
+    echo "password store not found at $store" >&2
+    sleep 2
+    exit 1
+fi
+
+# Build the entry list. fd is faster than find but optional.
+if command -v fd >/dev/null 2>&1; then
+    list_cmd=(fd --type f --extension gpg . "$store")
+else
+    list_cmd=(find "$store" -type f -name '*.gpg')
+fi
+
+entry=$(
+    "${list_cmd[@]}" 2>/dev/null \
+    | sed "s|^$store/||; s|\.gpg$||" \
+    | sort \
+    | fzf --prompt='pass ❯ ' \
+          --layout=reverse \
+          --info=inline \
+          --header='Enter → copy password to clipboard (45s lifetime). Esc → cancel.' \
+          --no-mouse \
+          --tiebreak=begin \
+    || true
+)
+
+[ -n "$entry" ] || exit 0
+
+# `pass -c` copies the first line of the entry to the clipboard, then spawns a
+# background sleep+clear job that wipes the clipboard after 45s. If we run it
+# in-process here, that background job lives inside kitty's PTY session — so
+# either kitty waits for it to finish (popup hangs 45s) or kitty's teardown
+# SIGHUPs it (clipboard never clears). `setsid -f` detaches pass into its own
+# session so the 45s timer survives the popup closing AND the popup closes
+# immediately. We surface the confirmation via notify-send instead.
+setsid -f pass -c "$entry" </dev/null >/dev/null 2>&1
+notify-send -a fpass "Password copied to clipboard" "$entry — clears in 45s"

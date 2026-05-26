@@ -1,0 +1,63 @@
+#!/bin/bash
+# niri-kondo-popup — floating fzf root picker for kondo(1).
+#
+# Flow:
+#   1. fzf over a curated list of "things worth cleaning" roots (~/dev,
+#      ~/dev/Projects, ~/dev/Repos, ~/.cache, current dir, etc.).
+#   2. Launch `kondo <picked-root>` in the same kitty window.
+#   3. User Space-selects what to wipe inside kondo's TUI, confirms, quits.
+#   4. Script exits, kitty closes (no --hold needed; kondo IS the work).
+#
+# Bound to Mod+C in niri, spawned inside a floating kitty with app-id
+# "kondo-popup" (see window-rule).
+set -euo pipefail
+
+if ! command -v kondo >/dev/null 2>&1; then
+    echo "kondo is not installed. Try: brew install kondo" >&2
+    exec sleep infinity
+fi
+
+# Curated roots. fd is fast on subtrees, but a flat list keeps the picker
+# instant and lets the user scan visually. Each line gets a one-word label
+# so the fzf list reads at a glance.
+roots=$(
+    cat <<EOF
+$HOME/dev                                — all dev work
+$HOME/dev/Projects                       — active projects
+$HOME/dev/Repos                          — cloned repos (github.com, gitlab.com, …)
+$HOME/dev/Repos/github.com               — github-only
+$HOME/.cache                             — user cache (xdg)
+$HOME/.local/share                       — user data (xdg)
+$PWD                                     — current directory ($PWD)
+EOF
+)
+
+pick=$(
+    printf '%s\n' "$roots" \
+    | fzf --prompt='kondo ❯ ' \
+          --layout=reverse \
+          --info=inline \
+          --header='Pick a root to scan with kondo. Esc → cancel.' \
+          --no-mouse \
+          --tiebreak=begin \
+    || true
+)
+
+[ -z "$pick" ] && exit 0
+
+# First field = absolute path (everything before the first 2+ space run).
+root=$(printf '%s' "$pick" | sed -E 's/[[:space:]]{2,}.*$//' | tr -d '[:space:]')
+
+if [ ! -d "$root" ]; then
+    echo "Not a directory: '$root'" >&2
+    echo "(picked: '$pick')" >&2
+    exec sleep infinity
+fi
+
+# Run kondo as a child (not via exec) so that when it exits we can hold the
+# window open and show what happened. Same pattern as niri-fabric-popup —
+# Ctrl+Shift+W closes the kitty when you're done reading.
+kondo "$root"
+echo
+echo "─── kondo exited (root: $root) — Ctrl+Shift+W to close ──"
+exec sleep infinity
