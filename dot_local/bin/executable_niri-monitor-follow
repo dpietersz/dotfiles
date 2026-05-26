@@ -1,0 +1,85 @@
+#!/bin/bash
+set -euo pipefail
+
+# niri-monitor-follow — make workspaces "follow" the external monitor.
+#
+# Long-running daemon launched from niri's spawn-at-startup. Subscribes to
+# `niri msg --json event-stream` and reacts to OutputsChanged events:
+#
+#   - When an external monitor is present (any output whose name does NOT
+#     start with eDP / LVDS / DSI), it becomes the "primary": every existing
+#     workspace is moved to it. Result: opening a fresh workspace lands on
+#     the external by default, and your existing tiled work shifts there
+#     instantly on hotplug.
+#
+#   - When the external is unplugged, niri auto-reflows workspaces back onto
+#     the remaining monitor; no work needed here.
+#
+# Idempotent: we cache the last-known primary in /tmp so re-emitted events
+# don't churn move-workspace-to-monitor calls.
+
+STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/niri-monitor-follow.state"
+
+is_internal() {
+  # Wayland convention: eDP-* / LVDS-* / DSI-* are panel-attached internals.
+  case "$1" in
+    eDP-*|eDP*|LVDS-*|LVDS*|DSI-*|DSI*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+pick_primary() {
+  # Prefer the first non-internal output; fall back to the first output of any kind.
+  local outputs_json="$1"
+  local external
+  external="$(echo "$outputs_json" | jq -r 'to_entries[] | .value.name' | while read -r name; do
+    if ! is_internal "$name"; then echo "$name"; break; fi
+  done)"
+  if [[ -n "$external" ]]; then echo "$external"; return; fi
+  echo "$outputs_json" | jq -r 'to_entries[0].value.name'
+}
+
+reflow() {
+  local outputs_json
+  outputs_json="$(niri msg --json outputs)"
+
+  # Skip if only one output present.
+  local count
+  count="$(echo "$outputs_json" | jq 'length')"
+  (( count <= 1 )) && { echo "" >"$STATE_FILE"; return; }
+
+  local primary
+  primary="$(pick_primary "$outputs_json")"
+  [[ -z "$primary" || "$primary" == "null" ]] && return
+
+  local last=""
+  [[ -f "$STATE_FILE" ]] && last="$(cat "$STATE_FILE")"
+  [[ "$last" == "$primary" ]] && return  # nothing changed
+
+  echo "[niri-monitor-follow] new primary: $primary" >&2
+
+  # Move every workspace not already on the primary onto the primary.
+  niri msg --json workspaces | jq -r --arg p "$primary" '.[] | select(.output != $p) | .id' |
+    while read -r ws_id; do
+      [[ -z "$ws_id" ]] && continue
+      niri msg action move-workspace-to-monitor --workspace "$ws_id" "$primary" 2>/dev/null || true
+    done
+
+  # Focus the primary so newly spawned windows land there.
+  niri msg action focus-monitor "$primary" 2>/dev/null || true
+
+  echo "$primary" >"$STATE_FILE"
+}
+
+# Initial pass at startup so already-attached external is honored.
+reflow
+
+# Stream events. Reflow on every OutputsChanged. event-stream emits one JSON
+# object per line.
+niri msg --json event-stream | while IFS= read -r line; do
+  case "$line" in
+    *OutputsChanged*|*OutputAdded*|*OutputRemoved*)
+      reflow
+      ;;
+  esac
+done

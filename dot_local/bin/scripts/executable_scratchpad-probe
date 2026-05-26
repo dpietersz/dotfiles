@@ -1,0 +1,66 @@
+#!/bin/bash
+# One-shot diagnostic for the scratchpad-toggle issue. Writes a snapshot of
+# niri state before/after a bare `move-window-to-workspace` so we can see
+# whether niri is honoring the move at all.
+#
+# Run from anywhere — does not need a terminal:
+#   niri msg action spawn -- scratchpad-probe
+# Then read the output:
+#   cat $XDG_RUNTIME_DIR/scratchpad-probe.out
+
+set -u
+OUT="${XDG_RUNTIME_DIR:-/tmp}/scratchpad-probe.out"
+
+{
+  echo "=== niri --version ==="
+  niri --version 2>&1
+  echo
+  echo "=== find scratchpad window ==="
+  WID="$(niri msg --json windows | jq -r '[.[] | select(.app_id == "scratchpad-term") | .id] | .[0] // empty')"
+  echo "WID=$WID"
+  if [[ -z "$WID" ]]; then
+    echo "no scratchpad-term window — spawn one first (Mod+Shift+Enter), then re-run probe"
+    exit 1
+  fi
+
+  echo
+  echo "=== PRE: window state ==="
+  niri msg --json windows | jq --arg id "$WID" \
+    '.[] | select((.id|tostring) == $id) | {id, app_id, workspace_id, is_floating, is_focused}'
+
+  echo
+  echo "=== PRE: all workspaces ==="
+  niri msg --json workspaces | jq '.[] | {id, idx, name, output, is_focused}'
+
+  echo
+  echo "=== running: move-window-to-workspace --window-id $WID --focus=false scratchpad ==="
+  niri msg action move-window-to-workspace --window-id "$WID" --focus=false scratchpad 2>&1
+  echo "rc=$?"
+
+  sleep 0.2
+
+  echo
+  echo "=== POST: window state ==="
+  niri msg --json windows | jq --arg id "$WID" \
+    '.[] | select((.id|tostring) == $id) | {id, app_id, workspace_id, is_floating, is_focused}'
+
+  echo
+  echo "=== POST: all workspaces ==="
+  niri msg --json workspaces | jq '.[] | {id, idx, name, output, is_focused}'
+
+  echo
+  echo "=== try same move but with workspace INDEX 99 instead of name ==="
+  niri msg action move-window-to-workspace --window-id "$WID" --focus=false 99 2>&1
+  echo "rc=$?"
+  sleep 0.2
+  echo
+  echo "=== POST-INDEX: window state ==="
+  niri msg --json windows | jq --arg id "$WID" \
+    '.[] | select((.id|tostring) == $id) | {id, app_id, workspace_id, is_floating, is_focused}'
+  echo
+  echo "=== POST-INDEX: all workspaces ==="
+  niri msg --json workspaces | jq '.[] | {id, idx, name, output, is_focused}'
+} >"$OUT" 2>&1
+
+# Notify user it's done
+command -v notify-send >/dev/null && notify-send "scratchpad-probe" "Written to $OUT" || true

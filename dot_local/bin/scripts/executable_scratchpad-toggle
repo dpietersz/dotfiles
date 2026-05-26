@@ -1,0 +1,67 @@
+#!/bin/bash
+set -euo pipefail
+
+# Scratchpad terminal toggle for niri 26.04.
+#
+# The "scratchpad" workspace MUST be declared in niri config — niri does not
+# auto-create named workspaces from move actions. With the workspace pre-
+# declared, `move-window-to-workspace --window-id X --focus=false NAME` works
+# silently (no focus bounce, no animation flicker).
+
+APP_ID="scratchpad-term"
+HIDDEN_WS="scratchpad"
+LOG="${XDG_RUNTIME_DIR:-/tmp}/scratchpad-toggle.log"
+
+log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >>"$LOG"; }
+run_niri() {
+  log "  + niri msg action $*"
+  local rc out
+  out="$(niri msg action "$@" 2>&1)"
+  rc=$?
+  [[ -n "$out" ]] && log "    out: $out"
+  log "    rc:  $rc"
+  return $rc
+}
+log "=== toggle invoked ==="
+
+windows_json="$(niri msg --json windows)"
+workspaces_json="$(niri msg --json workspaces)"
+
+window_id="$(echo "$windows_json" | jq -r --arg app "$APP_ID" \
+  '[.[] | select(.app_id == $app) | .id] | .[0] // empty')"
+
+if [[ -z "$window_id" ]]; then
+  log "no scratchpad window — spawning"
+  setsid kitty --class "$APP_ID" \
+    --override "env=NO_AUTO_ZELLIJ=1" \
+    >/dev/null 2>&1 &
+  disown
+  exit 0
+fi
+
+ws_of_window="$(echo "$windows_json" | jq -r --arg id "$window_id" \
+  '.[] | select((.id|tostring) == $id) | .workspace_id')"
+ws_of_window_name="$(echo "$workspaces_json" | jq -r --arg wid "$ws_of_window" \
+  '.[] | select((.id|tostring) == $wid) | .name // empty')"
+focused_ws_idx="$(echo "$workspaces_json" | jq -r \
+  '[.[] | select(.is_focused == true) | .idx] | .[0]')"
+is_floating="$(echo "$windows_json" | jq -r --arg id "$window_id" \
+  '.[] | select((.id|tostring) == $id) | .is_floating')"
+
+log "window_id=$window_id  ws_name=$ws_of_window_name  focused_idx=$focused_ws_idx  is_floating=$is_floating"
+
+if [[ "$ws_of_window_name" == "$HIDDEN_WS" ]]; then
+  # REVEAL — silently move from hidden workspace onto user's focused workspace.
+  log "reveal flow (silent)"
+  run_niri move-window-to-workspace --window-id "$window_id" --focus=false "$focused_ws_idx"
+  if [[ "$is_floating" != "true" ]]; then
+    run_niri move-window-to-floating --id "$window_id"
+  fi
+  run_niri focus-window --id "$window_id"
+else
+  # HIDE — silently move to hidden workspace; user stays where they are.
+  log "hide flow (silent)"
+  run_niri move-window-to-workspace --window-id "$window_id" --focus=false "$HIDDEN_WS"
+fi
+
+log "done"

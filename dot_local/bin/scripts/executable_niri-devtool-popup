@@ -1,0 +1,134 @@
+#!/bin/bash
+set -euo pipefail
+
+# Devtool popup — fzf-driven calculator / converter / dev utilities.
+# Backed by qalc (libqalculate) for most modes; pure-bash for color/base/date.
+# Result is echoed, copied to clipboard, and toasted via noctalia.
+#
+# Run from niri as: kitty --class devtool-popup -- niri-devtool-popup
+# Window-rule for app-id="devtool-popup" floats it.
+
+if ! command -v qalc >/dev/null 2>&1; then
+  echo "qalc not found — install via brewfile (qalculate)" >&2
+  read -rp "Press enter to close..." _
+  exit 1
+fi
+
+copy_and_toast() {
+  local result="$1"
+  printf '%s' "$result" | wl-copy
+  if command -v noctalia >/dev/null 2>&1; then
+    noctalia msg notification "Devtool" "Copied: $result" >/dev/null 2>&1 || true
+  fi
+  printf '\n→ \033[1;32m%s\033[0m  (copied to clipboard)\n\n' "$result"
+}
+
+prompt() {
+  local label="$1"
+  local input
+  read -rp "$label " input
+  printf '%s' "$input"
+}
+
+run_calc() {
+  local expr; expr="$(prompt 'expr ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+run_unit() {
+  echo "Examples:  '12 cm to in',  '60 mph to kph',  '500 ml to cup'"
+  local expr; expr="$(prompt 'unit ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+run_temp() {
+  echo "Examples:  '20 C to F',  '98.6 F to C',  '300 K to C'"
+  local expr; expr="$(prompt 'temp ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+run_currency() {
+  echo "Examples:  '100 EUR to USD',  '50 GBP to EUR'"
+  echo "(qalc auto-fetches exchange-rates.com data on first run, cached weekly.)"
+  local expr; expr="$(prompt 'fx ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+run_base() {
+  echo "Examples:  '255 to hex',  '0xff to bin',  '0b1011 to dec'"
+  local expr; expr="$(prompt 'base ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+run_color() {
+  echo "Input a hex (#RRGGBB) → outputs rgb() / hsl() / lowercase hex"
+  local input; input="$(prompt 'hex  ›')"; [[ -z "$input" ]] && return
+  local hex="${input#\#}"
+  if [[ ! "$hex" =~ ^[0-9a-fA-F]{6}$ ]]; then
+    echo "Not a 6-digit hex." ; sleep 1.5 ; return
+  fi
+  local r=$((16#${hex:0:2})) g=$((16#${hex:2:2})) b=$((16#${hex:4:2}))
+  # HSL conversion (integer-ish via awk)
+  read -r h s l < <(awk -v r="$r" -v g="$g" -v b="$b" 'BEGIN{
+    rn=r/255; gn=g/255; bn=b/255;
+    mx=(rn>gn?rn:gn); mx=(bn>mx?bn:mx);
+    mn=(rn<gn?rn:gn); mn=(bn<mn?bn:mn);
+    l=(mx+mn)/2;
+    if (mx==mn) { h=0; s=0; }
+    else {
+      d=mx-mn;
+      s=(l>0.5)?d/(2-mx-mn):d/(mx+mn);
+      if (mx==rn) h=(gn-bn)/d + (gn<bn?6:0);
+      else if (mx==gn) h=(bn-rn)/d + 2;
+      else h=(rn-gn)/d + 4;
+      h=h*60;
+    }
+    printf "%d %d %d", h+0.5, s*100+0.5, l*100+0.5;
+  }')
+  local lower; lower="$(printf '#%s' "${hex,,}")"
+  local rgb; rgb="$(printf 'rgb(%d, %d, %d)' "$r" "$g" "$b")"
+  local hsl; hsl="$(printf 'hsl(%d, %d%%, %d%%)' "$h" "$s" "$l")"
+  echo ""
+  echo "  hex : $lower"
+  echo "  rgb : $rgb"
+  echo "  hsl : $hsl"
+  # Copy the rgb form by default (most commonly pasted into CSS).
+  copy_and_toast "$rgb"
+}
+
+run_date() {
+  echo "Examples:  'today + 3 weeks',  'now to 2027-01-01',  '90 days from today'"
+  local expr; expr="$(prompt 'date ›')"; [[ -z "$expr" ]] && return
+  local result; result="$(qalc -t "$expr" 2>/dev/null || echo "ERR")"
+  copy_and_toast "$result"
+}
+
+while true; do
+  choice="$(printf '%s\n' \
+    'calc      — arbitrary expression (qalc)' \
+    'unit      — length / weight / volume conversion' \
+    'temp      — temperature C/F/K' \
+    'currency  — FX conversion' \
+    'base      — dec/hex/bin/oct conversion' \
+    'color     — hex → rgb / hsl' \
+    'date      — date arithmetic' \
+    'quit' |
+    fzf --prompt='devtool › ' --height=100% --no-info --reverse --border=none)"
+  [[ -z "$choice" ]] && exit 0
+  case "${choice%% *}" in
+    calc)     run_calc ;;
+    unit)     run_unit ;;
+    temp)     run_temp ;;
+    currency) run_currency ;;
+    base)     run_base ;;
+    color)    run_color ;;
+    date)     run_date ;;
+    quit)     exit 0 ;;
+  esac
+  read -rp "Press enter for menu, Ctrl+C to quit..." _ || exit 0
+done
