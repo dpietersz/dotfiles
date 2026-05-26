@@ -65,6 +65,15 @@
 {{- end -}}
 {{- $isBluefinUdx := and $isBluefin (contains "ghcr.io/dpietersz/bluefin-udx" $bootedImage) -}}
 
+{{/* Probe a second battery (T580 UltraBay slice). thinkpad_acpi exposes each
+     battery's thresholds via charge_control_start_threshold and
+     charge_control_end_threshold under each BAT* power_supply entry.
+     Single-battery machines (P14s G5 AMD) render hasBat1=false. */}}
+{{- $hasBat1 := false -}}
+{{- if stat "/sys/class/power_supply/BAT1" -}}
+{{-   $hasBat1 = true -}}
+{{- end -}}
+
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
 [data]
@@ -82,6 +91,12 @@ sourceDir = {{ .chezmoi.sourceDir | quote }}
   isBluefinUdx = {{ if $isBluefinUdx }}true{{ else }}false{{ end }}
   isServer = {{ if $isServer }}true{{ else }}false{{ end }}
   runsSyncthing = {{ if $runsSyncthing }}true{{ else }}false{{ end }}
+  hasBat1 = {{ if $hasBat1 }}true{{ else }}false{{ end }}
+  # Battery charge mode: "eco" (75/80) or "full" (96/100). Toggle via
+  # Mod+Alt+B (kitty popup runs `battery-toggle`). Default "eco" preserves
+  # cell life on plugged-in workloads. See:
+  # .chezmoiscripts/run_onchange_after_21-apply-battery-thresholds.sh.tmpl
+  batteryMode = "eco"
 
 {{- if not $remote }}
 [git]

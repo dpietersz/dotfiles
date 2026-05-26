@@ -1,0 +1,62 @@
+#!/bin/bash
+# battery-toggle — flip the chezmoi `batteryMode` data var between
+# "eco" (75/80) and "full" (96/100), then re-apply.
+#
+# Triggered via Mod+Alt+B in niri (which wraps this in `battery-toggle-popup`
+# so output is visible in a floating kitty window). Can also be run from any
+# terminal.
+#
+# Mechanism: edits ~/.config/chezmoi/chezmoi.toml (the rendered config, not
+# the source template), then `chezmoi apply` re-runs the
+# run_onchange_after_21-apply-battery-thresholds script. That script writes
+# /etc/tlp.d/01-thinkpad-battery.conf and runs `sudo tlp start`. The reboot
+# survives because TLP enforces thresholds on every start.
+
+set -euo pipefail
+
+config="$HOME/.config/chezmoi/chezmoi.toml"
+
+if [ ! -f "$config" ]; then
+  echo "error: $config not found — run \`chezmoi init\` first" >&2
+  exit 1
+fi
+
+current=$(chezmoi data 2>/dev/null | jq -r '.batteryMode // "eco"')
+case "$current" in
+  eco)  new=full ;;
+  full) new=eco ;;
+  *)    new=eco ;;  # unset / garbage → default eco
+esac
+
+echo "▶ Battery mode: $current → $new"
+echo
+
+if grep -qE '^[[:space:]]*batteryMode[[:space:]]*=' "$config"; then
+  sed -i.bak "s/^\([[:space:]]*batteryMode[[:space:]]*=[[:space:]]*\"\)[^\"]*\"/\1${new}\"/" "$config"
+else
+  # First-run path: data var missing because user hasn't re-rendered the
+  # toml since the template added the field. Append under [data].
+  awk -v new="$new" '
+    /^\[data\]/ { print; print "  batteryMode = \"" new "\""; in_data=1; next }
+    /^\[/ && in_data { in_data=0 }
+    { print }
+  ' "$config" > "$config.new" && mv "$config.new" "$config"
+fi
+
+echo "▶ Running chezmoi apply…"
+echo
+chezmoi apply -v 2>&1 | grep -vE "^zoxide:|^Please|^If the|^https:|^Disable" || true
+
+echo
+echo "▶ Current thresholds:"
+for b in /sys/class/power_supply/BAT*; do
+  [ -d "$b" ] || continue
+  start=$(cat "$b/charge_control_start_threshold" 2>/dev/null || echo "n/a")
+  end=$(cat "$b/charge_control_end_threshold" 2>/dev/null || echo "n/a")
+  printf "  %s: %s / %s\n" "${b##*/}" "$start" "$end"
+done
+
+if command -v notify-send >/dev/null 2>&1; then
+  icon=$([ "$new" = "eco" ] && echo "battery-good-symbolic" || echo "battery-full-charged-symbolic")
+  notify-send -i "$icon" "Battery mode: $new" "Charge thresholds applied"
+fi

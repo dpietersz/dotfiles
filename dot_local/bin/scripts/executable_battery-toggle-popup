@@ -1,0 +1,23 @@
+#!/bin/bash
+# battery-toggle-popup — niri keybind wrapper.
+#
+# Spawns a floating kitty window (--class battery-popup → niri window-rule
+# applies floating + size), runs battery-toggle inside it so chezmoi apply
+# output and any sudo password prompt are visible. Waits for a keypress
+# before closing so the user can read the threshold readout.
+
+exec kitty \
+  --class battery-popup \
+  --title "Battery Mode Toggle" \
+  bash -c '
+    set +e
+    "$HOME/.local/bin/scripts/battery-toggle"
+    rc=$?
+    echo
+    if [ $rc -eq 0 ]; then
+      echo "Press any key to close…"
+    else
+      echo "Toggle failed (exit $rc). Press any key to close…"
+    fi
+    read -n1 -s
+  '

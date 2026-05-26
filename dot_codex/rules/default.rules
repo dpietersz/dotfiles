@@ -1,108 +1,204 @@
-# Codex CLI Command Approval Rules
-# Starlark format (Python-like syntax)
-# 
-# These rules define which shell commands are auto-approved vs. require confirmation.
-# Rules are evaluated top-to-bottom; first match wins.
+# Codex CLI command approval rules.
 #
-# Actions: ALLOW, DENY, ASK
+# Format: Starlark, evaluated at startup. Loaded from `~/.codex/rules/default.rules`
+# (user layer) and `<repo>/.codex/rules/` for trusted projects.
+#
+# API (see https://developers.openai.com/codex/rules):
+#   prefix_rule(
+#       pattern = [<literal-string> | [<alt>, <alt>, ...], ...],
+#       decision = "allow" | "prompt" | "forbidden",
+#       justification = "<human-readable reason>",
+#       match = [<example commands that should match>],
+#       not_match = [<example commands that should NOT match>],
+#   )
+#
+# Pattern semantics: each list element matches one positional token of the
+# command. A string matches that token literally; a list-of-strings matches
+# any of its alternatives at that position. There is no glob/wildcard syntax.
+#
+# Conflict resolution: when multiple rules match the same command, codex picks
+# the most restrictive: forbidden > prompt > allow.
+#
+# Test a single command against this file before relying on it:
+#   codex execpolicy check --pretty --rules ~/.codex/rules/default.rules -- ls -la
+#
+# Anything not matched here falls back to codex's built-in policy + the
+# `approval_policy` setting in ~/.codex/config.toml (currently "on-request").
 
-def on_exec(cmd):
-    """Called for every shell command Codex wants to execute."""
-    
-    # ── ALWAYS DENY — Destructive/dangerous operations ────────────────────────
-    if cmd[0] in ["rm"] and "-rf" in cmd and ("/" in cmd or "/*" in cmd):
-        return DENY
-    if cmd[0] == "sudo":
-        return DENY
-    if cmd[0] in ["mkfs", "dd", "shutdown", "reboot", "poweroff"]:
-        return DENY
-    if cmd[0] == "chmod" and "-R" in cmd and "777" in cmd:
-        return DENY
-    
-    # ── ALWAYS ALLOW — Safe read-only operations ──────────────────────────────
-    # Search utilities
-    if cmd[0] in ["grep", "rg", "find", "fd", "ag", "fzf"]:
-        return ALLOW
-    # File reading
-    if cmd[0] in ["cat", "head", "tail", "less", "more", "file", "stat", "wc"]:
-        return ALLOW
-    # Directory listing
-    if cmd[0] in ["ls", "tree", "du", "df", "pwd", "realpath"]:
-        return ALLOW
-    # Git read operations
-    if cmd[0] == "git" and len(cmd) > 1 and cmd[1] in ["log", "diff", "show", "blame", "status", "branch", "remote", "fetch", "stash"]:
-        return ALLOW
-    # JSON/YAML processing
-    if cmd[0] in ["jq", "yq", "xq"]:
-        return ALLOW
-    # Environment inspection
-    if cmd[0] in ["env", "printenv", "which", "type", "echo", "printf", "date", "uname", "id", "whoami", "hostname"]:
-        return ALLOW
-    # Process inspection
-    if cmd[0] in ["ps", "lsof", "ss", "netstat"]:
-        return ALLOW
-    # Network diagnostics (read-only)
-    if cmd[0] in ["dig", "host", "nslookup", "ping", "traceroute", "curl", "wget"]:
-        return ALLOW
-    
-    # ── ALWAYS ALLOW — Development tools ─────────────────────────────────────
-    # Version control
-    if cmd[0] in ["git", "gh"]:
-        return ALLOW
-    # Build tools
-    if cmd[0] in ["make", "just", "task", "cmake", "ninja"]:
-        return ALLOW
-    # Package managers
-    if cmd[0] in ["npm", "yarn", "pnpm", "bun", "cargo", "pip", "pip3", "uv"]:
-        return ALLOW
-    # Go toolchain
-    if cmd[0] in ["go", "gofmt", "goimports", "golangci-lint"]:
-        return ALLOW
-    # Python toolchain
-    if cmd[0] in ["python", "python3", "pytest", "mypy", "ruff", "black", "isort"]:
-        return ALLOW
-    # TypeScript/JS toolchain
-    if cmd[0] in ["tsc", "ts-node", "tsx", "deno", "eslint", "prettier", "biome"]:
-        return ALLOW
-    if cmd[0] in ["vitest", "jest", "playwright", "cypress"]:
-        return ALLOW
-    if cmd[0] in ["next", "nuxt", "vite", "astro", "remix", "turbo"]:
-        return ALLOW
-    # Mise (tool version manager)
-    if cmd[0] == "mise":
-        return ALLOW
-    # Chezmoi (dotfiles manager) — read-only operations only
-    if cmd[0] == "chezmoi" and len(cmd) > 1 and cmd[1] in ["status", "diff", "data", "cat", "source-path", "target-path"]:
-        return ALLOW
-    
-    # ── ALWAYS ALLOW — File operations ────────────────────────────────────────
-    if cmd[0] in ["mkdir", "touch", "cp", "mv", "ln", "chmod", "rsync"]:
-        return ALLOW
-    if cmd[0] == "rm" and "-rf" not in cmd:
-        return ALLOW
-    
-    # ── ASK — Potentially destructive or sensitive ────────────────────────────
-    # Chezmoi apply (modifies home directory)
-    if cmd[0] == "chezmoi" and len(cmd) > 1 and cmd[1] == "apply":
-        return ASK
-    # Docker/container operations
-    if cmd[0] in ["docker", "podman", "kubectl", "helm"]:
-        return ASK
-    # Terraform (infrastructure changes)
-    if cmd[0] in ["terraform", "terragrunt"]:
-        return ASK
-    # Cloud CLIs
-    if cmd[0] in ["aws", "gcloud", "az"]:
-        return ASK
-    # Database clients
-    if cmd[0] in ["psql", "sqlite3", "redis-cli", "mysql", "mongosh"]:
-        return ASK
-    # SSH/GPG operations
-    if cmd[0] in ["ssh", "ssh-keygen", "gpg", "age", "sops"]:
-        return ASK
-    # System service management
-    if cmd[0] == "systemctl":
-        return ASK
-    
-    # ── DEFAULT — Ask for anything not explicitly listed ──────────────────────
-    return ASK
+# ── ALWAYS FORBIDDEN — destructive / privilege escalation ────────────────────
+# These never run, even with approval. Use the shell directly if truly needed.
+prefix_rule(
+    pattern = ["sudo"],
+    decision = "forbidden",
+    justification = "Privilege escalation must happen outside codex.",
+    match = ["sudo apt update", "sudo rm -rf /tmp/foo"],
+)
+prefix_rule(
+    pattern = ["dd"],
+    decision = "forbidden",
+    justification = "Raw disk write — too easy to misuse.",
+)
+prefix_rule(
+    pattern = ["mkfs"],
+    decision = "forbidden",
+    justification = "Filesystem creation destroys data.",
+)
+prefix_rule(
+    pattern = [["shutdown", "reboot", "poweroff", "halt"]],
+    decision = "forbidden",
+    justification = "Don't power-cycle the machine from codex.",
+)
+
+# ── ALLOW — safe read-only utilities ─────────────────────────────────────────
+prefix_rule(
+    pattern = [["ls", "tree", "pwd", "realpath", "stat", "file", "wc", "du", "df"]],
+    decision = "allow",
+    justification = "Read-only directory + file inspection.",
+)
+prefix_rule(
+    pattern = [["cat", "head", "tail", "less", "more", "bat"]],
+    decision = "allow",
+    justification = "File reading.",
+)
+prefix_rule(
+    pattern = [["grep", "rg", "find", "fd", "ag", "fzf"]],
+    decision = "allow",
+    justification = "Search utilities (read-only).",
+)
+prefix_rule(
+    pattern = [["jq", "yq", "xq"]],
+    decision = "allow",
+    justification = "Structured-data filters (stdin/file in, stdout out).",
+)
+prefix_rule(
+    pattern = [["env", "printenv", "which", "type", "echo", "printf", "date", "uname", "id", "whoami", "hostname"]],
+    decision = "allow",
+    justification = "Environment inspection.",
+)
+prefix_rule(
+    pattern = [["ps", "lsof", "ss", "netstat"]],
+    decision = "allow",
+    justification = "Process / socket inspection.",
+)
+prefix_rule(
+    pattern = [["dig", "host", "nslookup", "ping", "traceroute"]],
+    decision = "allow",
+    justification = "Network diagnostics (read-only).",
+)
+prefix_rule(
+    pattern = [["curl", "wget"]],
+    decision = "allow",
+    justification = "HTTP fetches; codex sandbox limits write side effects.",
+)
+
+# ── ALLOW — git / gh read operations ─────────────────────────────────────────
+prefix_rule(
+    pattern = ["git", ["log", "diff", "show", "blame", "status", "branch", "remote", "fetch", "stash", "ls-files", "rev-parse", "describe", "config"]],
+    decision = "allow",
+    justification = "Read-only git operations.",
+    match = ["git log --oneline -5", "git diff HEAD~1"],
+)
+prefix_rule(
+    pattern = ["gh", ["repo", "pr", "issue", "run", "workflow", "auth", "api"]],
+    decision = "allow",
+    justification = "GitHub CLI — sandbox keeps write side effects bounded.",
+)
+
+# ── ALLOW — development tools ────────────────────────────────────────────────
+prefix_rule(
+    pattern = [["make", "just", "task", "cmake", "ninja"]],
+    decision = "allow",
+    justification = "Build tools — output is bounded to the project tree.",
+)
+prefix_rule(
+    pattern = [["npm", "yarn", "pnpm", "bun", "bunx", "cargo", "pip", "pip3", "uv"]],
+    decision = "allow",
+    justification = "Package managers — sandboxed writes.",
+)
+prefix_rule(
+    pattern = [["go", "gofmt", "goimports", "golangci-lint"]],
+    decision = "allow",
+    justification = "Go toolchain.",
+)
+prefix_rule(
+    pattern = [["python", "python3", "pytest", "mypy", "ruff", "black", "isort"]],
+    decision = "allow",
+    justification = "Python toolchain.",
+)
+prefix_rule(
+    pattern = [["tsc", "ts-node", "tsx", "deno", "eslint", "prettier", "biome"]],
+    decision = "allow",
+    justification = "TypeScript / JS toolchain.",
+)
+prefix_rule(
+    pattern = [["vitest", "jest", "playwright", "cypress"]],
+    decision = "allow",
+    justification = "JS/TS test runners.",
+)
+prefix_rule(
+    pattern = [["next", "nuxt", "vite", "astro", "remix", "turbo"]],
+    decision = "allow",
+    justification = "JS/TS dev servers / build orchestrators.",
+)
+prefix_rule(
+    pattern = ["mise"],
+    decision = "allow",
+    justification = "Tool version manager.",
+)
+
+# ── ALLOW — chezmoi read-only ────────────────────────────────────────────────
+prefix_rule(
+    pattern = ["chezmoi", ["status", "diff", "data", "cat", "source-path", "target-path", "managed", "execute-template", "verify", "doctor"]],
+    decision = "allow",
+    justification = "Read-only chezmoi inspection.",
+)
+
+# ── ALLOW — light file ops (sandbox bounds the blast radius) ─────────────────
+prefix_rule(
+    pattern = [["mkdir", "touch", "cp", "mv", "ln", "rsync"]],
+    decision = "allow",
+    justification = "File ops — codex sandbox restricts targets.",
+)
+
+# ── PROMPT — modifies $HOME / system state ───────────────────────────────────
+prefix_rule(
+    pattern = ["chezmoi", "apply"],
+    decision = "prompt",
+    justification = "Modifies $HOME via templates and scripts.",
+    match = ["chezmoi apply", "chezmoi apply -v"],
+)
+prefix_rule(
+    pattern = [["docker", "podman"]],
+    decision = "prompt",
+    justification = "Container operations can pull images and run privileged code.",
+)
+prefix_rule(
+    pattern = [["kubectl", "helm"]],
+    decision = "prompt",
+    justification = "Cluster mutations.",
+)
+prefix_rule(
+    pattern = [["terraform", "terragrunt"]],
+    decision = "prompt",
+    justification = "Infrastructure changes.",
+)
+prefix_rule(
+    pattern = [["aws", "gcloud", "az"]],
+    decision = "prompt",
+    justification = "Cloud CLI — anything can be a write op.",
+)
+prefix_rule(
+    pattern = [["psql", "mysql", "mongosh", "redis-cli", "sqlite3"]],
+    decision = "prompt",
+    justification = "Database client — easy to mutate data.",
+)
+prefix_rule(
+    pattern = [["ssh", "ssh-keygen", "gpg", "age", "sops"]],
+    decision = "prompt",
+    justification = "SSH / cryptographic key operations.",
+)
+prefix_rule(
+    pattern = ["systemctl"],
+    decision = "prompt",
+    justification = "Service management — restarts, enables, disables.",
+)

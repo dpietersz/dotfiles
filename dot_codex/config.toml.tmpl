@@ -5,7 +5,7 @@
 # Config precedence: CLI flags > profiles > project .codex/config.toml > this file > system > defaults
 
 # Default model for interactive sessions
-model = "o4-mini"
+model = "gpt-5.4-mini"
 
 # Approval policy: "untrusted" | "on-request" | "never"
 # untrusted   = only run trusted commands (ls, cat, sed, etc.) without asking; escalate others
@@ -15,6 +15,10 @@ approval_policy = "on-request"
 
 # Disable sending telemetry to OpenAI
 disable_response_storage = true
+
+# Reasoning effort: "minimal" | "low" | "medium" | "high"
+# Medium is a balanced default for interactive use on gpt-5.4-mini.
+model_reasoning_effort = "medium"
 
 # ── Features ──────────────────────────────────────────────────────────────────
 [features]
@@ -60,38 +64,50 @@ type = "http"
 url = "http://localhost:8931/mcp"
 
 # ── Multi-Agent Roles ─────────────────────────────────────────────────────────
-# Each agent role can have its own model, instructions, and sandbox settings
-# Agent config files are loaded from ~/.codex/agents/<name>.toml
+# Each agent role registers with codex via this block. `description` is REQUIRED
+# (codex uses it to choose which agent to spawn for a task). `config_file` points
+# to the per-agent .toml with model + instructions + sandbox settings.
 
 [agents.oracle]
 config_file = "~/.codex/agents/oracle.toml"
+description = "Strategic technical advisor with deep reasoning. Use for architecture decisions, complex code analysis, refactoring roadmaps, and hard engineering questions that benefit from systematic reasoning."
 
 [agents.explore]
 config_file = "~/.codex/agents/explore.toml"
+description = "Fast read-only codebase exploration. Use to answer 'where is X?', 'which file has Y?', or 'find the code that does Z' across large repositories."
 
 [agents.librarian]
 config_file = "~/.codex/agents/librarian.toml"
+description = "Multi-repository and documentation research. Use for analyzing remote codebases, official library documentation, and finding implementation examples across projects."
 
 [agents.debugger]
 config_file = "~/.codex/agents/debugger.toml"
+description = "Senior debugging specialist. Use to diagnose complex bugs, analyze error logs and stack traces, identify root causes, and implement fixes for tricky production issues."
 
 [agents.code-reviewer]
 config_file = "~/.codex/agents/code-reviewer.toml"
+description = "Comprehensive code review specialist. Use for diff/PR review focused on code quality, security vulnerabilities, performance concerns, and best-practice adherence."
 
 [agents.perplexity-researcher]
 config_file = "~/.codex/agents/perplexity-researcher.toml"
+description = "Investigative web research via Perplexity Sonar API. Use for fast, citation-rich searches when fresh sources and journalistic rigor matter."
 
 [agents.gemini-researcher]
 config_file = "~/.codex/agents/gemini-researcher.toml"
+description = "Multi-perspective research via Google Gemini. Use for cross-domain synthesis, creative research angles, and breaking complex questions into parallel investigations."
 
 [agents.claude-researcher]
 config_file = "~/.codex/agents/claude-researcher.toml"
+description = "Scholarly research using built-in web search with multi-query decomposition. Use for academic depth, detailed analysis, and authoritative sources."
 
 [agents.document-writer]
 config_file = "~/.codex/agents/document-writer.toml"
+description = "Technical documentation writer. Use for README files, API references, architecture documents, and user guides — anything where clear written explanation is the deliverable."
 
 [agents.frontend-ui-ux-engineer]
 config_file = "~/.codex/agents/frontend-ui-ux-engineer.toml"
+description = "Designer-turned-developer for frontend work. Use when crafting UI/UX without design mockups, building polished interfaces from a verbal brief, or improving visual hierarchy and interaction patterns."
 
 [agents.penetration-tester]
 config_file = "~/.codex/agents/penetration-tester.toml"
+description = "Offensive security specialist. Use to identify exploitable vulnerabilities through active probing and validation in authorized security testing only."

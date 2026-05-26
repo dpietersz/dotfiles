@@ -1,0 +1,64 @@
+#!/bin/bash
+# Battery charge-threshold drop-in for TLP.
+#
+# Renders /etc/tlp.d/01-thinkpad-battery.conf from chezmoi data:
+#   batteryMode = "eco"  -> 75/80 (preserves cell calendar-aging life)
+#   batteryMode = "full" -> 96/100 (for travel / unplugged days)
+#
+# Per-machine handling:
+#   - hasBat1=true  (T580 with UltraBay slice) writes BAT0 + BAT1
+#   - hasBat1=false (P14s G5 AMD, single battery) writes BAT0 only
+#
+# Hash changes whenever batteryMode or hasBat1 changes, so chezmoi re-runs
+# this script. Trigger via `battery-toggle` (Mod+Alt+B in niri).
+#
+# State of truth: chezmoi data var `batteryMode` in ~/.config/chezmoi/chezmoi.toml.
+# Settings revision: 1  -- bump to force re-apply.
+#
+# Rendered with:
+#   batteryMode={{ .batteryMode }}  hasBat1={{ .hasBat1 }}
+
+{{- if or .remote .isMacOS .isServer }}
+# Skip on macOS, remote containers, and headless servers.
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# Skip cleanly on hardware without thinkpad_acpi charge-threshold support.
+if [ ! -e /sys/class/power_supply/BAT0/charge_control_end_threshold ]; then
+  echo "No charge_control_end_threshold on BAT0 — skipping TLP drop-in."
+  exit 0
+fi
+
+# Skip when TLP isn't installed. On Bluefin TLP must be baked in bluefin-udx
+# (rpm-ostree layer); chezmoi has no business installing system packages.
+# Without TLP, /etc/tlp.d/ doesn't exist and `install` would fail.
+if ! command -v tlp >/dev/null 2>&1 || [ ! -d /etc/tlp.d ]; then
+  echo "TLP not installed (missing tlp binary or /etc/tlp.d/) — skipping. Bake TLP in bluefin-udx if you want this active."
+  exit 0
+fi
+
+sudo install -m 644 /dev/stdin /etc/tlp.d/01-thinkpad-battery.conf <<'EOF'
+# Managed by chezmoi (run_onchange_after_21-apply-battery-thresholds.sh.tmpl).
+# Edit batteryMode in ~/.config/chezmoi/chezmoi.toml and run `chezmoi apply`,
+# or use the Mod+Alt+B keybind in niri.
+{{ if eq .batteryMode "eco" -}}
+START_CHARGE_THRESH_BAT0=75
+STOP_CHARGE_THRESH_BAT0=80
+{{ if .hasBat1 -}}
+START_CHARGE_THRESH_BAT1=75
+STOP_CHARGE_THRESH_BAT1=80
+{{ end -}}
+{{- else -}}
+START_CHARGE_THRESH_BAT0=96
+STOP_CHARGE_THRESH_BAT0=100
+{{ if .hasBat1 -}}
+START_CHARGE_THRESH_BAT1=96
+STOP_CHARGE_THRESH_BAT1=100
+{{ end -}}
+{{- end -}}
+EOF
+
+sudo tlp start >/dev/null
+echo "Battery thresholds applied: mode={{ .batteryMode }} hasBat1={{ .hasBat1 }}"
