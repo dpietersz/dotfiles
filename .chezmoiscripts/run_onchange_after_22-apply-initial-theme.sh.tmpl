@@ -1,0 +1,30 @@
+#!/bin/bash
+{{- if or .isServer .remote }}
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+# Apply the current theme on first install + whenever the theme palettes or
+# templates change (the chezmoi-onchange-hash invalidates on those bumps).
+#
+# hash: {{ include "dot_config/themes/palettes/gruvbox-dark.toml" | sha256sum }}
+# hash: {{ include "dot_config/themes/palettes/rose-pine.toml" | sha256sum }}
+# hash: {{ include "dot_config/themes/templates/kitty.conf" | sha256sum }}
+# hash: {{ include "dot_config/themes/templates/niri-theme.kdl" | sha256sum }}
+
+THEMES_DIR="$HOME/.config/themes"
+STATE_FILE="$THEMES_DIR/state/current"
+
+# Seed gruvbox-dark on first install.
+if [[ ! -f "$STATE_FILE" ]]; then
+  mkdir -p "$(dirname "$STATE_FILE")"
+  echo "gruvbox-dark" >"$STATE_FILE"
+fi
+
+# Apply whatever's currently selected (re-renders all per-app fragments).
+if command -v theme-switch >/dev/null 2>&1; then
+  current="$(cat "$STATE_FILE" | tr -d '[:space:]')"
+  echo "🎨 Applying theme: $current"
+  theme-switch "$current" || true
+fi

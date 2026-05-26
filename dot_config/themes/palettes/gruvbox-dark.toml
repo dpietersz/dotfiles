@@ -1,0 +1,52 @@
+# Gruvbox Dark — the default theme.
+# Used by theme-switch (~/.local/bin/theme-switch) as the source of truth for
+# all per-app theme template renders. Placeholders are @key@.
+
+name        = "gruvbox-dark"
+display     = "Gruvbox Dark"
+mode        = "dark"
+
+bg          = "#282828"
+bg_alt      = "#3c3836"
+bg_sel      = "#504945"
+fg          = "#ebdbb2"
+fg_dim      = "#a89984"
+cursor      = "#ebdbb2"
+border      = "#7c6f64"
+border_active = "#fe8019"
+
+black          = "#282828"
+red            = "#cc241d"
+green          = "#98971a"
+yellow         = "#d79921"
+blue           = "#458588"
+magenta        = "#b16286"
+cyan           = "#689d6a"
+white          = "#a89984"
+bright_black   = "#928374"
+bright_red     = "#fb4934"
+bright_green   = "#b8bb26"
+bright_yellow  = "#fabd2f"
+bright_blue    = "#83a598"
+bright_magenta = "#d3869b"
+bright_cyan    = "#8ec07c"
+bright_white   = "#ebdbb2"
+
+accent      = "#fe8019"
+warning     = "#d79921"
+error       = "#cc241d"
+success     = "#98971a"
+
+# Per-app extras
+nvim_colorscheme    = "gruvbox"
+nvim_background     = "dark"
+zellij_theme        = "gruvbox-dark"
+starship_preset     = "gruvbox-rainbow"
+noctalia_builtin    = "Gruvbox"
+bat_theme           = "gruvbox-dark"
+
+# Wallpaper — managed inside the chezmoi tree at
+# dot_config/themes/wallpapers/gruvbox-dark/, deployed to
+# ~/.config/themes/wallpapers/gruvbox-dark/ on apply.
+wallpaper_dir       = "~/.config/themes/wallpapers/gruvbox-dark"
+wallpaper_default   = "~/.config/themes/wallpapers/gruvbox-dark/fedora-gruvbox-dark.webp"

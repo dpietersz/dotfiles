@@ -14,6 +14,13 @@ if ! command -v fzf >/dev/null 2>&1; then
   return 0 2>/dev/null
 fi
 
+# Theme colors — owned by theme-switch. The rendered colors file is rewritten
+# on each theme change; sourcing it sets FZF_DEFAULT_OPTS and BAT_THEME for
+# this shell. New shells pick up the new theme on next launch.
+if [ -r "$HOME/.config/themes/state/fzf-colors.sh" ]; then
+  . "$HOME/.config/themes/state/fzf-colors.sh"
+fi
+
 # --- Defaults ---
 # Use `fd` for file/dir listing so .gitignore + hidden-file rules are honoured
 # and indexing is much faster than `find`. Falls back to find if fd missing.

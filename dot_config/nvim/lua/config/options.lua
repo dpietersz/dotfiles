@@ -6,8 +6,12 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = "/"
 
--- Theme & Transparency
-vim.cmd.colorscheme("unokai")
+-- Theme — sourced from theme-switch-managed file. If it doesn't exist yet
+-- (fresh install pre-`chezmoi apply`), fall back to gruvbox.
+local ok = pcall(require, "config.theme")
+if not ok then
+  pcall(vim.cmd.colorscheme, "gruvbox")
+end
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })

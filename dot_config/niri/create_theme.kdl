@@ -1,0 +1,10 @@
+// Seed file — chezmoi creates this only if it's missing (`create_` prefix).
+// theme-switch overwrites it on every theme change; treat any value here as a
+// placeholder that's only used until the first `theme-switch` call.
+
+layout {
+    focus-ring {
+        active-color   "#fe8019"
+        inactive-color "#7c6f64"
+    }
+}

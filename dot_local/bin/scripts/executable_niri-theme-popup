@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+# Theme picker — fzf over available palettes.
+# Run from niri as: kitty --class theme-popup -- niri-theme-popup
+
+current="$(theme-switch)"
+choice="$(theme-switch --list |
+  fzf --prompt='theme › ' \
+      --header="active: $current" \
+      --height=100% --no-info --reverse --border=none)"
+[[ -z "$choice" ]] && exit 0
+theme-switch "$choice"
+sleep 1

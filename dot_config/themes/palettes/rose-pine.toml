@@ -1,0 +1,53 @@
+# Rosé Pine — alternate theme.
+# Palette: https://rosepinetheme.com/palette/ingredients/
+
+name        = "rose-pine"
+display     = "Rosé Pine"
+mode        = "dark"
+
+bg          = "#191724"
+bg_alt      = "#1f1d2e"
+bg_sel      = "#26233a"
+fg          = "#e0def4"
+fg_dim      = "#908caa"
+cursor      = "#e0def4"
+border      = "#403d52"
+border_active = "#c4a7e7"
+
+black          = "#26233a"
+red            = "#eb6f92"
+green          = "#31748f"
+yellow         = "#f6c177"
+blue           = "#9ccfd8"
+magenta        = "#c4a7e7"
+cyan           = "#ebbcba"
+white          = "#e0def4"
+bright_black   = "#6e6a86"
+bright_red     = "#eb6f92"
+bright_green   = "#31748f"
+bright_yellow  = "#f6c177"
+bright_blue    = "#9ccfd8"
+bright_magenta = "#c4a7e7"
+bright_cyan    = "#ebbcba"
+bright_white   = "#e0def4"
+
+accent      = "#c4a7e7"
+warning     = "#f6c177"
+error       = "#eb6f92"
+success     = "#31748f"
+
+# Per-app extras
+nvim_colorscheme    = "rose-pine"
+nvim_background     = "dark"
+zellij_theme        = "rose-pine"
+starship_preset     = "pastel-powerline"
+noctalia_builtin    = "RosePine"
+bat_theme           = "base16"
+
+# Wallpaper — managed inside the chezmoi tree at
+# dot_config/themes/wallpapers/rose-pine/, deployed to
+# ~/.config/themes/wallpapers/rose-pine/ on apply. theme-switch repoints
+# noctalia's [wallpaper] directory here on switch. If the default file is
+# absent, theme-switch falls back to the first image in the directory.
+wallpaper_dir       = "~/.config/themes/wallpapers/rose-pine"
+wallpaper_default   = "~/.config/themes/wallpapers/rose-pine/wave-red-blue.jpg"

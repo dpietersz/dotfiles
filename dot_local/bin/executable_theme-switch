@@ -1,0 +1,181 @@
+#!/bin/bash
+set -euo pipefail
+
+# theme-switch — apply a theme across all supported apps.
+#
+# Usage:
+#   theme-switch                     # show current
+#   theme-switch <name>              # set theme to <name>
+#   theme-switch --cycle             # advance to next theme in palette dir
+#   theme-switch --list              # list available themes
+#
+# Reads palettes from ~/.config/themes/palettes/<name>.toml. Renders the
+# per-app templates from ~/.config/themes/templates/ into their destinations,
+# then signals each app to reload. Skips apps that aren't installed.
+
+THEMES_DIR="$HOME/.config/themes"
+PALETTES_DIR="$THEMES_DIR/palettes"
+TEMPLATES_DIR="$THEMES_DIR/templates"
+STARSHIP_DIR="$THEMES_DIR/starship"
+STATE_FILE="$THEMES_DIR/state/current"
+
+list_themes() {
+  find "$PALETTES_DIR" -maxdepth 1 -name '*.toml' -printf '%f\n' 2>/dev/null | sed 's/\.toml$//' | sort
+}
+
+current_theme() {
+  [[ -f "$STATE_FILE" ]] && tr -d '[:space:]' <"$STATE_FILE" || echo "gruvbox-dark"
+}
+
+next_theme() {
+  local cur="$1"
+  local all
+  mapfile -t all < <(list_themes)
+  for i in "${!all[@]}"; do
+    if [[ "${all[i]}" == "$cur" ]]; then
+      echo "${all[(i+1) % ${#all[@]}]}"
+      return
+    fi
+  done
+  echo "${all[0]}"
+}
+
+# Parse a TOML palette into a flat associative array of key=value pairs.
+# Simple parser: `key = "value"` or `key = value` lines, ignoring # comments.
+load_palette() {
+  local file="$1"
+  declare -gA PAL=()
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*\"?([^\"]*)\"?[[:space:]]*$ ]]; then
+      PAL["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+    fi
+  done <"$file"
+}
+
+# Render a template by substituting @key@ tokens with palette values.
+render() {
+  local src="$1" dst="$2"
+  local content
+  content="$(cat "$src")"
+  for k in "${!PAL[@]}"; do
+    content="${content//@$k@/${PAL[$k]}}"
+  done
+  mkdir -p "$(dirname "$dst")"
+  printf '%s' "$content" >"$dst"
+}
+
+# --- arg parsing ---
+case "${1:-}" in
+  --list)  list_themes; exit 0 ;;
+  "")      current_theme; exit 0 ;;
+  --cycle) target="$(next_theme "$(current_theme)")" ;;
+  *)       target="$1" ;;
+esac
+
+PALETTE_FILE="$PALETTES_DIR/$target.toml"
+if [[ ! -f "$PALETTE_FILE" ]]; then
+  echo "theme-switch: no such theme '$target' (see --list)" >&2
+  exit 1
+fi
+
+echo "→ Applying theme: $target"
+load_palette "$PALETTE_FILE"
+
+# --- kitty ---
+if command -v kitty >/dev/null; then
+  render "$TEMPLATES_DIR/kitty.conf" "$HOME/.config/kitty/current-theme.conf"
+  # SIGUSR1 makes all running kitty instances reread config.
+  pkill -SIGUSR1 -x kitty 2>/dev/null || true
+fi
+
+# --- niri ---
+if command -v niri >/dev/null; then
+  render "$TEMPLATES_DIR/niri-theme.kdl" "$HOME/.config/niri/theme.kdl"
+  niri msg action load-config-file >/dev/null 2>&1 || true
+fi
+
+# --- zellij ---
+# Zellij has no `include` directive, so we sed the active `theme` line in
+# the existing config.kdl directly. Zellij doesn't hot-reload — new tabs
+# pick up the change.
+if command -v zellij >/dev/null; then
+  ZELLIJ_CFG="$HOME/.config/zellij/config.kdl"
+  if [[ -f "$ZELLIJ_CFG" ]]; then
+    sed -i -E "s|^theme \"[^\"]+\"|theme \"${PAL[zellij_theme]}\"|" "$ZELLIJ_CFG"
+    echo "  zellij: open a new tab/session to see the change (no hot-reload)."
+  fi
+fi
+
+# --- fzf + bat (env vars sourced from shell rc) ---
+render "$TEMPLATES_DIR/fzf-colors.sh" "$HOME/.config/themes/state/fzf-colors.sh"
+
+# --- nvim ---
+if command -v nvim >/dev/null; then
+  render "$TEMPLATES_DIR/nvim-theme.lua" "$HOME/.config/nvim/lua/config/theme.lua"
+  # Send :colorscheme to all running nvim instances via their servername if any.
+  for sock in /run/user/"$UID"/nvim.*.0; do
+    [[ -e "$sock" ]] || continue
+    nvim --server "$sock" --remote-send ":source $HOME/.config/nvim/lua/config/theme.lua<CR>" 2>/dev/null || true
+  done
+fi
+
+# --- starship (full file swap because preset structure differs) ---
+if command -v starship >/dev/null; then
+  if [[ -f "$STARSHIP_DIR/$target.toml" ]]; then
+    cp -f "$STARSHIP_DIR/$target.toml" "$HOME/.config/starship.toml"
+  else
+    echo "  starship: no per-theme config at $STARSHIP_DIR/$target.toml — keeping current."
+  fi
+fi
+
+# --- noctalia (merge theme + wallpaper blocks into its state file) ---
+NOCTALIA_STATE="$HOME/.local/state/noctalia/settings.toml"
+if [[ -f "$NOCTALIA_STATE" ]]; then
+  render "$TEMPLATES_DIR/noctalia-theme.toml" "$THEMES_DIR/state/noctalia-theme.toml"
+
+  # Expand ~ in wallpaper paths sourced from the palette.
+  wp_dir="${PAL[wallpaper_dir]/#\~/$HOME}"
+  wp_default="${PAL[wallpaper_default]/#\~/$HOME}"
+  # Fall back to first file in the directory if the named default is missing.
+  if [[ -n "$wp_default" && ! -f "$wp_default" && -d "$wp_dir" ]]; then
+    wp_default="$(find "$wp_dir" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort | head -n1)"
+  fi
+
+  # Strip existing [theme], [wallpaper], [wallpaper.default] blocks; append new.
+  awk '
+    BEGIN { skip = 0 }
+    /^\[theme\][[:space:]]*$/         { skip = 1; next }
+    /^\[wallpaper\][[:space:]]*$/     { skip = 1; next }
+    /^\[wallpaper\.default\][[:space:]]*$/ { skip = 1; next }
+    /^\[/ && skip { skip = 0 }
+    !skip
+  ' "$NOCTALIA_STATE" >"$NOCTALIA_STATE.tmp"
+  cat "$THEMES_DIR/state/noctalia-theme.toml" >>"$NOCTALIA_STATE.tmp"
+  {
+    echo ""
+    echo "[wallpaper]"
+    echo "directory = \"$wp_dir\""
+    if [[ -n "$wp_default" && -f "$wp_default" ]]; then
+      echo ""
+      echo "[wallpaper.default]"
+      echo "path = \"$wp_default\""
+    fi
+  } >>"$NOCTALIA_STATE.tmp"
+  mv "$NOCTALIA_STATE.tmp" "$NOCTALIA_STATE"
+
+  if pgrep -x noctalia >/dev/null; then
+    echo "  noctalia: restart manually (Mod+Backspace → quit, then noctalia &) to apply."
+  fi
+fi
+
+# --- record + notify ---
+mkdir -p "$(dirname "$STATE_FILE")"
+echo "$target" >"$STATE_FILE"
+
+if command -v noctalia >/dev/null; then
+  noctalia msg notification "Theme" "Switched to $target" 2>/dev/null || true
+fi
+
+echo "✅ theme-switch: $target"

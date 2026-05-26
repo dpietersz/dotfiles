@@ -1,6 +1,8 @@
 #!/bin/bash
-# Setup nushell starship integration
-# starship config hash: {{ include "dot_config/starship.toml" | sha256sum }}
+# Setup nushell starship integration. Rehash on theme palette changes since
+# theme-switch is what writes ~/.config/starship.toml now.
+# starship gruvbox hash: {{ include "dot_config/themes/starship/gruvbox-dark.toml" | sha256sum }}
+# starship rose-pine hash: {{ include "dot_config/themes/starship/rose-pine.toml" | sha256sum }}
 
 set -euo pipefail
 
