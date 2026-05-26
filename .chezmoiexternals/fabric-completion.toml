@@ -1,0 +1,14 @@
+# fabric bash completion — fetched from upstream so `<TAB>` works on every shell
+# fragment (pattern names, flag args, etc.).
+#
+# bash-completion auto-loads files placed at
+#   ~/.local/share/bash-completion/completions/<command-name>
+# without any source step, so this single external is the entire wiring.
+# See https://raw.githubusercontent.com/danielmiessler/Fabric/refs/heads/main/docs/Shell-Completions.md
+#
+# refreshPeriod=168h pins it to a weekly check rather than every-apply, which
+# keeps `chezmoi apply` fast while still picking up upstream changes.
+[".local/share/bash-completion/completions/fabric"]
+type = "file"
+url = "https://raw.githubusercontent.com/danielmiessler/Fabric/refs/heads/main/completions/fabric.bash"
+refreshPeriod = "168h"
