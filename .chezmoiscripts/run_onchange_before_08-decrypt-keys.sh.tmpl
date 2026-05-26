@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ if not .remote -}}
+
+echo "🔐 Dotfiles encryption setup"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Determine which keys are missing — only prompt for the passphrase if at
+# least one is. Each decrypt block below is independently idempotent.
+NEED_DECRYPT=0
+[ -s "$HOME/.ssh/id_ed25519" ] || NEED_DECRYPT=1
+[ -s "$HOME/.ssh/id_ed25519.pub" ] || NEED_DECRYPT=1
+gpg --list-secret-keys {{ .gpgKeyId }} &>/dev/null || NEED_DECRYPT=1
+[ -s "$HOME/.ssh/cosign.key" ] || NEED_DECRYPT=1
+[ -s "$HOME/.ssh/cosign.pub" ] || NEED_DECRYPT=1
+for src in "{{ .chezmoi.sourceDir }}"/.encrypted/*.age; do
+    base=$(basename "$src" .age)
+    case "$base" in
+        ssh_id_ed25519|ssh_id_ed25519.pub|gpg-private.asc|cosign.key|cosign.pub) continue ;;
+    esac
+    target="${base#ssh_}"
+    [ -s "$HOME/.ssh/$target" ] || NEED_DECRYPT=1
+done
+
+if [ "$NEED_DECRYPT" -eq 0 ]; then
+    echo "✅ All keys already installed. Skipping decryption."
+    exit 0
+fi
+
+{{- if .isMacOS }}
+# macOS: Use Homebrew's age directly
+AGE_CMD="age"
+{{- else }}
+# Linux: prefer a system age (apt/bluefin-baked) — that's where it lives on
+# Debian server (ansible installs via apt) and on bluefin-udx. Only fall back
+# to mise on pre-brew-migration Bluefin laptops.
+if command -v age >/dev/null 2>&1; then
+    AGE_CMD="age"
+else
+    MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+    AGE_CMD="$MISE_BIN_PATH exec age -- age"
+fi
+{{- end }}
+
+# Prompt for passphrase
+echo ""
+echo "Enter your dotfiles passphrase to decrypt your keys:"
+read -s DOTFILES_PASSPHRASE
+echo ""
+
+# Decrypt SSH keys
+echo "🔓 Decrypting SSH keys..."
+mkdir -p "$HOME/.ssh"
+
+# Helper: atomically decrypt $src to $dest with $mode, only if $dest is
+# missing or zero-byte. Wrong-passphrase failures leave $dest untouched
+# (no half-written stub) so a subsequent run will retry cleanly.
+decrypt_to() {
+    local src="$1" dest="$2" mode="$3"
+    [ -s "$dest" ] && return 0
+    local tmp
+    tmp=$(mktemp "${dest}.XXXXXX")
+    if echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "$src" > "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+        mv "$tmp" "$dest"
+        chmod "$mode" "$dest"
+        return 0
+    fi
+    rm -f "$tmp"
+    echo "  ✗ failed: $(basename "$dest") (wrong passphrase for this file?)" >&2
+    return 1
+}
+
+decrypt_to "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.age" "$HOME/.ssh/id_ed25519" 600
+decrypt_to "{{ .chezmoi.sourceDir }}/.encrypted/ssh_id_ed25519.pub.age" "$HOME/.ssh/id_ed25519.pub" 644
+
+echo "✅ SSH keys installed"
+
+# Decrypt and import GPG key
+if ! gpg --list-secret-keys {{ .gpgKeyId }} &>/dev/null; then
+    echo "🔓 Decrypting GPG key..."
+    GPG_KEY=$(echo "$DOTFILES_PASSPHRASE" | $AGE_CMD -d "{{ .chezmoi.sourceDir }}/.encrypted/gpg-private.asc.age")
+    echo "$GPG_KEY" | gpg --import --batch
+    echo "{{ .gpgKeyId }}:6:" | gpg --import-ownertrust
+    echo "✅ GPG key imported and trusted"
+else
+    echo "✅ GPG key already imported"
+fi
+
+# Configure GPG agent cache (12 hours = 43200 seconds)
+echo "⚙️  Configuring GPG agent cache..."
+mkdir -p "$HOME/.gnupg"
+cat > "$HOME/.gnupg/gpg-agent.conf" <<EOF
+# Cache passphrases for 12 hours
+default-cache-ttl 43200
+max-cache-ttl 43200
+EOF
+
+# Reload gpg-agent to apply new settings
+gpg-connect-agent reloadagent /bye &>/dev/null || true
+
+echo "✅ GPG agent cache set to 12 hours"
+
+# Decrypt Cosign keys
+echo "🔓 Decrypting Cosign keys..."
+mkdir -p "$HOME/.ssh"
+
+decrypt_to "{{ .chezmoi.sourceDir }}/.encrypted/cosign.key.age" "$HOME/.ssh/cosign.key" 600
+decrypt_to "{{ .chezmoi.sourceDir }}/.encrypted/cosign.pub.age" "$HOME/.ssh/cosign.pub" 644
+
+echo "✅ Cosign keys installed"
+
+# Decrypt any remaining keys in .encrypted/ generically (e.g. extra work
+# SSH keys). Each one is decrypted to ~/.ssh/<basename> with the leading
+# `ssh_` prefix stripped, and skipped if the target already exists.
+echo "🔓 Decrypting additional SSH keys..."
+shopt -s nullglob
+ADDITIONAL_FAILED=0
+for src in "{{ .chezmoi.sourceDir }}"/.encrypted/*.age; do
+    base=$(basename "$src" .age)
+    case "$base" in
+        ssh_id_ed25519|ssh_id_ed25519.pub|gpg-private.asc|cosign.key|cosign.pub)
+            continue ;;
+    esac
+    target="${base#ssh_}"
+    case "$target" in
+        *.pub) mode=644 ;;
+        *)     mode=600 ;;
+    esac
+    if decrypt_to "$src" "$HOME/.ssh/$target" "$mode"; then
+        echo "  + $target"
+    else
+        ADDITIONAL_FAILED=1
+    fi
+done
+shopt -u nullglob
+if [ "$ADDITIONAL_FAILED" -eq 0 ]; then
+    echo "✅ Additional SSH keys installed"
+else
+    echo "⚠️  Some additional keys could not be decrypted with this passphrase — see errors above"
+fi
+
+# Clear passphrase from memory
+unset DOTFILES_PASSPHRASE
+unset GPG_KEY
+
+echo ""
+echo "✅ All keys decrypted and installed successfully!"
+echo ""
+
+# Add available private SSH keys to the agent. ssh-add is best-effort; the
+# real source of truth is ~/.ssh/config + IdentityFile per host.
+if [ -n "${SSH_AUTH_SOCK:-}" ]; then
+    echo "Adding SSH keys to agent..."
+    shopt -s nullglob
+    for key in "$HOME/.ssh/id_"* "$HOME/.ssh/cosign.key"; do
+        case "$key" in *.pub) continue ;; esac
+        [ -f "$key" ] && ssh-add "$key" 2>/dev/null || true
+    done
+    shopt -u nullglob
+    echo "SSH keys added to agent"
+fi
+
+{{ end -}}
