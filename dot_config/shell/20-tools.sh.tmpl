@@ -38,26 +38,34 @@ if command -v starship >/dev/null; then
   eval "$(starship init $CURRENT_SHELL)"
 fi
 
-# fzf - fuzzy finder with key bindings and completion
-# Note: fzf is installed via Homebrew on macOS
-# To enable fzf integration, run: $(brew --prefix)/opt/fzf/install
-# Or manually add: eval "$(fzf --bash)" for bash or eval "$(fzf --zsh)" for zsh
-# Skipping automatic initialization due to compatibility issues with process substitution
+# fzf shell integration lives in 30-fzf.sh.tmpl (loaded right after this file)
+# so FZF_DEFAULT_OPTS/COMMAND can be set in one focused place.
 
-# kubectl - Kubernetes CLI completion
-# Skipped due to process substitution in generated output
-# if command -v kubectl >/dev/null; then
-#   eval "$(kubectl completion $CURRENT_SHELL)"
-# fi
+# --- Completions that use process substitution ---
+# These all emit shell code via stdout (`<cmd> completion bash` etc.). On macOS
+# bash 3.2 has known process-substitution bugs in subshells, so we gate them to
+# Linux. Each one extends bash completion for that binary.
+{{- if not .isMacOS }}
+if [ "$CURRENT_SHELL" = "bash" ]; then
+  command -v kubectl  >/dev/null && eval "$(kubectl completion bash)"
+  command -v flux     >/dev/null && eval "$(flux completion bash)"
+  command -v chezmoi  >/dev/null && eval "$(chezmoi completion bash)"
+  command -v gh       >/dev/null && eval "$(gh completion -s bash)"
+  command -v docker   >/dev/null && eval "$(docker completion bash 2>/dev/null)" || true
+  command -v kind     >/dev/null && eval "$(kind completion bash)"
+  command -v k9s      >/dev/null && eval "$(k9s completion bash)"
+  command -v niri     >/dev/null && eval "$(niri completions bash 2>/dev/null)" || true
+  command -v zellij   >/dev/null && eval "$(zellij setup --generate-completion bash 2>/dev/null)" || true
+  # `claude` (the PAI CLI / Anthropic Claude Code binary) does NOT have a
+  # completion subcommand. Running `claude completion bash` is interpreted as
+  # a chat prompt and returns "Acknowledged. Standing by..." which then gets
+  # eval'd as shell code, producing `bash: command not found: Acknowledged.`
+  # Leave it out unless/until upstream adds real completion support.
+fi
+{{- end }}
 
-# flux - GitOps toolkit completion
-# Skipped due to process substitution in generated output
-# if command -v flux >/dev/null; then
-#   eval "$(flux completion $CURRENT_SHELL)"
-# fi
-
-# zoxide moved to 90-zoxide.sh so it loads after all other PROMPT_COMMAND mutators
-# (starship, fabric, completions). Don't initialize it here.
+# zoxide is initialized in ~/.bashrc (after this file + bash-completion + direnv
+# + AsyncAPI) so its PROMPT_COMMAND hook isn't displaced. Do not init here.
 
 # bat - better cat with syntax highlighting
 if command -v bat >/dev/null; then
@@ -67,14 +75,7 @@ if command -v bat >/dev/null; then
   # zsh: bat completion is typically installed via package manager
 fi
 
-# chezmoi - dotfile manager
-# Skipped due to process substitution in generated output (incompatible with macOS)
-# if command -v chezmoi >/dev/null; then
-#   if [ "$CURRENT_SHELL" = "bash" ]; then
-#     eval "$(chezmoi completion bash)"
-#   fi
-#   # zsh: chezmoi completion is typically installed via package manager
-# fi
+# chezmoi handled in the Linux completion block above.
 
 # eza - modern ls replacement
 if command -v eza >/dev/null; then

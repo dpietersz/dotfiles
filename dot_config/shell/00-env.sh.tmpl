@@ -56,9 +56,12 @@ fi
 
 
 {{ if not .remote }}
-# Only load secrets via pass in interactive shells (requires GPG with TTY)
-# Non-interactive shells (like Claude Code, scripts) will skip this to avoid GPG errors
-if [[ $- == *i* ]] && command -v pass &>/dev/null; then
+# Only load secrets via pass in interactive shells (requires GPG with TTY).
+# Non-interactive shells (Claude Code, scripts) skip this to avoid GPG errors.
+# BASH_FAST_INIT=1 lets niri popup scripts (fpass-popup, shell-cheatsheet,
+# fssh-popup, etc.) source bashrc for aliases+functions in <100ms by skipping
+# the ~30 GPG-pinentry-blocked pass invocations that cost ~4s each shell start.
+if [[ $- == *i* ]] && [[ -z "${BASH_FAST_INIT:-}" ]] && command -v pass &>/dev/null; then
   # Set GPG_TTY for proper pinentry behavior
   export GPG_TTY=$(tty)
 

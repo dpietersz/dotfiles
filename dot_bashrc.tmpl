@@ -5,10 +5,22 @@ for file in "${XDG_CONFIG_HOME:-$HOME/.config}/shell"/*.sh; do
   [[ -r "$file" ]] && source "$file"
 done
 
-# Source bash-specific configs
+# Source bash-specific configs (includes bash-completion, direnv hook).
+# Both bash-completion and direnv mutate PROMPT_COMMAND, so they MUST load
+# before zoxide for zoxide's "init last" check to be satisfied.
 for file in "${XDG_CONFIG_HOME:-$HOME/.config}/bash"/*.sh; do
   [[ -r "$file" ]] && source "$file"
 done
 
-# AsyncAPI CLI Autocomplete
+# AsyncAPI CLI Autocomplete (mutates PROMPT_COMMAND; must run before zoxide).
 ASYNCAPI_AC_BASH_SETUP_PATH={{ .chezmoi.homeDir }}/.cache/@asyncapi/cli/autocomplete/bash_setup && test -f $ASYNCAPI_AC_BASH_SETUP_PATH && source $ASYNCAPI_AC_BASH_SETUP_PATH
+
+# zoxide MUST be the last thing initialised — it hooks PROMPT_COMMAND, and
+# any later mutator (starship, direnv, bash-completion, AsyncAPI) displaces
+# the hook and triggers zoxide's "init last" warning. Keep this block at the
+# bottom of .bashrc. (Lives here rather than ~/.config/shell/ so it survives
+# the addition of any future numbered fragment.)
+if command -v zoxide >/dev/null; then
+  # Strip the completion block; uses process substitution that bash 3.2 (macOS) chokes on.
+  eval "$(zoxide init bash | sed '/^# Load completions/,$d')"
+fi
