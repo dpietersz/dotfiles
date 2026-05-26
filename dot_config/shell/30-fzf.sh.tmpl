@@ -37,6 +37,10 @@ export FZF_DEFAULT_OPTS='
   --color=fg+:#d4be98,bg+:#3c3836,hl+:#d8a657
   --color=info:#7daea3,prompt:#ea6962,pointer:#d3869b
   --color=marker:#a9b665,spinner:#d3869b,header:#7daea3
+  --bind=ctrl-/:toggle-preview
+  --bind=ctrl-_:toggle-preview
+  --bind=alt-/:toggle-preview
+  --bind=f2:toggle-preview
 '
 
 # Ctrl+T file picker → preview with bat if available, head otherwise.
@@ -59,6 +63,25 @@ export FZF_CTRL_R_OPTS="
   --header 'Ctrl-Y: copy command to clipboard'
 "
 
+# `**<TAB>` completion triggers — fzf's trigger-based completion uses three
+# OPTS vars: FZF_COMPLETION_OPTS (always), then FZF_COMPLETION_PATH_OPTS or
+# FZF_COMPLETION_DIR_OPTS depending on whether the completion is for a file
+# or a directory. Adding a preview to each so commands like `nvim **<TAB>`,
+# `cd **<TAB>`, `cat **<TAB>` show the same right-pane preview as Ctrl+T/Alt+C.
+export FZF_COMPLETION_OPTS="--height=60% --layout=reverse --border=rounded --info=inline"
+if command -v bat >/dev/null 2>&1; then
+  export FZF_COMPLETION_PATH_OPTS="--preview 'bat --style=numbers --color=always --line-range :300 {} 2>/dev/null || head -300 {}' --preview-window='right,55%,border-left'"
+else
+  export FZF_COMPLETION_PATH_OPTS="--preview 'head -300 {}' --preview-window='right,55%,border-left'"
+fi
+if command -v eza >/dev/null 2>&1; then
+  export FZF_COMPLETION_DIR_OPTS="--preview 'eza --tree --color=always --level=2 {} | head -200' --preview-window='right,55%,border-left'"
+elif command -v tree >/dev/null 2>&1; then
+  export FZF_COMPLETION_DIR_OPTS="--preview 'tree -C {} | head -200' --preview-window='right,55%,border-left'"
+else
+  export FZF_COMPLETION_DIR_OPTS="--preview 'ls -la --color=always {} | head -200' --preview-window='right,55%,border-left'"
+fi
+
 # --- Shell integration (key-bindings + completion) ---
 # fzf 0.48+ ships `fzf --bash`. Older installs use the per-file integration
 # under $(brew --prefix)/opt/fzf/shell/. We try the modern path first.
@@ -77,12 +100,15 @@ if [ "$CURRENT_SHELL" = "bash" ]; then
 
   # Zellij intercepts Ctrl+T (its default "tab mode" prefix), so fzf's
   # built-in Ctrl+T file picker never reaches the shell inside a zellij pane.
-  # Bind Alt+T as a second trigger for the same widget so the file picker
-  # works whether or not we're in zellij.
+  # Bind Alt+T as a second trigger for the same widget. We use `bind -x`
+  # (execute shell command) calling fzf-file-widget directly — same pattern
+  # fzf's own bash integration uses for Ctrl+T. The previous macro-based
+  # form garbled the literal string into the prompt because the embedded
+  # escape sequences were wrong for `bind` (no -x flag).
   if declare -F fzf-file-widget >/dev/null 2>&1; then
-    bind -m emacs-standard '"\et": "\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
-    bind -m vi-command       '"\et": "i\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
-    bind -m vi-insert        '"\et": "\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
+    bind -m emacs-standard -x '"\et": fzf-file-widget' 2>/dev/null || true
+    bind -m vi-command       -x '"\et": fzf-file-widget' 2>/dev/null || true
+    bind -m vi-insert        -x '"\et": fzf-file-widget' 2>/dev/null || true
   fi
 elif [ "$CURRENT_SHELL" = "zsh" ]; then
   if fzf --zsh >/dev/null 2>&1; then
@@ -93,16 +119,35 @@ fi
 # --- Custom functions (from omerxx's pattern, adapted) ---
 
 # fcd — fuzzy directory jump (deeper than Alt+C: searches all dirs from CWD).
+# Previews dir contents via eza (or tree, or ls --color) — same logic as the
+# Alt+C binding so both pickers feel identical.
 fcd() {
+  local preview
+  if command -v eza >/dev/null 2>&1; then
+    preview='eza --tree --color=always --level=2 {} | head -200'
+  elif command -v tree >/dev/null 2>&1; then
+    preview='tree -C {} | head -200'
+  else
+    preview='ls -la --color=always {} | head -200'
+  fi
   local dir
-  dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null | fzf --no-multi) \
+  dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null \
+        | fzf --no-multi --preview="$preview" --preview-window='right,55%,border-left') \
     && cd "$dir"
 }
 
 # fv — fuzzy-find a file and open it in $EDITOR.
+# Previews via bat (syntax-highlighted) when available, falling back to head.
 fv() {
+  local preview
+  if command -v bat >/dev/null 2>&1; then
+    preview='bat --style=numbers --color=always --line-range=:300 {} 2>/dev/null'
+  else
+    preview='head -300 {}'
+  fi
   local file
-  file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null | fzf --no-multi) \
+  file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null \
+         | fzf --no-multi --preview="$preview" --preview-window='right,55%,border-left') \
     && "${EDITOR:-nvim}" "$file"
 }
 
