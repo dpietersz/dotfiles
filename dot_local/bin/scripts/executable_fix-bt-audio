@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+
+# Workaround for wireplumber 0.5.x bug where the bluez audio monitor silently
+# fails to register A2DP endpoints after a leaked-proxy shutdown, leaving
+# connected Bluetooth headphones invisible to PipeWire (and therefore to
+# noctalia/wpctl) while still visible to bluetoothd/pavucontrol.
+#
+# Fix: restart wireplumber + pipewire-pulse, then bounce every currently
+# connected BT audio device so wireplumber re-creates its sink node.
+
+notify() {
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -a "fix-bt-audio" -i audio-headphones "$1" "${2:-}"
+  fi
+  echo "$1${2:+ — $2}"
+}
+
+notify "Restarting WirePlumber" "rebuilding bluez audio state"
+systemctl --user restart wireplumber pipewire-pulse
+sleep 2
+
+# Collect connected devices that advertise the A2DP Audio Sink UUID (0x110B).
+audio_macs=()
+while IFS=' ' read -r _ mac _; do
+  [[ -z "$mac" ]] && continue
+  if bluetoothctl info "$mac" 2>/dev/null | grep -q "Audio Sink"; then
+    audio_macs+=("$mac")
+  fi
+done < <(bluetoothctl devices Connected)
+
+if [[ ${#audio_macs[@]} -eq 0 ]]; then
+  notify "WirePlumber restarted" "no BT audio device connected — done"
+  exit 0
+fi
+
+for mac in "${audio_macs[@]}"; do
+  name=$(bluetoothctl info "$mac" | awk -F': ' '/^\tName:/ {print $2; exit}')
+  echo "→ cycling $name ($mac)"
+  bluetoothctl disconnect "$mac" >/dev/null || true
+  sleep 2
+  bluetoothctl connect "$mac" >/dev/null || true
+done
+
+sleep 2
+notify "Bluetooth audio reset" "$(printf '%s, ' "${audio_macs[@]}" | sed 's/, $//')"

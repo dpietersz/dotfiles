@@ -62,6 +62,7 @@ input {
     }
     mouse {
         accel-profile "flat"
+        accel-speed 0.75
         scroll-factor 2.0
     }
 }
@@ -147,6 +148,17 @@ binds {
     XF86AudioLowerVolume allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "volume-down"; }
     XF86AudioMute        allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "volume-mute"; }
     XF86AudioMicMute     allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "mic-mute"; }
+
+    // Workaround for wireplumber 0.5.x bug where bluez audio monitor silently fails
+    // after a leaked-proxy shutdown; restart wireplumber + cycle any connected BT
+    // audio devices so PipeWire re-creates the sink. See scripts/fix-bt-audio.
+    Mod+Shift+B hotkey-overlay-title="Fix BT audio (restart wireplumber + reconnect)" { spawn "fix-bt-audio"; }
+
+    // === Mouse Live-Tune (niri-mouse-tune edits both rendered + chezmoi source) ===
+    Mod+Ctrl+Equal       hotkey-overlay-title="Mouse: accel-speed +0.10"  { spawn "niri-mouse-tune" "accel" "up"; }
+    Mod+Ctrl+Minus       hotkey-overlay-title="Mouse: accel-speed -0.10"  { spawn "niri-mouse-tune" "accel" "down"; }
+    Mod+Ctrl+Period      hotkey-overlay-title="Mouse: scroll-factor +0.25" { spawn "niri-mouse-tune" "scroll" "up"; }
+    Mod+Ctrl+Comma       hotkey-overlay-title="Mouse: scroll-factor -0.25" { spawn "niri-mouse-tune" "scroll" "down"; }
 
     // === Brightness Controls (F5/F6) — via Noctalia ===
     XF86MonBrightnessDown allow-when-locked=true hotkey-overlay-title=null { spawn "noctalia" "msg" "brightness-down"; }
