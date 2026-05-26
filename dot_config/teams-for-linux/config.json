@@ -1,0 +1,10 @@
+{
+  "url": "https://teams.microsoft.com",
+  "disableGpu": false,
+  "screenSharing": {
+    "lockInhibitionMethod": "WakeLockSentinel"
+  },
+  "wayland": {
+    "xwaylandOptimizations": false
+  }
+}
