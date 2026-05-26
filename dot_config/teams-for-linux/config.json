@@ -1,5 +1,6 @@
 {
   "url": "https://teams.microsoft.com",
+  "awayOnSystemIdle": true,
   "disableGpu": false,
   "screenSharing": {
     "lockInhibitionMethod": "WakeLockSentinel"
