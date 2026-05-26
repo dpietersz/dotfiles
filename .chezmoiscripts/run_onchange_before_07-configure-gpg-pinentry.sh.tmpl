@@ -1,11 +1,18 @@
 #!/bin/bash
-{{- if and (not .isMacOS) (not .isServer) }}
+{{- if .remote }}
 exit 0
 {{- end }}
 
 set -euo pipefail
 
-echo "🔐 Configuring GPG to use terminal-based pinentry..."
+# Configures gpg-agent's pinentry-program. Renamed from run_once_* to
+# run_onchange_* on 2026-05-26 because the previous version exited early on
+# Linux desktop, leaving gpg-agent.conf without a pinentry-program line. That
+# race-condition'd gnome-keyring vs gpg-agent at login and surfaced as a
+# double pinentry popup. Running on every change means tightening the binary
+# preference order doesn't require manual state resets.
+
+echo "🔐 Configuring GPG pinentry..."
 
 # Create GPG config directory if it doesn't exist
 mkdir -p "$HOME/.gnupg"
@@ -34,12 +41,24 @@ if ! command -v pinentry-tty >/dev/null 2>&1; then
 fi
 PINENTRY_PATH="$(command -v pinentry-tty)"
 {{- else }}
-# Check if pinentry is installed
-if ! command -v pinentry >/dev/null 2>&1; then
-  echo "❌ Error: pinentry is not installed"
+# Linux desktop (Bluefin / Bazzite / generic Fedora) — niri + Wayland.
+# Prefer pinentry-gnome3 explicitly so we get a graphical prompt under the
+# Wayland compositor. `/usr/bin/pinentry` (alternatives-wrapper) can resolve
+# to pinentry-curses on Bluefin, which then fails silently when gpg-agent is
+# called from a non-tty context (vibe-typer, ssh-add via niri spawn, etc.) —
+# that's what produced the double-prompt regression.
+if command -v pinentry-gnome3 >/dev/null 2>&1; then
+  PINENTRY_PATH="$(command -v pinentry-gnome3)"
+elif command -v pinentry-gtk-2 >/dev/null 2>&1; then
+  PINENTRY_PATH="$(command -v pinentry-gtk-2)"
+elif command -v pinentry-qt >/dev/null 2>&1; then
+  PINENTRY_PATH="$(command -v pinentry-qt)"
+elif command -v pinentry >/dev/null 2>&1; then
+  PINENTRY_PATH="$(command -v pinentry)"
+else
+  echo "❌ Error: no pinentry binary found"
   exit 1
 fi
-PINENTRY_PATH=$(which pinentry)
 {{- end }}
 
 # Kill any running gpg-agent to clear old configuration
