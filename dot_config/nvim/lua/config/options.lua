@@ -72,7 +72,18 @@ vim.opt.iskeyword:append("-") -- Treat dash as part of word
 vim.opt.path:append("**") -- Include subdirectories in search
 vim.opt.selection = "exclusive"
 vim.opt.mouse = "a"
-vim.opt.clipboard:append("unnamedplus") -- Use system clipboard
+-- Use system clipboard. LazyVim defers clipboard init to `User VeryLazy` to
+-- avoid slow Wayland clipboard startup; that leaves a window where plain `y`
+-- doesn't reach the system clipboard. Force it at every safe firing point so
+-- yank → wl-copy → kitty Ctrl+V (Claude Code, etc.) works from the first key.
+vim.opt.clipboard = "unnamedplus"
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function() vim.opt.clipboard = "unnamedplus" end,
+})
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VeryLazy",
+  callback = function() vim.opt.clipboard = "unnamedplus" end,
+})
 vim.opt.modifiable = true
 vim.opt.encoding = "UTF-8"
 

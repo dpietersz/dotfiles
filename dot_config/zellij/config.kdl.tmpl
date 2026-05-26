@@ -22,5 +22,13 @@ copy_command "pbcopy"
 copy_command "wl-copy"
 {{- end }}
 
+// Explicit scrollback editor. Zellij defaults to $EDITOR/$VISUAL — but those
+// captured `vim` when the zellij server first started (00-env.sh runs the
+// `command -v nvim` check BEFORE 10-path.sh adds linuxbrew to PATH, so nvim
+// wasn't visible yet and the script fell through to vim). Hard-wiring nvim
+// here makes scrollback edits land in nvim with clipboard=unnamedplus, so
+// `y` writes to wl-copy and Ctrl+V in Claude Code pastes correctly.
+scrollback_editor "{{ if .isMacOS }}/opt/homebrew/bin/nvim{{ else }}/home/linuxbrew/.linuxbrew/bin/nvim{{ end }}"
+
 show_startup_tips false
 show_release_notes false
