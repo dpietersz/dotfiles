@@ -1,0 +1,193 @@
+# 30-fzf.sh — fzf integration and defaults.
+#
+# Sourced after 20-tools.sh (so brew/mise have populated PATH) and before
+# 90-* / .bashrc tail. Provides:
+#   • Ctrl+R   fuzzy command-history search
+#   • Ctrl+T   fuzzy file picker → paste path onto command line
+#   • Alt+C    fuzzy directory picker → cd
+#   • Tab      fuzzy completion for ssh/kill/export/unalias/etc.
+#
+# These are fzf's standard key-bindings; they only exist if shell integration
+# is loaded. Once loaded, Ctrl+R replaces bash's reverse-i-search.
+
+if ! command -v fzf >/dev/null 2>&1; then
+  return 0 2>/dev/null
+fi
+
+# --- Defaults ---
+# Use `fd` for file/dir listing so .gitignore + hidden-file rules are honoured
+# and indexing is much faster than `find`. Falls back to find if fd missing.
+if command -v fd >/dev/null 2>&1; then
+  export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+fi
+
+# Match the gruvbox-dark palette already used by zellij/kitty for a unified
+# look. Reverse layout + 60% height stays out of the way on tall terminals.
+export FZF_DEFAULT_OPTS='
+  --height=60%
+  --layout=reverse
+  --border=rounded
+  --info=inline
+  --prompt="❯ "
+  --pointer="▶"
+  --marker="✓"
+  --color=fg:#d4be98,bg:-1,hl:#a9b665
+  --color=fg+:#d4be98,bg+:#3c3836,hl+:#d8a657
+  --color=info:#7daea3,prompt:#ea6962,pointer:#d3869b
+  --color=marker:#a9b665,spinner:#d3869b,header:#7daea3
+'
+
+# Ctrl+T file picker → preview with bat if available, head otherwise.
+if command -v bat >/dev/null 2>&1; then
+  export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+else
+  export FZF_CTRL_T_OPTS="--preview 'head -300 {}'"
+fi
+
+# Alt+C dir picker → show tree preview (eza > tree > ls).
+if command -v eza >/dev/null 2>&1; then
+  export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always --level=2 {} | head -200'"
+elif command -v tree >/dev/null 2>&1; then
+  export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+fi
+
+# Ctrl+R history → keep it dense; no preview needed.
+export FZF_CTRL_R_OPTS="
+  --bind 'ctrl-y:execute-silent(printf %s {2..} | wl-copy)+abort'
+  --header 'Ctrl-Y: copy command to clipboard'
+"
+
+# --- Shell integration (key-bindings + completion) ---
+# fzf 0.48+ ships `fzf --bash`. Older installs use the per-file integration
+# under $(brew --prefix)/opt/fzf/shell/. We try the modern path first.
+if [ "$CURRENT_SHELL" = "bash" ]; then
+  if fzf --bash >/dev/null 2>&1; then
+    eval "$(fzf --bash)"
+  else
+    for f in \
+      /home/linuxbrew/.linuxbrew/opt/fzf/shell/key-bindings.bash \
+      /home/linuxbrew/.linuxbrew/opt/fzf/shell/completion.bash \
+      /usr/share/fzf/key-bindings.bash \
+      /usr/share/fzf/completion.bash; do
+      [ -r "$f" ] && source "$f"
+    done
+  fi
+
+  # Zellij intercepts Ctrl+T (its default "tab mode" prefix), so fzf's
+  # built-in Ctrl+T file picker never reaches the shell inside a zellij pane.
+  # Bind Alt+T as a second trigger for the same widget so the file picker
+  # works whether or not we're in zellij.
+  if declare -F fzf-file-widget >/dev/null 2>&1; then
+    bind -m emacs-standard '"\et": "\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
+    bind -m vi-command       '"\et": "i\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
+    bind -m vi-insert        '"\et": "\C-x\C-addi`__fzf_select__`\C-x\C-e\C-x\C-r\C-m"' 2>/dev/null || true
+  fi
+elif [ "$CURRENT_SHELL" = "zsh" ]; then
+  if fzf --zsh >/dev/null 2>&1; then
+    eval "$(fzf --zsh)"
+  fi
+fi
+
+# --- Custom functions (from omerxx's pattern, adapted) ---
+
+# fcd — fuzzy directory jump (deeper than Alt+C: searches all dirs from CWD).
+fcd() {
+  local dir
+  dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null | fzf --no-multi) \
+    && cd "$dir"
+}
+
+# fv — fuzzy-find a file and open it in $EDITOR.
+fv() {
+  local file
+  file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null | fzf --no-multi) \
+    && "${EDITOR:-nvim}" "$file"
+}
+
+# fgrep — ripgrep + fzf live-grep: type a query, get matches, Enter opens in nvim.
+fgrep() {
+  local rg_prefix="rg --column --line-number --no-heading --color=always --smart-case"
+  local result
+  result=$(
+    FZF_DEFAULT_COMMAND="$rg_prefix ''" \
+    fzf --ansi --disabled --query "${1:-}" \
+        --bind "change:reload:$rg_prefix {q} || true" \
+        --delimiter : --preview 'bat --color=always --highlight-line {2} {1}' \
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+  ) || return 0
+  [ -n "$result" ] && "${EDITOR:-nvim}" "$(echo "$result" | cut -d: -f1)" \
+    +"$(echo "$result" | cut -d: -f2)"
+}
+
+# fkill — fuzzy-pick a process and send SIGTERM (or SIGKILL with -9).
+fkill() {
+  local signal="${1:-15}"
+  local pid
+  pid=$(ps -ef | sed 1d | fzf --multi --header='Pick process to kill' \
+        | awk '{print $2}')
+  if [ -n "$pid" ]; then
+    echo "$pid" | xargs -r kill "-$signal"
+  fi
+}
+
+# fkube — fuzzy-pick a kubernetes namespace and switch to it.
+{{- if not .isMacOS }}
+if command -v kubectl >/dev/null 2>&1; then
+  fkube() {
+    local ns
+    ns=$(kubectl get ns -o name 2>/dev/null | sed 's|namespace/||' | fzf --no-multi) \
+      && kubectl config set-context --current --namespace="$ns" \
+      && echo "→ namespace: $ns"
+  }
+  fkubepod() {
+    local pod
+    pod=$(kubectl get pods --no-headers 2>/dev/null | fzf --no-multi | awk '{print $1}') \
+      && [ -n "$pod" ] && kubectl describe pod "$pod"
+  }
+fi
+{{- end }}
+
+# fbranch — git branch fuzzy-checkout.
+fbranch() {
+  local branch
+  branch=$(git branch --all --color=never \
+    | grep -v HEAD \
+    | sed 's/^[* ] //; s|remotes/origin/||' \
+    | sort -u \
+    | fzf --no-multi) \
+    && git checkout "$(echo "$branch" | sed 's|^origin/||')"
+}
+
+# fpass — fuzzy-pick a pass(1) entry and copy the password to clipboard.
+# Uses pass's built-in `-c` (clip) so the secret never echoes to the terminal.
+if command -v pass >/dev/null 2>&1; then
+  fpass() {
+    local store="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+    local entry
+    entry=$(fd --type f --extension gpg . "$store" 2>/dev/null \
+      | sed "s|^$store/||; s|\.gpg$||" \
+      | fzf --no-multi --header='Pick a pass entry — copies password to clipboard')
+    [ -n "$entry" ] && pass -c "$entry"
+  }
+fi
+
+# fssh — fuzzy-pick an SSH host from ~/.ssh/config and connect.
+fssh() {
+  local host
+  host=$(awk '/^Host / && $2 !~ /[*?]/ {for (i=2;i<=NF;i++) print $i}' \
+    ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null \
+    | sort -u | fzf --no-multi --header='Pick an SSH host')
+  [ -n "$host" ] && ssh "$host"
+}
+
+# fgco — fuzzy pick a git commit and copy SHA (or use it in any next cmd).
+fgco() {
+  local commit
+  commit=$(git log --oneline --color=always | fzf --ansi --no-multi \
+    --preview 'git show --color=always {1}' \
+    --preview-window 'right:60%' \
+    --bind 'enter:execute(git show {1} | less -R)+abort') \
+    && echo "${commit%% *}"
+}
