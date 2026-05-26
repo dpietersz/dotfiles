@@ -10,3 +10,14 @@ brew "openjdk@17"
 # Terminal image viewer (sixel/kitty/iterm graphics). Linux-only; on macOS
 # this is typically installed ad-hoc per machine if needed.
 brew "chafa"
+
+# yt-dlp + ffmpeg — required by the `fabric` CLI for `--youtube` (transcript
+# extraction) and `--visual` (OCR + scene detection). Installed via brew on
+# macOS already (Brewfile.darwin.tmpl lines 32, 37); mirror on Linux so
+# `fabric -y <url> --transcript` works the same on Bluefin/Bazzite.
+brew "yt-dlp"
+brew "ffmpeg"
+
+# kondo — interactive cleaner for build/cache directories (node_modules,
+# target/, .venv, etc.). Useful for reclaiming disk on the dev workstation.
+brew "kondo"
