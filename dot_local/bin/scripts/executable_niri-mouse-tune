@@ -1,0 +1,51 @@
+#!/bin/bash
+# Live-tune niri mouse settings. Edits both the rendered ~/.config/niri/config.kdl
+# (so niri hot-reloads immediately) and the chezmoi source template (so the change
+# survives the next `chezmoi apply`). Does NOT run `chezmoi apply` itself, so no
+# auto-commit fires; commit manually when satisfied.
+#
+# Usage: niri-mouse-tune <accel|scroll> <up|down>
+set -euo pipefail
+
+if [ $# -ne 2 ]; then
+  echo "usage: $0 <accel|scroll> <up|down>" >&2
+  exit 1
+fi
+
+case "$1" in
+  accel)  field="accel-speed";   step="0.1";  min="-1.0"; max="1.0" ;;
+  scroll) field="scroll-factor"; step="0.25"; min="0.1";  max="10.0" ;;
+  *) echo "first arg must be 'accel' or 'scroll'" >&2; exit 1 ;;
+esac
+
+case "$2" in
+  up)   sign="+" ;;
+  down) sign="-" ;;
+  *) echo "second arg must be 'up' or 'down'" >&2; exit 1 ;;
+esac
+
+live="$HOME/.config/niri/config.kdl"
+src="$(chezmoi source-path "$live")"
+
+current=$(grep -oE "${field} -?[0-9]+\.?[0-9]*" "$live" | head -1 | awk '{print $2}')
+if [ -z "$current" ]; then
+  echo "could not find '${field}' in $live" >&2
+  exit 1
+fi
+
+new=$(awk -v c="$current" -v s="$step" -v sg="$sign" -v lo="$min" -v hi="$max" '
+  BEGIN {
+    v = (sg=="+") ? c+s : c-s
+    if (v < lo) v = lo
+    if (v > hi) v = hi
+    printf "%.2f", v
+  }
+')
+
+sed -i -E "s/(${field}) -?[0-9]+\.?[0-9]*/\1 ${new}/" "$live"
+sed -i -E "s/(${field}) -?[0-9]+\.?[0-9]*/\1 ${new}/" "$src"
+
+if command -v notify-send >/dev/null 2>&1; then
+  notify-send -t 1500 "niri mouse" "${field} = ${new}"
+fi
+echo "${field} ${current} -> ${new}"
