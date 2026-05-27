@@ -35,3 +35,9 @@
 # The wrapper exec'd into a `browser-toolbox` distrobox that no longer exists.
 # Default-browser wiring now lives in run_onchange_after_18-set-default-browser.
 .local/bin/zen
+
+# toggle-workspaces — replaced by toggle-workspace-monitor (2026-05-27).
+# Old script moved ALL named workspaces between monitors with a hardcoded LG
+# assumption (--to-lg / --to-laptop). New script toggles the ACTIVE workspace
+# between laptop (eDP-*) and any connected external monitor.
+.local/bin/scripts/toggle-workspaces

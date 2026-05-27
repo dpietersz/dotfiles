@@ -436,5 +436,8 @@ binds {
     Mod+Ctrl+Shift+S hotkey-overlay-title="Screenshot (monitor: all)"     { spawn "dot-screenshot" "monitor-all"; }
 
     // === Workspace tooling ===
-    Mod+Shift+M hotkey-overlay-title="Move workspaces to LG" { spawn "bash" "-c" "$HOME/.local/bin/scripts/toggle-workspaces --to-lg"; }
+    // Toggle the active workspace between laptop (eDP-*) and the external
+    // monitor (any HDMI/DP, not just the LG). Script auto-detects the
+    // external by ruling out eDP-* and no-ops cleanly when nothing's plugged in.
+    Mod+Shift+M hotkey-overlay-title="Toggle workspace to other monitor" { spawn "toggle-workspace-monitor"; }
 }

@@ -1,0 +1,47 @@
+#!/bin/bash
+# ─────────────────────────────────────────────────────────────────────────────
+# toggle-workspace-monitor — cycle the focused niri workspace through all
+# connected monitors.
+#
+# Behaviour:
+#   - With 1 monitor (laptop only): no-op + notify.
+#   - With 2 monitors (laptop + one external): toggle between the two.
+#   - With 3+ monitors (laptop + multiple externals): cycle in deterministic
+#     order. Output names are sorted alphabetically, so the rotation is the
+#     same every time — no surprises across plug events.
+#
+# Why sorted by name rather than by spatial position: niri's `outputs` JSON
+# doesn't carry the global layout in a directly usable form here, and spatial
+# layouts change when you re-dock. Alphabetical on connector name
+# (DP-1, eDP-1, HDMI-A-1, ...) is stable and reproducible.
+# ─────────────────────────────────────────────────────────────────────────────
+
+set -euo pipefail
+
+OUTPUTS=$(niri msg --json outputs | jq -r 'keys[]' | sort)
+OUTPUT_COUNT=$(echo "$OUTPUTS" | grep -c .)
+
+if [ "$OUTPUT_COUNT" -lt 2 ]; then
+  notify-send -a niri "No other monitor connected" \
+    "Plug in an external display and try again." 2>/dev/null || true
+  exit 0
+fi
+
+CURRENT_OUTPUT=$(niri msg --json workspaces | jq -r '.[] | select(.is_focused) | .output')
+
+# Find the next output in the sorted list, wrapping around to the first.
+TARGET=$(echo "$OUTPUTS" | awk -v cur="$CURRENT_OUTPUT" '
+  { lines[NR] = $0 }
+  END {
+    for (i = 1; i <= NR; i++) {
+      if (lines[i] == cur) {
+        print lines[(i % NR) + 1]
+        exit
+      }
+    }
+    # Current output not in list (should not happen) - fall back to first.
+    print lines[1]
+  }
+')
+
+niri msg action move-workspace-to-monitor "$TARGET"
