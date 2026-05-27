@@ -31,11 +31,16 @@ scrollback-limit = 2000
 # ============================================================================
 # Shell Configuration (macOS only)
 # ============================================================================
-
-# Set bash as the default shell for Ghostty on macOS
-command = /bin/bash
+{{ if .isMacOS }}
+# Force Homebrew bash (5.x) on macOS. /bin/bash is Apple's bash 3.2 from 2007,
+# which (a) rejects hyphenated function names like `fzf-file-widget` under POSIX
+# mode and (b) is incompatible with fzf 0.48+'s `fzf --bash` integration. Path
+# differs by arch — Apple Silicon vs Intel. Linux Ghostty installs (if any) fall
+# through and use the user's login shell.
+command = {{ if eq .chezmoi.arch "arm64" }}/opt/homebrew/bin/bash{{ else }}/usr/local/bin/bash{{ end }} --login
 
 # Enable shell integration for bash
 shell-integration = bash
+{{- end }}
 
 keybind = shift+enter=text:\x1b\r

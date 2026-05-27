@@ -25,6 +25,26 @@ if [ "$CURRENT_SHELL" = "$BASH_PATH" ]; then
   exit 0
 fi
 
+# chsh refuses to set a shell that isn't in /etc/shells. Apple's /bin/bash is
+# bash 3.2 (2007); we want Homebrew's bash (5.x) which lives outside the
+# default list. Add it once, with sudo. Required because (a) the fzf shell
+# integration requires bash >= 4, (b) Ghostty's POSIX-mode bootstrap reaches
+# the shell rc in posix mode, where 3.2's parser rejects hyphenated function
+# names like fzf-file-widget.
+if ! grep -qxF "$BASH_PATH" /etc/shells 2>/dev/null; then
+  echo "Adding $BASH_PATH to /etc/shells..."
+  if [ -t 0 ]; then
+    echo "$BASH_PATH" | sudo tee -a /etc/shells >/dev/null
+  elif sudo -n true 2>/dev/null; then
+    echo "$BASH_PATH" | sudo -n tee -a /etc/shells >/dev/null
+  else
+    echo "⚠️  Cannot add $BASH_PATH to /etc/shells non-interactively."
+    echo "Run manually, then re-run chezmoi apply:"
+    echo "    echo $BASH_PATH | sudo tee -a /etc/shells"
+    exit 0
+  fi
+fi
+
 echo "Setting bash as default shell..."
 
 # Try interactive chsh first if we have a terminal

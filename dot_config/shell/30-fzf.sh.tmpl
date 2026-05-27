@@ -92,7 +92,14 @@ fi
 # --- Shell integration (key-bindings + completion) ---
 # fzf 0.48+ ships `fzf --bash`. Older installs use the per-file integration
 # under $(brew --prefix)/opt/fzf/shell/. We try the modern path first.
-if [ "$CURRENT_SHELL" = "bash" ]; then
+#
+# Bash 3.2 (macOS's /bin/bash) cannot parse fzf's modern integration: it defines
+# `fzf-file-widget` (hyphenated function name, rejected in POSIX mode) and uses
+# `func < <(...)` redirection patterns 3.2's parser chokes on under certain
+# init conditions. macOS users should be on Homebrew bash 5.x (see Ghostty
+# config and run_once_after_05-set-default-shell-bash). Until then, skip the
+# integration cleanly instead of dumping syntax errors to stderr.
+if [ "$CURRENT_SHELL" = "bash" ] && [ "${BASH_VERSINFO[0]:-0}" -ge 4 ]; then
   if fzf --bash >/dev/null 2>&1; then
     eval "$(fzf --bash)"
   else
