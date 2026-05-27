@@ -86,13 +86,12 @@ btn_yes = { reversed = true }
 btn_no  = {}
 
 # === Cmp (completion popup) ===
+# Note: icon_file / icon_folder / icon_command are STRINGS (glyph chars),
+# not Style maps. Leave them at yazi defaults rather than risk a parse error.
 [cmp]
-border          = { fg = "@accent@" }
-active          = { fg = "@accent@", bg = "@bg_sel@" }
-inactive        = {}
-icon_file       = { fg = "@blue@" }
-icon_folder     = { fg = "@accent@" }
-icon_command    = { fg = "@warning@" }
+border   = { fg = "@accent@" }
+active   = { fg = "@accent@", bg = "@bg_sel@" }
+inactive = {}
 
 # === Tasks ===
 [tasks]

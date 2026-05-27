@@ -1,0 +1,11 @@
+// Seed file — chezmoi creates this only if it's missing (`create_` prefix).
+// Once nwg-displays is run on this machine, it overwrites this file with the
+// machine-specific output configuration. Until then, this single-display
+// fallback keeps niri's `include "monitor.kdl"` directive from erroring on
+// first boot.
+
+output "eDP-1" {
+    mode "1920x1080@60.0"
+    scale 1.0
+    position x=0 y=0
+}
