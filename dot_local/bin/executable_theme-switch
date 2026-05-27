@@ -41,14 +41,15 @@ next_theme() {
 }
 
 # Parse a TOML palette into a flat associative array of key=value pairs.
-# Simple parser: `key = "value"` or `key = value` lines, ignoring # comments.
+# Accepts `key = "value"` lines with an optional trailing `# comment`.
 load_palette() {
   local file="$1"
   declare -gA PAL=()
   while IFS= read -r line; do
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
     [[ "$line" =~ ^[[:space:]]*$ ]] && continue
-    if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*\"?([^\"]*)\"?[[:space:]]*$ ]]; then
+    # Match: key = "value" [optional trailing whitespace + comment]
+    if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*\"([^\"]*)\"[[:space:]]*(#.*)?$ ]]; then
       PAL["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
     fi
   done <"$file"
@@ -94,6 +95,13 @@ fi
 if command -v niri >/dev/null; then
   render "$TEMPLATES_DIR/niri-theme.kdl" "$HOME/.config/niri/theme.kdl"
   niri msg action load-config-file >/dev/null 2>&1 || true
+fi
+
+# --- yazi ---
+# Direct theme.toml render (no [flavor] block — that would shadow our colors).
+# yazi watches its config files; new yazi processes pick up the change.
+if command -v yazi >/dev/null; then
+  render "$TEMPLATES_DIR/yazi-theme.toml" "$HOME/.config/yazi/theme.toml"
 fi
 
 # --- zellij ---

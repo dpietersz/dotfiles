@@ -1,0 +1,50 @@
+# Kanagawa Lotus — the official light variant of kanagawa.nvim.
+# First light theme in the rotation. Palette: https://github.com/rebelot/kanagawa.nvim
+# (lotus colors — designed for light terminal backgrounds).
+
+name        = "kanagawa-lotus"
+display     = "Kanagawa Lotus"
+mode        = "light"
+
+bg          = "#f2ecbc"   # Lotus White0 — page bg
+bg_alt      = "#e7dba0"   # Lotus White1
+bg_sel      = "#d5cea3"   # Lotus White2
+fg          = "#545464"   # Lotus ink (text on light bg)
+fg_dim      = "#6f6f70"
+cursor      = "#545464"
+border      = "#8a8980"
+border_active = "#cc6d00"
+
+black          = "#545464"
+red            = "#c84053"
+green          = "#6f894e"
+yellow         = "#77713f"
+blue           = "#4d699b"
+magenta        = "#b35b79"
+cyan           = "#597b75"
+white          = "#43436c"
+bright_black   = "#8a8980"
+bright_red     = "#d7474b"
+bright_green   = "#6f894e"
+bright_yellow  = "#836f4a"
+bright_blue    = "#4d699b"
+bright_magenta = "#b35b79"
+bright_cyan    = "#597b75"
+bright_white   = "#43436c"
+
+accent      = "#cc6d00"
+warning     = "#e98a00"
+error       = "#c84053"
+success     = "#6f894e"
+
+# Per-app extras
+nvim_colorscheme    = "kanagawa-lotus"
+nvim_background     = "light"
+zellij_theme        = "gruvbox-light"
+starship_preset     = "kanagawa-lotus"
+noctalia_builtin    = "Kanagawa"
+bat_theme           = "GitHub"
+
+# Wallpaper
+wallpaper_dir       = "~/.config/themes/wallpapers/kanagawa-lotus"
+wallpaper_default   = "~/.config/themes/wallpapers/kanagawa-lotus/great-wave.jpg"

@@ -1,0 +1,49 @@
+# Tokyo Night Dark — based on folke/tokyonight.nvim (night variant).
+# Palette: https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_night.lua
+
+name        = "tokyo-night-dark"
+display     = "Tokyo Night"
+mode        = "dark"
+
+bg          = "#1a1b26"   # bg
+bg_alt      = "#24283b"   # bg_dark
+bg_sel      = "#414868"   # bg_highlight
+fg          = "#c0caf5"   # fg
+fg_dim      = "#a9b1d6"
+cursor      = "#c0caf5"
+border      = "#414868"
+border_active = "#7aa2f7"
+
+black          = "#15161e"
+red            = "#f7768e"
+green          = "#9ece6a"
+yellow         = "#e0af68"
+blue           = "#7aa2f7"
+magenta        = "#bb9af7"
+cyan           = "#7dcfff"
+white          = "#a9b1d6"
+bright_black   = "#414868"
+bright_red     = "#f7768e"
+bright_green   = "#9ece6a"
+bright_yellow  = "#e0af68"
+bright_blue    = "#7aa2f7"
+bright_magenta = "#bb9af7"
+bright_cyan    = "#7dcfff"
+bright_white   = "#c0caf5"
+
+accent      = "#7aa2f7"
+warning     = "#e0af68"
+error       = "#f7768e"
+success     = "#9ece6a"
+
+# Per-app extras
+nvim_colorscheme    = "tokyonight-night"
+nvim_background     = "dark"
+zellij_theme        = "tokyo-night-dark"
+starship_preset     = "tokyo-night"
+noctalia_builtin    = "TokyoNight"
+bat_theme           = "TwoDark"
+
+# Wallpaper
+wallpaper_dir       = "~/.config/themes/wallpapers/tokyo-night-dark"
+wallpaper_default   = "~/.config/themes/wallpapers/tokyo-night-dark/tokyo-neon.jpg"

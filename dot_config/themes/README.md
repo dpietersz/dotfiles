@@ -6,8 +6,10 @@ substituted on every switch. State (active theme) lives in `state/current`.
 
 ## Available themes
 
-- **gruvbox-dark** (default)
-- **rose-pine**
+- **gruvbox-dark** (default — dark)
+- **rose-pine** (dark)
+- **kanagawa-lotus** (light — first light theme)
+- **tokyo-night-dark** (dark)
 
 ## Per-app coverage (reliable)
 
@@ -19,12 +21,10 @@ kitty · niri (focus ring) · zellij · starship · nvim · fzf · bat · noctal
 Each palette names a `wallpaper_dir` and `wallpaper_default`. On theme switch
 those values are written into Noctalia's state file.
 
-Both palettes' wallpapers live INSIDE the chezmoi tree:
-
-- **gruvbox-dark** → source `dot_config/themes/wallpapers/gruvbox-dark/`,
-  deployed to `~/.config/themes/wallpapers/gruvbox-dark/`.
-- **rose-pine** → source `dot_config/themes/wallpapers/rose-pine/`,
-  deployed to `~/.config/themes/wallpapers/rose-pine/`.
+All palette wallpapers live INSIDE the chezmoi tree under
+`dot_config/themes/wallpapers/<theme>/`, deployed to
+`~/.config/themes/wallpapers/<theme>/`. Each palette's `wallpaper_dir` and
+`wallpaper_default` point at its own folder.
 
 Add wallpapers by dropping files into the source directory and running
 `chezmoi apply`. The legacy `~/dev/Pictures/Wallpapers/dark/` directory is no
