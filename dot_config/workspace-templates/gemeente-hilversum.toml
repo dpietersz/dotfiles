@@ -1,0 +1,74 @@
+# Hilversum workspace template
+#
+# Schema:
+#   name           — string. Used as the niri workspace name when opened, and
+#                    as the dedup marker (one workspace per template).
+#   description    — optional. Shown in the fzf preview pane.
+#   [[columns]]    — array. Each entry is one niri column.
+#       tab-group  — optional documentation label. No effect on its own.
+#                    Tabbed display is decided automatically: columns with
+#                    2+ tabs get set-column-display tabbed (the same thing
+#                    Mod+Shift+T toggles).
+#       tabs       — array of inline tables. Each entry becomes ONE window
+#                    in the column, in declared order. Each entry must have
+#                    exactly one of:
+#                      helium  = "<url>"             # new Helium window, one URL
+#                      command = ["bin", "arg", ...] # any other application
+#                    Command entries may also set:
+#                      app_id  = "<niri app_id>"     # OPTIONAL. If an existing
+#                                                     window with this app_id is
+#                                                     already running on another
+#                                                     workspace, it gets moved
+#                                                     to this workspace instead
+#                                                     of trying to spawn a new
+#                                                     instance. Required for
+#                                                     single-instance apps like
+#                                                     teams-for-linux that won't
+#                                                     spawn a second window.
+
+name        = "Hilversum"
+description = "Citrix · Dev tools tab-group · Teams"
+
+# === Column 1: Citrix workspace (single Helium window) =====================
+[[columns]]
+tabs = [
+  { helium = "https://werkplek.hilversum.nl" },
+]
+
+# === Column 2: Development tools (niri tabbed display, declared order) =====
+# Storage Explorer uses the local launcher script (~/.local/bin/scripts/
+# launch-storage-explorer) instead of gtk-launch on the host-exported
+# distrobox .desktop. Reason: the auto-generated .desktop has
+# Path=/opt/StorageExplorer which is a valid path only INSIDE the container;
+# gtk-launch chdir's on the host before invoking distrobox-enter and fails
+# with "Failed to change to directory '/opt/StorageExplorer' (No such file or
+# directory)". The launcher script bypasses that by calling distrobox-enter
+# directly with the same DBUS/XDG env injection the .desktop declared.
+[[columns]]
+tab-group = "Development tools"
+tabs = [
+  { helium  = "https://dev.azure.com/Hilversum-IM/Proces%20en%20Data" },
+  { helium  = "https://app.powerbi.com" },
+  { helium  = "https://adf.azure.com/en/home" },
+  { helium  = "https://adb-5244239616138753.13.azuredatabricks.net" },
+  # `code -n <folder>` forces a new VS Code window opened on that folder.
+  # No app_id hint here on purpose: if VS Code is already running on a
+  # DIFFERENT folder, claiming that existing window would give the wrong
+  # workspace. -n guarantees a fresh window for this template's folder.
+  # The engine expands ~ at spawn time so the literal "~/dev/..." works.
+  { command = ["code", "-n", "~/dev/Repos/dev.azure.com/Hilversum-IM/Lakehouse"] },
+  { command = ["launch-storage-explorer"],    app_id = "storageexplorer" },
+  { helium  = "https://portal.azure.com" },
+  { helium  = "https://outlook.office.com" },
+]
+
+# === Column 3: Microsoft Teams (single window) =============================
+# Teams is single-instance: relaunching teams-for-linux does NOT create a
+# second window, it just raises the existing one. The app_id hint lets the
+# engine spot an already-running Teams window on a different workspace and
+# MOVE it here instead of spawning (and timing out waiting for a new window
+# that will never come).
+[[columns]]
+tabs = [
+  { command = ["teams-for-linux"], app_id = "teams-for-linux" },
+]

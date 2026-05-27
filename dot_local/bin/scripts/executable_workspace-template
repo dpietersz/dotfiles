@@ -1,0 +1,468 @@
+#!/usr/bin/env python3
+"""
+workspace-template — manage niri workspace templates.
+
+A template is a TOML file in ~/.config/workspace-templates/ describing a set
+of columns, each containing one or more Helium browser windows (with browser
+tabs) and optionally a non-browser command. Opening a template either focuses
+its existing named workspace (if already open) or claims the first empty
+workspace, names it after the template, and spawns all the windows in the
+declared column / tab-group layout.
+
+Subcommands:
+  list             one line per template, prefixed with state
+  open  <name>     focus-if-open, otherwise spawn into next empty workspace
+  close <name>     close all windows on that workspace and unset its name
+  picker           default: fzf UI with toggle action (OPEN / CLOSE)
+
+Lives at ~/.local/bin/scripts/workspace-template (chezmoi-managed).
+Bound in niri to Mod+E via a floating kitty popup (see niri config).
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import time
+import tomllib
+from pathlib import Path
+from typing import Any
+
+TEMPLATE_DIR = Path(
+    os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+) / "workspace-templates"
+
+HELIUM_BIN = "helium-browser-bin"
+HELIUM_APP_ID = "helium"
+WINDOW_WAIT_TIMEOUT_S = 20.0    # generous — apps like Teams cold-start slowly
+WINDOW_POLL_INTERVAL_S = 0.08
+SETTLE_AFTER_CONSUME_S = 0.1
+# How long a newly-sighted command window must stay present before we trust
+# it as "the" window. Apps with a splash screen (Storage Explorer is the
+# motivating case) show a transient window for ~1s before the real main
+# window appears. If we consumed-into-column too eagerly the splash dies
+# mid-construction and breaks the layout. 1.5s is enough to clear SE.
+COMMAND_WINDOW_STABILITY_S = 1.5
+
+
+# ─── niri helpers ───────────────────────────────────────────────────────────
+
+
+def niri_json(*args: str) -> Any:
+    out = subprocess.check_output(["niri", "msg", "--json", *args])
+    return json.loads(out)
+
+
+def niri_action(*args: str) -> None:
+    subprocess.run(["niri", "msg", "action", *args], check=True)
+
+
+def workspaces() -> list[dict]:
+    return niri_json("workspaces")
+
+
+def windows() -> list[dict]:
+    return niri_json("windows")
+
+
+def find_workspace_by_name(name: str) -> dict | None:
+    return next((w for w in workspaces() if w.get("name") == name), None)
+
+
+def find_first_empty_workspace() -> dict | None:
+    """First workspace (by idx, current monitor preferred) with zero windows."""
+    wins = windows()
+    occupied_ids = {w["workspace_id"] for w in wins}
+    # Prefer current monitor; fall back to any.
+    focused_output = next(
+        (w["output"] for w in workspaces() if w.get("is_focused")), None
+    )
+    candidates = sorted(workspaces(), key=lambda w: (w["output"] != focused_output, w["idx"]))
+    for ws in candidates:
+        if ws["id"] not in occupied_ids:
+            return ws
+    return None
+
+
+def wait_for_new_window(known_ids: set[int], app_id: str | None = None) -> dict | None:
+    """Wait for a new window to appear. If app_id is given, restrict to that
+    application; otherwise accept any new window (used for command-launched
+    apps whose final app_id we cannot predict ahead of time)."""
+    deadline = time.monotonic() + WINDOW_WAIT_TIMEOUT_S
+    while time.monotonic() < deadline:
+        for w in windows():
+            if w["id"] in known_ids:
+                continue
+            if app_id is not None and w.get("app_id") != app_id:
+                continue
+            return w
+        time.sleep(WINDOW_POLL_INTERVAL_S)
+    return None
+
+
+def confirm_window_stable(window_id: int, hold_s: float) -> dict | None:
+    """Re-check that a window we just sighted is still present after a
+    short hold. Splash screens (Storage Explorer is the motivator) appear
+    briefly then get replaced by the real main window; if we acted on the
+    splash and consumed it into a column, the layout breaks when the splash
+    dies. This guard lets the splash die first so we lock onto the main
+    window. Returns the window dict if still alive, None if it vanished."""
+    time.sleep(hold_s)
+    return next((w for w in windows() if w["id"] == window_id), None)
+
+
+# ─── template loading ───────────────────────────────────────────────────────
+
+
+def load_templates() -> list[tuple[Path, dict]]:
+    if not TEMPLATE_DIR.is_dir():
+        return []
+    out = []
+    for f in sorted(TEMPLATE_DIR.glob("*.toml")):
+        try:
+            with f.open("rb") as fh:
+                data = tomllib.load(fh)
+            if "name" in data:
+                out.append((f, data))
+        except Exception as e:
+            print(f"warning: failed to load {f}: {e}", file=sys.stderr)
+    return out
+
+
+def find_template_by_name(name: str) -> dict | None:
+    for _, tpl in load_templates():
+        if tpl.get("name") == name:
+            return tpl
+    return None
+
+
+# ─── subcommands ────────────────────────────────────────────────────────────
+
+
+def cmd_list() -> int:
+    for _, tpl in load_templates():
+        name = tpl["name"]
+        state = "OPEN" if find_workspace_by_name(name) else "CLOSED"
+        desc = tpl.get("description", "")
+        print(f"{state}\t{name}\t{desc}")
+    return 0
+
+
+def cmd_open(name: str) -> int:
+    tpl = find_template_by_name(name)
+    if tpl is None:
+        print(f"no template named '{name}'", file=sys.stderr)
+        return 1
+
+    # Already open → focus and exit (idempotent).
+    if find_workspace_by_name(name):
+        niri_action("focus-workspace", name)
+        return 0
+
+    target = find_first_empty_workspace()
+    if target is None:
+        notify(f"no empty workspace for '{name}'")
+        return 1
+
+    # Focus the target workspace and name it. Construction happens with
+    # the target focused (niri's consume / set-column-display actions are
+    # focus-relative). Tradeoff: visible during build. Mitigation: fast.
+    niri_action("focus-workspace", str(target["idx"]))
+    time.sleep(0.1)
+    niri_action("set-workspace-name", name)
+
+    target_ws_id = target["id"]
+    notify(f"opening '{name}'…")
+
+    skipped: list[str] = []
+    for col_idx, column in enumerate(tpl.get("columns", [])):
+        tabs = column.get("tabs", [])
+        if not tabs:
+            continue
+
+        # SPAWN PHASE for this column — every tab spawns its own column to
+        # the right; consumes are deferred to after the whole column is
+        # placed. Reason: an app like Storage Explorer shows a splash window
+        # first and then a real main window with a DIFFERENT app_id. If we
+        # consumed inline, an orphan main window appearing late would land
+        # between the column-under-construction and the next spawn, and the
+        # next consume would target the wrong column. Deferring all consumes
+        # until after every tab in the column has landed and settled avoids
+        # this entire class of races.
+        column_window_ids: list[int] = []
+        for tab_idx, tab in enumerate(tabs):
+            new = place_tab(tab, target_ws_id, name)
+            if new is None:
+                skipped.append(f"col{col_idx}.tab{tab_idx}")
+                continue
+            column_window_ids.append(new["id"])
+
+        # LAYOUT PHASE for this column — merge every window after the first
+        # into the first one's column by focusing each in turn and calling
+        # consume-or-expel-window-left (the action behind Mod+BracketLeft).
+        # When the focused window is alone in a column with another column
+        # to its left, this action moves the window into that left column,
+        # making it a tab in the resulting tab-group. We walk in declared
+        # order, so the left neighbour is always the growing tab-group.
+        if len(column_window_ids) > 1:
+            for wid in column_window_ids[1:]:
+                niri_action("focus-window", "--id", str(wid))
+                niri_action("consume-or-expel-window-left")
+                time.sleep(SETTLE_AFTER_CONSUME_S)
+            niri_action("set-column-display", "tabbed")
+
+    # Kick every zellij session in case our window-event storm desynced its
+    # cached dimensions (the popup kitty's open/close interacts with the
+    # zellij-main kitty enough that zellij can latch onto a stale size).
+    kick_zellij_sigwinch()
+
+    if skipped:
+        notify(f"'{name}' ready (skipped: {', '.join(skipped)})")
+    else:
+        notify(f"'{name}' ready")
+    return 0
+
+
+def place_tab(tab: dict, target_ws_id: int, ws_name: str) -> dict | None:
+    """Place one tab's window on the target workspace and leave focus on it,
+    so the caller can do `focus-column-left` + `consume-window-into-column`
+    for the tab-group construction.
+
+    Three paths:
+      1. Helium URL → always spawn a fresh Helium window. Lands focused in
+         a new column on the (already-focused) target workspace.
+      2. Command with `app_id` hint matching an already-running window →
+         claim that existing window (move to target, focus it). Avoids the
+         "Teams was already running, my spawn did nothing" timeout.
+      3. Command without an existing match → spawn it. If `app_id` is given,
+         perform a stability check after the first sighting to skip past
+         splash screens (Storage Explorer in particular).
+    """
+    if "helium" in tab:
+        known_ids = {w["id"] for w in windows()}
+        subprocess.Popen(
+            [HELIUM_BIN, "--new-window", tab["helium"]],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        new = wait_for_new_window(known_ids, HELIUM_APP_ID)
+        if new is None:
+            return None
+        # If for any reason the window landed on a different workspace
+        # (rare with target focused), re-home it and re-focus it.
+        if new["workspace_id"] != target_ws_id:
+            niri_action(
+                "move-window-to-workspace", "--window-id", str(new["id"]), ws_name
+            )
+            niri_action("focus-window", "--id", str(new["id"]))
+        return new
+
+    if "command" not in tab:
+        return None
+
+    app_id = tab.get("app_id")
+
+    # Claim an already-running window if one matches the hint and is not
+    # already on the target. (If it's already on target, we leave it where
+    # it is and just focus it, behaving as if a fresh spawn had landed.)
+    existing = None
+    if app_id:
+        existing = next(
+            (
+                w
+                for w in windows()
+                if w.get("app_id") == app_id and w["workspace_id"] != target_ws_id
+            ),
+            None,
+        )
+    if existing is not None:
+        niri_action(
+            "move-window-to-workspace", "--window-id", str(existing["id"]), ws_name
+        )
+        # Focus the moved window so the caller's focus-column-left +
+        # consume sequence treats it the same as a freshly-spawned tab.
+        niri_action("focus-window", "--id", str(existing["id"]))
+        return existing
+
+    # No existing match: spawn. We do NOT filter by app_id when waiting for
+    # the spawned window — Storage Explorer's splash and main windows have
+    # different app_ids, and a strict filter would miss whichever one is
+    # the "real" one. The stability check (next) separates splash from main.
+    known_ids = {w["id"] for w in windows()}
+    # Expand ~ and $HOME (and other env vars) in every command arg so
+    # templates can use either form for paths. subprocess does NOT expand
+    # these on its own — the shell normally would, but we never invoke one.
+    cmd = [os.path.expanduser(os.path.expandvars(arg)) for arg in tab["command"]]
+    subprocess.Popen(
+        cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    new = wait_for_new_window(known_ids)
+    if new is None:
+        return None
+
+    # Stability check: splash screens appear briefly then die. If the first
+    # window we saw vanishes within COMMAND_WINDOW_STABILITY_S, wait for the
+    # next new window — which will be the real main window.
+    stable = confirm_window_stable(new["id"], COMMAND_WINDOW_STABILITY_S)
+    if stable is None:
+        known_ids.add(new["id"])
+        new = wait_for_new_window(known_ids)
+        if new is None:
+            return None
+
+    if new["workspace_id"] != target_ws_id:
+        niri_action(
+            "move-window-to-workspace", "--window-id", str(new["id"]), ws_name
+        )
+        niri_action("focus-window", "--id", str(new["id"]))
+    return new
+
+
+def cmd_close(name: str) -> int:
+    ws = find_workspace_by_name(name)
+    if ws is None:
+        notify(f"'{name}' is not open")
+        return 0
+
+    ws_id = ws["id"]
+    # Close windows BY WINDOW ID, not by PID. Helium (and any Chromium- or
+    # Electron-based app) runs every browser window under one master PID.
+    # Killing that PID nukes ALL of its windows across every workspace —
+    # including any active work on the workspace the user is currently on.
+    # `close-window --id` is the only safe primitive.
+    window_ids = [w["id"] for w in windows() if w["workspace_id"] == ws_id]
+
+    for wid in window_ids:
+        try:
+            niri_action("close-window", "--id", str(wid))
+        except subprocess.CalledProcessError:
+            # Window may have died between query and call. Don't bail — keep
+            # closing the rest.
+            pass
+
+    # Give windows up to ~3s to vanish.
+    deadline = time.monotonic() + 3.0
+    while time.monotonic() < deadline:
+        remaining = [w for w in windows() if w["workspace_id"] == ws_id]
+        if not remaining:
+            break
+        time.sleep(0.15)
+
+    # Unset the workspace name (requires focusing it first).
+    niri_action("focus-workspace", str(ws["idx"]))
+    niri_action("unset-workspace-name")
+    kick_zellij_sigwinch()
+    notify(f"'{name}' closed")
+    return 0
+
+
+def cmd_picker() -> int:
+    rows = []
+    for _, tpl in load_templates():
+        name = tpl["name"]
+        desc = tpl.get("description", "")
+        if find_workspace_by_name(name):
+            rows.append(f"[ CLOSE ] {name}\t{desc}")
+        else:
+            rows.append(f"[ OPEN  ] {name}\t{desc}")
+
+    if not rows:
+        notify("workspace-template: no templates in ~/.config/workspace-templates")
+        return 0
+
+    fzf = subprocess.run(
+        [
+            "fzf",
+            "--prompt=workspace template> ",
+            "--layout=reverse",
+            "--height=100%",
+            "--border",
+            "--with-nth=1",
+            "--delimiter=\t",
+            "--preview",
+            "echo {2}",
+            "--preview-window=down:3:wrap",
+        ],
+        input="\n".join(rows),
+        capture_output=True,
+        text=True,
+    )
+    if fzf.returncode != 0 or not fzf.stdout.strip():
+        return 0
+
+    line = fzf.stdout.strip()
+    label, _, rest = line.partition("] ")
+    name = rest.split("\t", 1)[0]
+    action = label.replace("[", "").replace(" ", "").strip()
+
+    if action not in ("OPEN", "CLOSE"):
+        return 1
+
+    # Detach the actual open/close work so the kitty popup hosting this
+    # picker can close immediately when fzf returns. `setsid -f` does the
+    # double-fork: it forks a fully-detached grandchild and the immediate
+    # child (setsid itself) exits right away. start_new_session=True alone
+    # is NOT enough here — Python kept the kitty pty alive somehow even
+    # with stdin/stdout/stderr redirected. setsid -f severs every tie.
+    subprocess.Popen(
+        ["setsid", "-f", sys.argv[0], action.lower(), name],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return 0
+
+
+# ─── misc ───────────────────────────────────────────────────────────────────
+
+
+def notify(msg: str) -> None:
+    try:
+        subprocess.run(
+            ["notify-send", "-a", "niri", "workspace-template", msg],
+            check=False,
+        )
+    except FileNotFoundError:
+        print(msg, file=sys.stderr)
+
+
+def kick_zellij_sigwinch() -> None:
+    """Broadcast SIGWINCH to every zellij process so any session whose
+    cached dimensions drifted during the workflow's focus / window-event
+    storm re-detects size from its current client. zellij not running →
+    pkill exits 1, which we ignore."""
+    subprocess.run(
+        ["pkill", "-WINCH", "zellij"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+
+# ─── entry ──────────────────────────────────────────────────────────────────
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        return cmd_picker()
+    sub = argv[1]
+    if sub == "list":
+        return cmd_list()
+    if sub == "open":
+        return cmd_open(argv[2])
+    if sub == "close":
+        return cmd_close(argv[2])
+    if sub == "picker":
+        return cmd_picker()
+    print("usage: workspace-template [list|open <name>|close <name>|picker]", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

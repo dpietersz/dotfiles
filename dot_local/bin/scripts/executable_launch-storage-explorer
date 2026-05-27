@@ -1,0 +1,21 @@
+#!/bin/bash
+# Launch Microsoft Azure Storage Explorer from inside udx-toolbox with the
+# DBUS/XDG/dotnet env injection that the in-container .desktop file declares.
+# Bypasses gtk-launch on the host-exported udx-toolbox-storageexplorer.desktop
+# because that file carries `Path=/opt/StorageExplorer` (valid only inside
+# the container) and gtk-launch chdir's BEFORE handing off to distrobox-enter,
+# so it fails with "No such file or directory" before SE ever starts.
+#
+# Mirror this script in any niri workspace template that needs Storage
+# Explorer, or call it directly from the shell.
+
+set -euo pipefail
+
+exec distrobox-enter -n udx-toolbox -- env \
+  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/host/run/user/1000/bus \
+  XDG_CURRENT_DESKTOP=niri:GNOME \
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+  storageexplorer \
+    --ozone-platform-hint=auto \
+    --enable-features=WaylandWindowDecorations,WebRTCPipeWireCapturer \
+    --enable-webrtc-pipewire-capturer

@@ -1,0 +1,12 @@
+#!/bin/bash
+# niri-workspace-template-popup — floating fzf picker for niri workspace
+# templates. Spawned by Mod+E in niri inside a floating kitty with app-id
+# "workspace-template-popup" (see niri window-rule). On selection the
+# launcher exits and the kitty popup disappears; the actual open/close work
+# continues in the spawned helper because we use setsid to detach.
+set -euo pipefail
+
+# Run the picker. The picker itself dispatches to open/close synchronously,
+# which is fine — Helium spawns and niri actions return quickly, so the popup
+# closes within ~1s of the user pressing Enter.
+exec workspace-template picker
