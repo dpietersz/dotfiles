@@ -5,7 +5,7 @@
 # Config precedence: CLI flags > profiles > project .codex/config.toml > this file > system > defaults
 
 # Default model for interactive sessions
-model = "gpt-5.4-mini"
+model = "gpt-5.5"
 
 # Approval policy: "untrusted" | "on-request" | "never"
 # untrusted   = only run trusted commands (ls, cat, sed, etc.) without asking; escalate others
@@ -17,7 +17,7 @@ approval_policy = "on-request"
 disable_response_storage = true
 
 # Reasoning effort: "minimal" | "low" | "medium" | "high"
-# Medium is a balanced default for interactive use on gpt-5.4-mini.
+# Medium is a balanced default for interactive use on gpt-5.5.
 model_reasoning_effort = "medium"
 
 # ── Features ──────────────────────────────────────────────────────────────────
@@ -111,3 +111,49 @@ description = "Designer-turned-developer for frontend work. Use when crafting UI
 [agents.penetration-tester]
 config_file = "~/.codex/agents/penetration-tester.toml"
 description = "Offensive security specialist. Use to identify exploitable vulnerabilities through active probing and validation in authorized security testing only."
+
+# ── Trusted projects ──────────────────────────────────────────────────────────
+# Pre-declare directories as trusted so codex never prompts for the trust
+# banner inside them. Codex's match is exact-path, NOT recursive (see
+# openai/codex#19426 for the open feature request). We work around this by
+# ENUMERATING subdirs at `chezmoi apply` time via the `output` template
+# function — meaning any directory you create after the last apply needs a
+# re-apply to get trusted. Acceptable trade-off vs. listing thousands of
+# vendored paths.
+{{- $home := .chezmoi.homeDir }}
+
+# Always-trusted top-level roots
+[projects."{{ $home }}"]
+trust_level = "trusted"
+
+[projects."{{ $home }}/dotfiles"]
+trust_level = "trusted"
+
+[projects."{{ $home }}/.claude"]
+trust_level = "trusted"
+
+[projects."{{ $home }}/.local/bin"]
+trust_level = "trusted"
+
+# Enumerated: all direct subdirs of ~/.config (each is an app's config root).
+{{- range $dir := (output "find" (printf "%s/.config" $home) "-mindepth" "1" "-maxdepth" "1" "-type" "d" | trim | splitList "\n") }}
+{{- if ne $dir "" }}
+[projects."{{ $dir }}"]
+trust_level = "trusted"
+{{- end }}
+{{- end }}
+
+# Enumerated: subdirs of ~/dev up to 3 levels deep, skipping vendored noise
+# (node_modules, .git, .venv, target/, dist/, build/, .next/, .cache).
+{{- $find_dev := printf "find %s/dev -mindepth 1 -maxdepth 3 -type d -not -path '*/node_modules*' -not -path '*/.git*' -not -path '*/.venv*' -not -path '*/target*' -not -path '*/dist*' -not -path '*/build*' -not -path '*/.next*' -not -path '*/.cache*'" $home }}
+{{- range $dir := (output "bash" "-c" $find_dev | trim | splitList "\n") }}
+{{- if ne $dir "" }}
+[projects."{{ $dir }}"]
+trust_level = "trusted"
+{{- end }}
+{{- end }}
+
+# ── TUI state ─────────────────────────────────────────────────────────────────
+# Pre-acknowledge the model-picker first-run hint so it doesn't re-appear.
+[tui.model_availability_nux]
+"gpt-5.5" = 2
