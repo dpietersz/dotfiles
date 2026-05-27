@@ -1,0 +1,108 @@
+#!/bin/bash
+# Settings revision: 1  -- bump to force re-apply when the DESIRED block changes.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Default-browser wiring — Helium on every Linux laptop.
+#
+# Helium (helium-browser-bin RPM) is baked into bluefin-udx. This script makes
+# it the host's default URL handler so:
+#   1. Anything calling xdg-open <url> on the host routes to Helium.
+#   2. Anything inside a distrobox toolbox (udx-toolbox, etc.) that calls
+#      xdg-open hits the boxkit shim → distrobox-host-exec xdg-open → host
+#      xdg-open → Helium. Storage Explorer's Azure device-login depends on
+#      this chain.
+#   3. Electron/Chromium-family apps that bypass xdg-open and consult
+#      `xdg-settings get default-web-browser` (or read default-web-browser
+#      from mimeapps.list) also resolve to Helium.
+#
+# Why both xdg-settings AND xdg-mime: xdg-settings sets the "default web
+# browser" key (consulted by some Electron apps and by GNOME's settings UI);
+# xdg-mime sets the per-MIME / per-scheme handlers (consulted by xdg-open and
+# by most desktop tooling). The two are not the same and can drift; setting
+# both keeps every code path in agreement.
+#
+# Mirror fix that lives in boxkit (NOT here): scripts/distrobox-shims.sh
+# must symlink /usr/local/bin/xdg-open → /usr/bin/distrobox-host-exec inside
+# every udx-toolbox image. Without that shim, this default-browser setting
+# never gets reached from inside the container.
+# ─────────────────────────────────────────────────────────────────────────────
+
+{{- if or .remote .isMacOS .isServer }}
+# No browser-launch wiring needed on remote/headless/macOS hosts.
+exit 0
+{{- end }}
+
+set -euo pipefail
+
+DESKTOP_NAME="helium.desktop"
+DESKTOP_PATH="/usr/share/applications/${DESKTOP_NAME}"
+
+# Skip cleanly if Helium isn't installed (e.g. a Bluefin host that hasn't yet
+# rebased to the bluefin-udx image carrying helium-browser-bin). Don't error —
+# the script is content-hashed by chezmoi and will re-run on the next apply
+# once Helium lands.
+if ! command -v helium-browser-bin >/dev/null 2>&1 || [ ! -f "$DESKTOP_PATH" ]; then
+  echo "[default-browser] helium-browser-bin / ${DESKTOP_NAME} not found — skipping (will re-run on next apply)"
+  exit 0
+fi
+
+# ─── xdg-settings: default web browser ──────────────────────────────────────
+# Setting this writes to ~/.config/mimeapps.list and (on GNOME) updates the
+# corresponding gsettings key.
+#
+# xdg-settings refuses to set the default web browser if $BROWSER is exported
+# in the calling environment ("$BROWSER is set and can't be changed with
+# xdg-settings", exit 4). Our shell config sets BROWSER=helium-browser-bin
+# for in-shell tooling, so we unset it for just this invocation. The read
+# side has the same trap: a stale $BROWSER makes xdg-settings *get* return
+# bogus values (the prior anytype.desktop reading came from $BROWSER pointing
+# at the broken ~/.local/bin/zen stub).
+current_xdg_settings=$(env -u BROWSER xdg-settings get default-web-browser 2>/dev/null || echo "")
+if [ "$current_xdg_settings" != "$DESKTOP_NAME" ]; then
+  env -u BROWSER xdg-settings set default-web-browser "$DESKTOP_NAME"
+  echo "[default-browser] xdg-settings default-web-browser: ${current_xdg_settings:-<unset>} -> ${DESKTOP_NAME}"
+else
+  echo "[default-browser] xdg-settings already set to ${DESKTOP_NAME}"
+fi
+
+# ─── xdg-mime: per-scheme / per-MIME handlers ───────────────────────────────
+# These are the keys xdg-open and most desktop tooling actually consult.
+# Set http, https, and text/html to keep parity with what a clean GNOME
+# default-browser switch would do.
+declare -a HANDLED=(
+  "x-scheme-handler/http"
+  "x-scheme-handler/https"
+  "text/html"
+  "application/xhtml+xml"
+)
+
+changed=0
+for mime in "${HANDLED[@]}"; do
+  current=$(xdg-mime query default "$mime" 2>/dev/null || echo "")
+  if [ "$current" != "$DESKTOP_NAME" ]; then
+    xdg-mime default "$DESKTOP_NAME" "$mime"
+    echo "[default-browser] xdg-mime ${mime}: ${current:-<unset>} -> ${DESKTOP_NAME}"
+    changed=1
+  fi
+done
+
+if [ "$changed" -eq 0 ]; then
+  echo "[default-browser] xdg-mime handlers already aligned"
+fi
+
+# ─── Verification gate ──────────────────────────────────────────────────────
+# Read back what xdg-open will actually resolve to. Build fails loudly if the
+# settings didn't stick (e.g. a system mimeapps.list overriding the user one
+# in an unexpected way).
+final_https=$(xdg-mime query default x-scheme-handler/https 2>/dev/null || echo "")
+final_settings=$(env -u BROWSER xdg-settings get default-web-browser 2>/dev/null || echo "")
+
+if [ "$final_https" != "$DESKTOP_NAME" ] || [ "$final_settings" != "$DESKTOP_NAME" ]; then
+  echo "[default-browser] ASSERT FAIL: post-set state did not match desired"
+  echo "  xdg-mime  x-scheme-handler/https : ${final_https}"
+  echo "  xdg-settings default-web-browser : ${final_settings}"
+  echo "  expected                         : ${DESKTOP_NAME}"
+  exit 1
+fi
+
+echo "[default-browser] OK: Helium is the default browser (xdg-settings + xdg-mime)"

@@ -30,3 +30,8 @@
 # base wrappers (2026-05-25). kitty-zellij now always attaches to "main".
 .local/bin/kitty-zellij-main
 .local/bin/alacritty-zellij-main
+
+# zen browser wrapper — replaced by host-side helium-browser-bin (2026-05-27).
+# The wrapper exec'd into a `browser-toolbox` distrobox that no longer exists.
+# Default-browser wiring now lives in run_onchange_after_18-set-default-browser.
+.local/bin/zen

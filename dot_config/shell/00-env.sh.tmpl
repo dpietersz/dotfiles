@@ -45,9 +45,11 @@ export GHREPOS="$REPOS/github.com"
 export GLREPOS="$REPOS/gitlab.com"
 export AZREPOS="$REPOS/dev.azure.com"
 
-# Zen browser from browser-toolbox distrobox
-# Uses wrapper script at ~/.local/bin/zen to handle distrobox entry
-export BROWSER="$HOME/.local/bin/zen"
+{{- if not .isMacOS }}
+# Helium browser is a host-side RPM (helium-browser-bin) baked into bluefin-udx.
+# The host-side default-browser wiring lives in run_onchange_after_18-set-default-browser.
+export BROWSER="helium-browser-bin"
+{{- end }}
 
 # Dagger - disable nag messages
 if command -v dagger >/dev/null; then
