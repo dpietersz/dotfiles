@@ -1,11 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# ------------------ Bring up tailscale ------------------
+# ------------------ Bring up tailscale + accept subnet routes ------------------
 # Tailscale is pre-installed on Bluefin. This script:
 #   1) Enables tailscaled
-#   2) If not yet authenticated, pulls an auth key from pass and runs
-#      `tailscale up --auth-key=<key>`
+#   2) Sets --accept-routes=true so LAN-only homelab services (*.pietersz.me,
+#      reachable via the tailnet subnet router) resolve over Tailscale. This
+#      preference persists in tailscaled state and is idempotent.
+#   3) If not yet authenticated, pulls an auth key from pass and runs
+#      `tailscale up --auth-key=<key> --accept-routes`
 #
 # Prerequisites (set up by earlier run_once_before_* scripts):
 #   - pass installed        (06)
@@ -14,9 +17,12 @@ set -euo pipefail
 #
 # Auth key location in pass: Homelab/tailscale/auth-key
 
-{{- if or .remote (not (or .isBluefin .isFedora)) }}
+{{- if .remote }}
 exit 0
 {{- end }}
+
+{{- if or .isBluefin .isFedora }}
+# ===================== Linux (Bluefin / Fedora) =====================
 
 if ! command -v tailscale >/dev/null 2>&1; then
     echo "[tailscale] not installed; skipping."
@@ -31,7 +37,19 @@ elif ! systemctl is-active --quiet tailscaled 2>/dev/null; then
     sudo systemctl start tailscaled
 fi
 
-# Already authenticated? Nothing to do.
+# Accept subnet routes. Done BEFORE the "already authenticated" early-exit so
+# existing nodes (e.g. this one was set manually once) get the preference
+# applied declaratively from now on. `tailscale set` needs sudo, so only call
+# it when the pref isn't already on — `tailscale debug prefs` reads RouteAll
+# (the accept-routes pref) without sudo, keeping the common re-apply path
+# prompt-free. On a not-yet-authenticated node prefs may be unreadable; the
+# `tailscale up --accept-routes` below covers that case.
+if ! tailscale debug prefs 2>/dev/null | grep -q '"RouteAll": true'; then
+    echo "[tailscale] Enabling --accept-routes=true..."
+    sudo tailscale set --accept-routes=true 2>/dev/null || true
+fi
+
+# Already authenticated? accept-routes is handled above, so we're done.
 if tailscale status >/dev/null 2>&1; then
     exit 0
 fi
@@ -55,6 +73,40 @@ if [ -z "$auth_key" ]; then
 fi
 
 echo "[tailscale] Bringing up..."
-sudo tailscale up --auth-key="$auth_key"
+sudo tailscale up --auth-key="$auth_key" --accept-routes
 echo "[tailscale] Connected:"
 tailscale status || true
+
+{{- else if .isMacOS }}
+# ===================== macOS (UNVERIFIED — confirm once) =====================
+# macOS Tailscale auth is done through the GUI app, not an auth key, so this
+# branch does NOT manage the daemon or run `tailscale up`. It only sets the
+# accept-routes preference via the CLI, which is all that's needed once you've
+# logged in through the app.
+#
+# The CLI location depends on the install method:
+#   - Mac App Store build: /Applications/Tailscale.app/Contents/MacOS/Tailscale
+#     (enable it once via the Tailscale menu → "Install CLI")
+#   - Homebrew build: `tailscale` on PATH
+#
+# `tailscale set` on macOS talks to the app's daemon over a user socket and
+# does not need sudo. First run requires you to have logged in via the app.
+TS=""
+if command -v tailscale >/dev/null 2>&1; then
+    TS="tailscale"
+elif [ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]; then
+    TS="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+fi
+
+if [ -z "$TS" ]; then
+    echo "[tailscale] CLI not found on macOS — skipping accept-routes."
+    echo "            Install the CLI (Tailscale menu → Install CLI) or brew install tailscale, then re-apply."
+    exit 0
+fi
+
+if "$TS" set --accept-routes=true 2>/dev/null; then
+    echo "[tailscale] accept-routes enabled."
+else
+    echo "[tailscale] could not set accept-routes — log in via the Tailscale app first, then re-apply."
+fi
+{{- end }}
