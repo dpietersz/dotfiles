@@ -5,3 +5,6 @@ dotfiles_gruvbox-example/
 .opencode/package.json
 .opencode/bun.lock
 .opencode/node_modules/
+
+# Claude Code runtime artifacts
+.claude/scheduled_tasks.lock

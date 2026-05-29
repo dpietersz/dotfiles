@@ -8,7 +8,7 @@ set -euo pipefail
 CONFIG="${NIRI_CONFIG:-$HOME/.config/niri/config.kdl}"
 [ -r "$CONFIG" ] || { echo "niri config not readable: $CONFIG" >&2; exit 1; }
 
-python3 - "$CONFIG" <<'PY' | \
+python3 - "$CONFIG" "${KITTY_CONFIG:-$HOME/.config/kitty/kitty.conf}" <<'PY' | \
     fzf --prompt='keybind ❯ ' \
         --layout=reverse \
         --info=inline \
@@ -61,6 +61,35 @@ for m in BIND.finditer(block):
     else:
         label = body  # e.g. `focus-column-left` or `spawn "noctalia" ...`
     rows.append((chord, label))
+
+# Also surface the kitty `super+b` session maps (they live in kitty.conf, not
+# the niri config, so they're invisible to the parser above).
+if len(sys.argv) > 2:
+    kpath = pathlib.Path(sys.argv[2])
+    if kpath.is_file():
+        ktext = re.sub(r'#[^\n]*', '', kpath.read_text())
+        KMAP = re.compile(
+            r'^map\s+super\+b>(?P<key>\S+)\s+.*?kitty-session\s+(?P<arg>\S+)',
+            re.MULTILINE,
+        )
+        pretty = {
+            '--pick': 'zoxide + ssh session picker',
+            '--projects': 'project picker (~/dev/Projects)',
+            '--list': 'list open sessions (ctrl-x kills)',
+            '--alt': 'alternate session (toggle last two)',
+            'notes': "notes — today's daily note",
+            'home': 'home session',
+            'dotfiles': 'dotfiles repo',
+            'nvim': 'nvim config',
+            'bash': 'bash / shell config',
+            'boxkit': 'boxkit repo',
+            'bluefin': 'bluefin-udx repo',
+        }
+        for km in KMAP.finditer(ktext):
+            key = km.group('key')
+            keyname = 'Enter' if key.lower() == 'enter' else key
+            label = pretty.get(km.group('arg'), km.group('arg'))
+            rows.append((f'Super+b › {keyname}', f'[kitty] {label}'))
 
 # Sort by chord for stable, scannable output.
 for chord, label in sorted(rows, key=lambda r: (r[0].lower(), r[1].lower())):

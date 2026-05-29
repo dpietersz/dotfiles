@@ -41,3 +41,8 @@
 # assumption (--to-lg / --to-laptop). New script toggles the ACTIVE workspace
 # between laptop (eDP-*) and any connected external monitor.
 .local/bin/scripts/toggle-workspaces
+
+# zellij session helpers — replaced by native kitty sessions (kitty-session,
+# 2026-05-29). Migrated off zellij/tmux to kitty's goto_session workflow.
+.local/bin/kitty-zellij-pick
+.local/bin/zellij-switch

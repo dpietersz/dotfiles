@@ -1,0 +1,398 @@
+#!/bin/bash
+# kitty-session — unified kitty native-session manager (replaces tmux/zellij).
+#
+# Subcommands:
+#   kitty-session <dir>        focus-or-create a session for directory <dir>
+#   kitty-session --pick       fzf over zoxide dirs + ssh hosts -> focus/create
+#   kitty-session --projects   fzf over ~/dev/Projects/*      -> focus/create
+#   kitty-session --list       fzf over OPEN sessions (enter switch, ctrl-x kill)
+#   kitty-session --alt        toggle the last two sessions (goto_session -1)
+#
+# Every session is named canonically (z-<dirname>) and located by matching its
+# PWD, so the SAME directory always resolves to ONE session no matter whether it
+# was opened via a fixed key, the project picker, or the zoxide picker.
+#
+# Cross-platform: works on Linux (kitten on PATH) and macOS (kitten on PATH or
+# the kitty.app bundle). Requires `allow_remote_control yes` + `listen_on` in
+# kitty.conf, plus fzf, jq, zoxide.
+set -euo pipefail
+
+# --- locate the kitty remote-control binary -------------------------------
+if command -v kitten >/dev/null 2>&1; then
+  KITTEN=(kitten)
+elif command -v kitty >/dev/null 2>&1; then
+  KITTEN=(kitty +kitten)
+elif [ -x /Applications/kitty.app/Contents/MacOS/kitten ]; then
+  KITTEN=(/Applications/kitty.app/Contents/MacOS/kitten)
+else
+  echo "kitty-session: kitten not found in PATH or /Applications" >&2
+  exit 1
+fi
+
+if command -v kitty >/dev/null 2>&1; then
+  KITTY_BIN=kitty
+elif [ -x /Applications/kitty.app/Contents/MacOS/kitty ]; then
+  KITTY_BIN=/Applications/kitty.app/Contents/MacOS/kitty
+else
+  KITTY_BIN=""
+fi
+
+# --- locate the remote-control socket -------------------------------------
+# Inside a kitty window KITTY_LISTEN_ON is exported. When launched from niri
+# (no kitty env) we discover the newest socket created by
+# `listen_on unix:/tmp/kitty` -> /tmp/kitty-<pid>.
+_socket() {
+  if [ -n "${KITTY_LISTEN_ON:-}" ]; then
+    printf '%s' "$KITTY_LISTEN_ON"
+    return 0
+  fi
+  # Prefer the FOCUSED kitty's own socket (handles multiple kitty instances).
+  # `listen_on unix:/tmp/kitty` creates /tmp/kitty-<pid>, and niri reports that
+  # same pid for the focused window. (Skipped on macOS — no niri.)
+  if command -v niri >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    local pid
+    pid="$(niri msg --json focused-window 2>/dev/null | jq -r '.pid // empty' 2>/dev/null || true)"
+    if [ -n "$pid" ] && [ -S "/tmp/kitty-$pid" ]; then
+      printf 'unix:/tmp/kitty-%s' "$pid"
+      return 0
+    fi
+  fi
+  # Fallback: newest socket.
+  local s newest="" t best=0
+  for s in /tmp/kitty-*; do
+    [ -S "$s" ] || continue
+    t=$(stat -c %Y "$s" 2>/dev/null || stat -f %m "$s" 2>/dev/null || echo 0)
+    if [ "$t" -ge "$best" ]; then best=$t; newest=$s; fi
+  done
+  [ -n "$newest" ] && printf 'unix:%s' "$newest"
+}
+
+kc() {
+  local sock; sock="$(_socket)"
+  if [ -n "$sock" ]; then
+    "${KITTEN[@]}" @ --to "$sock" "$@"
+  else
+    "${KITTEN[@]}" @ "$@"
+  fi
+}
+
+# Interactive pickers need a tty. When invoked without one (niri `spawn`, or a
+# kitty `launch --type=background` map), re-exec inside a kitty overlay in the
+# running instance so fzf has a terminal and shares that instance's socket.
+_ensure_overlay() {
+  if [ -t 1 ] && [ -n "${KITTY_WINDOW_ID:-}" ]; then
+    return 0
+  fi
+  local sock self
+  self="$(command -v "$0" 2>/dev/null || readlink -f "$0" 2>/dev/null || printf '%s' "$0")"
+  sock="$(_socket)"
+  if [ -n "$sock" ]; then
+    # A kitty is already running: open the picker as an overlay inside it.
+    exec "${KITTEN[@]}" @ --to "$sock" launch --type=overlay "$self" "$@"
+  fi
+  # Cold start: no kitty running. Launch one that opens straight on the picker.
+  [ -z "$KITTY_BIN" ] && { echo "kitty-session: kitty not found" >&2; exit 1; }
+  exec "$KITTY_BIN" "$self" "$@"
+}
+
+_realpath() { realpath "$1" 2>/dev/null || printf '%s' "$1"; }
+
+# --- fzf theming: reuse the repo's theme-managed colors if present ---------
+if [ -r "$HOME/.config/themes/state/fzf-colors.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.config/themes/state/fzf-colors.sh"
+fi
+FZF_BASE_OPTS="--height=100% --layout=reverse --border=rounded --info=inline"
+
+# Reusable vim-modal fzf picker (the linkarzu list-picker pattern, generalized).
+#   Starts in NORMAL: j/k move, g/G top/bottom, ctrl-d/u half-page, i -> SEARCH,
+#   esc quits, enter selects.
+#   SEARCH: type to filter (nav keys are unbound so they type), esc -> NORMAL.
+# Mode is shown in the prompt and used by the esc transform to decide quit vs
+# return-to-normal. Caller passes a short label as $1, then any extra fzf args
+# (preview, --expect, --header, --with-nth, ...). Ctrl-chord actions (e.g.
+# ctrl-x) are safe in both modes since they're never typed.
+_fzf_modal() {
+  local label="$1"; shift
+  local pn="${label} NORMAL ❯ "
+  local ps="${label} SEARCH ❯ "
+  fzf $FZF_BASE_OPTS --no-multi --disabled --prompt "$pn" \
+    --bind 'j:down,k:up,g:first,G:last,ctrl-d:half-page-down,ctrl-u:half-page-up' \
+    --bind "i:enable-search+change-prompt($ps)+unbind(j,k,g,G,i)" \
+    --bind "esc:transform:case \"\$FZF_PROMPT\" in *SEARCH*) echo \"rebind(j,k,g,G,i)+disable-search+change-prompt($pn)+clear-query\";; *) echo abort;; esac" \
+    "$@"
+}
+
+# --- session lookups (kitty exposes .session_name in `@ ls`) --------------
+_session_exists() {
+  kc ls 2>/dev/null \
+    | jq -e --arg n "$1" 'any(.[]?.tabs[]?.windows[]?; .session_name==$n)' >/dev/null
+}
+
+_find_by_path() {
+  local target name pwd
+  target="$(_realpath "$1")"
+  while IFS=$'\t' read -r name pwd; do
+    [ -z "$name" ] && continue
+    [ -z "$pwd" ] && continue
+    if [ "$(_realpath "$pwd")" = "$target" ]; then
+      printf '%s' "$name"
+      return 0
+    fi
+  done < <(
+    kc ls 2>/dev/null | jq -r '
+      .[]?.tabs[]?.windows[]?
+      | select(.session_name != null and .session_name != "")
+      | [(.session_name|tostring), (.env.PWD // .cwd // "")]
+      | @tsv'
+  )
+  return 1
+}
+
+# --- focus an existing session for a dir, or create one -------------------
+focus_or_create_dir() {
+  local dir mode real base safe name existing file
+  dir="$1"
+  mode="${2:-shell}"   # shell (default) | nvim (open nvim dashboard in the dir)
+  [ -d "$dir" ] || { echo "kitty-session: no such directory: $dir" >&2; exit 1; }
+  real="$(_realpath "$dir")"
+
+  existing="$(_find_by_path "$real" || true)"
+  if [ -n "$existing" ]; then
+    zoxide add -- "$real" >/dev/null 2>&1 || true
+    kc action goto_session "$existing"
+    return 0
+  fi
+
+  if [ "$real" = "$HOME" ]; then base="home"; else base="$(basename "$real")"; fi
+  safe="$(printf '%s' "$base" | tr -cs 'A-Za-z0-9._-' '_')"
+  name="z-${safe}"
+  if _session_exists "$name"; then
+    name="z-${safe}-$(printf '%s' "$real" | cksum | tr -dc '0-9' | cut -c1-4)"
+  fi
+
+  mkdir -p /tmp/kitty-sessions
+  file="/tmp/kitty-sessions/${name}.kitty-session"
+  if [ "$mode" = "nvim" ]; then
+    # Open nvim (no file) in the dir so the configured dashboard shows. Launched
+    # via an interactive shell so PATH resolves on macOS too; BASH_FAST_INIT
+    # skips the slow pass secret-load.
+    cat >"$file" <<EOF
+layout tall
+cd ${real}
+launch --title "${base}" --env BASH_FAST_INIT=1 bash -ic 'exec nvim'
+focus
+focus_os_window
+EOF
+  else
+    cat >"$file" <<EOF
+layout tall
+cd ${real}
+launch --title "${base}"
+focus
+focus_os_window
+EOF
+  fi
+  kc action goto_session "$file"
+  zoxide add -- "$real" >/dev/null 2>&1 || true
+}
+
+focus_or_create_ssh() {
+  local host safe file
+  host="$1"
+  safe="$(printf '%s' "$host" | tr -cs 'A-Za-z0-9._-' '_')"
+  mkdir -p /tmp/kitty-sessions
+  file="/tmp/kitty-sessions/ssh-${safe}.kitty-session"
+  cat >"$file" <<EOF
+layout tall
+launch --title "ssh-${host}" ssh ${host}
+focus
+focus_os_window
+EOF
+  kc action goto_session "$file"
+}
+
+# --- daily note (super+b n) -----------------------------------------------
+# Adopts linkarzu's daily-note pattern: a dated file under $NOTES/daily, created
+# on the fly from a template, opened in nvim (cwd = notes root, cursor at end).
+# The session refreshes to today's note when the open one is from a past day.
+daily_note() {
+  local notes_root base y m mon d wd dir name file sfile
+  notes_root="${NOTES:-${DEV:-$HOME/dev}/Notes}"
+  base="$notes_root/daily"
+  y="$(date +%Y)"; m="$(date +%m)"; mon="$(date +%b)"
+  d="$(date +%d)"; wd="$(date +%A)"
+  dir="$base/$y/$m-$mon"
+  name="$y-$m-$d-$wd"
+  file="$dir/$name.md"
+
+  mkdir -p "$dir"
+  if [ ! -f "$file" ]; then
+    cat >"$file" <<EOF
+# $name
+
+## Daily Note
+
+EOF
+  fi
+
+  mkdir -p /tmp/kitty-sessions
+  sfile="/tmp/kitty-sessions/z-notes.kitty-session"
+
+  # Already pointing at today's note and the session is live? Just focus it,
+  # so re-pressing super+b n mid-edit doesn't disrupt anything.
+  if [ -f "$sfile" ] && grep -Fq "$name.md" "$sfile" && _session_exists "z-notes"; then
+    kc action goto_session "z-notes"
+    return 0
+  fi
+
+  # cd sets the session cwd (so nvim's cwd = notes root for cross-note search).
+  # nvim is launched via an interactive shell so PATH resolves on macOS too
+  # (GUI apps there don't inherit the login PATH); BASH_FAST_INIT skips the slow
+  # pass secret-load. \`+\` puts the cursor on the last line.
+  cat >"$sfile" <<EOF
+layout tall
+cd $notes_root
+launch --title "$name" --env BASH_FAST_INIT=1 bash -ic 'exec nvim + "\$1"' bash "$file"
+focus
+focus_os_window
+EOF
+
+  # A stale (previous-day) notes session open? Replace it with today's.
+  _session_exists "z-notes" && kc action close_session "z-notes" >/dev/null 2>&1 || true
+  kc action goto_session "$sfile"
+}
+
+# --- ssh hosts from ~/.ssh/config (+ config.d), concrete names only --------
+_ssh_hosts() {
+  awk '/^[Hh]ost / {for (i=2;i<=NF;i++) if ($i !~ /[*?!]/) print $i}' \
+    "$HOME/.ssh/config" "$HOME"/.ssh/config.d/* 2>/dev/null | sort -u
+}
+
+# --- pickers ---------------------------------------------------------------
+pick_zoxide() {
+  local menu sel
+  # Build the menu first (failure-tolerant). Doing this inside the `| fzf`
+  # pipeline would let a non-zero producer (e.g. ssh glob miss) trip pipefail
+  # and abort even after a successful selection.
+  menu="$( { zoxide query -l 2>/dev/null; _ssh_hosts | sed 's/^/ssh:/'; } 2>/dev/null || true )"
+  [ -z "$menu" ] && return 0
+  sel="$(
+    printf '%s\n' "$menu" | _fzf_modal 'session' --no-sort \
+            --preview '[ -d {} ] && { eza --tree --color=always --level=2 {} 2>/dev/null || ls -la {}; } || echo {}' \
+            --preview-window='right,55%,border-left'
+  )" || return 0
+  [ -z "$sel" ] && return 0
+  case "$sel" in
+    ssh:*) focus_or_create_ssh "${sel#ssh:}" ;;
+    *)     focus_or_create_dir "$sel" ;;
+  esac
+}
+
+pick_projects() {
+  local root="${PROJECTS:-$HOME/dev/Projects}" menu sel
+  [ -d "$root" ] || { echo "kitty-session: $root not found" >&2; exit 1; }
+  menu="$(find "$root" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort || true)"
+  [ -z "$menu" ] && return 0
+  sel="$(
+    printf '%s\n' "$menu" | _fzf_modal 'project' \
+            --preview 'eza --tree --color=always --level=2 {} 2>/dev/null || ls -la {}' \
+            --preview-window='right,55%,border-left'
+  )" || return 0
+  [ -n "$sel" ] && focus_or_create_dir "$sel"
+}
+
+list_sessions() {
+  local data out key sel
+  while true; do
+    data="$(
+      kc ls 2>/dev/null | jq -r '
+        [ .[]? as $os | $os.tabs[]? as $tab | $tab.windows[]?
+          | select(.session_name != null and .session_name != "")
+          | {name: .session_name,
+             pwd: (.env.PWD // .cwd // ""),
+             at: (.last_focused_at // 0)} ]
+        | group_by(.name)
+        | map({name: .[0].name, pwd: .[0].pwd, at: (map(.at) | max)})
+        | sort_by(-.at)
+        | .[] | [.name, .pwd] | @tsv' || true
+    )"
+    [ -z "$data" ] && { echo "kitty-session: no named sessions open" >&2; return 0; }
+    out="$(
+      printf '%s\n' "$data" \
+      | _fzf_modal 'sessions' --ansi --with-nth=1 --delimiter='\t' \
+            --header='i: search   ctrl-x: kill   enter: switch' \
+            --expect=enter,ctrl-x \
+            --preview 'eza --tree --color=always --level=2 {2} 2>/dev/null || ls -la {2}' \
+            --preview-window='right,55%,border-left'
+    )" || return 0
+    key="$(printf '%s\n' "$out" | sed -n '1p')"
+    sel="$(printf '%s\n' "$out" | sed -n '2p' | cut -f1)"
+    [ -z "$sel" ] && return 0
+    case "$key" in
+      ctrl-x) kc action close_session "$sel" >/dev/null 2>&1 || true; continue ;;
+      *)      kc action goto_session "$sel"; return 0 ;;
+    esac
+  done
+}
+
+# --- named fixed sessions --------------------------------------------------
+# Logical names keep the kitty.conf maps readable and give one source of truth
+# for paths. Env vars (from 00-env.sh) are used when present; the literal
+# fallbacks match those defaults so this also works when launched by kitty/niri
+# (which don't source the shell config). $HOME differs per-OS, structure does not.
+_resolve_name() {
+  local dev="${DEV:-$HOME/dev}"
+  local dots="${DOTFILES:-$HOME/dotfiles}"
+  local projects="${PROJECTS:-$dev/Projects}"
+  case "$1" in
+    home)     printf '%s' "$HOME" ;;
+    dotfiles) printf '%s' "$dots" ;;
+    nvim)     printf '%s' "$dots/dot_config/nvim" ;;
+    bash)     printf '%s' "$dots/dot_config/shell" ;;
+    boxkit)   printf '%s' "$projects/boxkit" ;;
+    bluefin)  printf '%s' "$projects/bluefin-udx" ;;
+    *)        return 1 ;;
+  esac
+}
+
+# Focused kitty's active-session name (z- stripped); empty when not on a kitty
+# session. The active session is the FOCUSED TAB of the focused OS window
+# (kitty represents each session as a tab). Used by the Noctalia bar widget.
+_session_name() {
+  local fw p s n
+  fw="$(niri msg --json focused-window 2>/dev/null || true)"
+  [ "$(printf '%s' "$fw" | jq -r '.app_id // ""' 2>/dev/null)" = "kitty" ] || return 0
+  p="$(printf '%s' "$fw" | jq -r '.pid // empty' 2>/dev/null)"
+  if [ -n "$p" ] && [ -S "/tmp/kitty-$p" ]; then s="unix:/tmp/kitty-$p"; else s="$(_socket)"; fi
+  [ -n "$s" ] || return 0
+  n="$("${KITTEN[@]}" @ --to "$s" ls 2>/dev/null | jq -r \
+    '[.[] | select(.is_focused) | .tabs[] | select(.is_focused) | .windows[] | select(.is_focused) | .session_name] | .[0] // ""' 2>/dev/null)"
+  printf '%s' "${n#z-}"
+}
+
+# --- dispatch --------------------------------------------------------------
+case "${1:-}" in
+  --pick)     _ensure_overlay "$@"; pick_zoxide ;;
+  --projects) _ensure_overlay "$@"; pick_projects ;;
+  --list)     _ensure_overlay "$@"; list_sessions ;;
+  --alt)      kc action goto_session -1 ;;
+  --name)        _session_name; printf '\n' ;;
+  --name-stream)
+    # The Noctalia "Scripted" widget runs its command as a long-lived runtime
+    # and displays the streamed stdout (no interval field). So loop: print the
+    # current focused-kitty session name on a line every ~1.5s. Empty line when
+    # not on a session, so the label clears.
+    while :; do _session_name; printf '\n'; sleep 1.5; done
+    ;;
+  notes)      daily_note ;;
+  "")         echo "usage: kitty-session <name|dir>|--pick|--projects|--list|--alt" >&2; exit 2 ;;
+  nvim|bash)  focus_or_create_dir "$(_resolve_name "$1")" nvim ;;
+  *)
+    if _path="$(_resolve_name "$1")"; then
+      focus_or_create_dir "$_path"
+    else
+      focus_or_create_dir "$1"
+    fi
+    ;;
+esac

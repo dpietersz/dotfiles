@@ -10,6 +10,14 @@ if command -v lazygit >/dev/null; then
   alias lg="lazygit"
 fi
 
+if command -v kitten >/dev/null; then
+  # showkeys — print the raw key events kitty receives, in the kitty
+  # keyboard-protocol encoding. Handy for checking what a custom-keyboard
+  # chord actually emits (e.g. confirming Super+B reaches kitty as super+b).
+  # Press the chord, then Ctrl+C / Ctrl+D to quit.
+  alias showkeys="kitten show_key -m kitty"
+fi
+
 if command -v kondo >/dev/null; then
   # cln — interactive cleaner over the dev tree. kondo scans for project
   # build/cache dirs (node_modules, target/, .venv, .gradle, etc.) and lets

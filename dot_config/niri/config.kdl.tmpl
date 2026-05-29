@@ -225,13 +225,6 @@ window-rule {
 }
 
 window-rule {
-    match app-id="zellij-switcher"
-    open-floating true
-    default-column-width { fixed 700; }
-    default-window-height { fixed 500; }
-}
-
-window-rule {
     match app-id="window-switcher"
     open-floating true
     default-column-width { fixed 900; }
@@ -302,11 +295,13 @@ binds {
     Mod+C     hotkey-overlay-title="fzf+kondo: pick scan root → clean build dirs" { spawn "kitty" "--class" "kondo-popup" "--" "niri-kondo-popup"; }
     Mod+T     hotkey-overlay-title="fzf: switch focused window" { spawn "kitty" "--class" "window-switcher" "--" "niri-window-switch"; }
     Mod+E     hotkey-overlay-title="fzf: workspace template (Environment) — open/close" { spawn "kitty" "--class" "workspace-template-popup" "--" "niri-workspace-template-popup"; }
-    Mod+Z     hotkey-overlay-title="fzf: switch zellij session (in focused kitty)" { spawn "zellij-switch"; }
 
     // === Launchers ===
-    Mod+Return       hotkey-overlay-title="Pick a Zellij session: Enter → main, 1-9 → sessionN" { spawn "kitty-zellij-pick"; }
-    Mod+Shift+Return hotkey-overlay-title="Toggle scratchpad terminal" { spawn "scratchpad-toggle"; }
+    Mod+Return       hotkey-overlay-title="Kitty: session picker (zoxide dirs + ssh)" { spawn "kitty-session" "--pick"; }
+    Mod+Shift+Return hotkey-overlay-title="Kitty: list open sessions (switch / kill)" { spawn "kitty-session" "--list"; }
+    Mod+Tab          hotkey-overlay-title="Kitty: alternate session (toggle last two)" { spawn "kitty-session" "--alt"; }
+    Ctrl+Alt+S       hotkey-overlay-title="Toggle scratchpad terminal" { spawn "scratchpad-toggle"; }
+    Mod+V            hotkey-overlay-title="Launch kitty terminal" { spawn "kitty"; }
     Mod+Space        hotkey-overlay-title="Launcher (Noctalia)" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+Shift+V      hotkey-overlay-title="Clipboard history" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
     Mod+Ctrl+Space   hotkey-overlay-title="Toggle Noctalia bar" { spawn "noctalia" "msg" "bar-toggle"; }
