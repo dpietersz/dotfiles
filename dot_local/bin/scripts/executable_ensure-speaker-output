@@ -1,0 +1,52 @@
+#!/bin/bash
+set -euo pipefail
+
+# Ensure the internal laptop audio card exposes its built-in Speaker as a sink.
+#
+# On some SOF-DSP ThinkPads (P14s Gen5 / Meteor Lake) the UCM config splits
+# Speaker and Headphones into two mutually-exclusive profiles. WirePlumber
+# auto-selects the Headphones-only profile (higher UCM priority), so the
+# built-in speaker has no sink at all — and with an HDMI monitor attached,
+# audio silently falls through to HDMI. This switches the card to a profile
+# that includes the Speaker.
+#
+# Idempotent: no-op when a Speaker sink already exists (the healthy case on
+# cards with a combined analog profile, e.g. older Intel HDA laptops).
+
+command -v pactl >/dev/null 2>&1 || { echo "[ensure-speaker] pactl not found; skipping."; exit 0; }
+
+# Already have a Speaker sink? Nothing to do.
+if pactl list sinks short 2>/dev/null | grep -qi "Speaker"; then
+  echo "[ensure-speaker] Speaker sink already present — nothing to do."
+  exit 0
+fi
+
+# Find the first card offering an available profile that includes a Speaker,
+# along with that profile's internal name. Profile lines (not port lines) are
+# the ones carrying both "priority:" and "sinks:".
+result=$(pactl list cards | awk '
+  /^Card #/ { gsub("#","",$2); card=$2 }
+  /priority:/ && /sinks:/ && /available: yes/ && /Speaker/ {
+    line=$0; sub(/^[ \t]+/,"",line);
+    p=index(line,": "); name=substr(line,1,p-1);
+    print card "\t" name; exit
+  }')
+
+if [ -z "$result" ]; then
+  echo "[ensure-speaker] No Speaker-capable profile found on any card — skipping."
+  exit 0
+fi
+
+card=${result%%$'\t'*}
+profile=${result#*$'\t'}
+
+echo "[ensure-speaker] Switching card $card to profile: $profile"
+pactl set-card-profile "$card" "$profile"
+
+# The speaker sink may come up muted; unmute it so audio is actually audible.
+sleep 1
+spk=$(pactl list sinks short 2>/dev/null | awk '/Speaker/ {print $2; exit}')
+if [ -n "${spk:-}" ]; then
+  pactl set-sink-mute "$spk" 0 || true
+  echo "[ensure-speaker] Speaker sink active and unmuted: $spk"
+fi

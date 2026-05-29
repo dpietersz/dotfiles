@@ -5,7 +5,10 @@
 .config/systemd/
 .config/distrobox/
 .config/hypr/
+.config/wireplumber/
 .local/bin/scripts/niri-idle-daemon.sh
+.local/bin/scripts/ensure-speaker-output
+.chezmoiscripts/run_onchange_after_21-configure-audio-routing.sh
 # Vibe Typer is Linux-only (AppImage); the parent dir doesn't exist on macOS
 .config/vibe-typer/
 .config/autostart/
@@ -46,9 +49,11 @@
 .config/yazi/
 .config/vibe-typer/
 .config/espanso/
+.config/wireplumber/
 .local/bin/scripts/niri-idle-daemon.sh
 .local/bin/scripts/dot-screenshot
 .local/bin/scripts/notify-pending-reboot.sh
+.local/bin/scripts/ensure-speaker-output
 
 # --- GUI / desktop install + config scripts ---
 .chezmoiscripts/run_once_before_00b-install-polkit-agent.sh
@@ -72,6 +77,7 @@
 .chezmoiscripts/run_onchange_after_17-configure-localsend.sh
 .chezmoiscripts/run_onchange_after_19-install-equibop.sh
 .chezmoiscripts/run_onchange_after_20-enable-pending-reboot-notify.sh
+.chezmoiscripts/run_onchange_after_21-configure-audio-routing.sh
 .chezmoiscripts/run_onchange_before_00a-verify-image.sh
 .chezmoiscripts/run_onchange_before_05-install-noctalia.sh
 

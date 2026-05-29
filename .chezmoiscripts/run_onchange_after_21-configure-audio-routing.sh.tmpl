@@ -1,0 +1,40 @@
+#!/bin/bash
+# routing conf hash: {{ include "dot_config/wireplumber/wireplumber.conf.d/51-audio-routing-priority.conf" | sha256sum }}
+# ensure-speaker hash: {{ include "dot_local/bin/scripts/executable_ensure-speaker-output" | sha256sum }}
+# (Hashes above force this run_onchange script to re-fire whenever either the
+#  WirePlumber drop-in or the speaker-fix script changes.)
+
+set -euo pipefail
+
+# ------------------ Configure audio output routing ------------------
+# Loads the WirePlumber priority drop-in (deployed by chezmoi) and ensures the
+# internal card exposes its built-in Speaker. See the drop-in header for the
+# routing policy. Linux laptops only.
+
+{{- if or .remote .isMacOS .isServer }}
+echo "[audio-routing] Skipping: {{ if .remote }}remote{{ else if .isMacOS }}macOS{{ else }}server (headless){{ end }}."
+exit 0
+{{- end }}
+
+if ! command -v wpctl >/dev/null 2>&1; then
+  echo "[audio-routing] wpctl not found (pipewire/wireplumber absent) — skipping."
+  exit 0
+fi
+
+# Restart ONLY wireplumber to load the new drop-in. Deliberately NOT restarting
+# pipewire / pipewire-pulse: bouncing the pulse server orphans the audio
+# connections of running Electron apps (Teams, etc.) until they restart.
+# wireplumber owns policy/routing, so a wireplumber-only restart is enough and
+# keeps live clients connected.
+echo "[audio-routing] Restarting wireplumber to load routing policy..."
+systemctl --user restart wireplumber
+
+# Give wireplumber a moment to re-enumerate devices before fixing the profile.
+sleep 2
+
+if [ -x "$HOME/.local/bin/scripts/ensure-speaker-output" ]; then
+  echo "[audio-routing] Ensuring built-in speaker is available..."
+  "$HOME/.local/bin/scripts/ensure-speaker-output" || true
+fi
+
+echo "[audio-routing] Done."
