@@ -1,0 +1,59 @@
+#!/bin/bash
+# paseo-daemon.service hash: {{ include "dot_config/systemd/user/paseo-daemon.service" | sha256sum }}
+# (Hash above re-fires this script whenever the unit file or this script
+#  changes, so the service is re-enabled + restarted on every relevant apply.)
+
+set -euo pipefail
+
+{{- if or .remote .isMacOS .isServer (not .isBluefin) }}
+echo "[paseo-daemon] Skipping: {{ if .remote }}remote{{ else if .isMacOS }}macOS{{ else if .isServer }}server{{ else }}non-bluefin host{{ end }}."
+exit 0
+{{- end }}
+
+if ! command -v systemctl >/dev/null 2>&1; then
+    echo "[paseo-daemon] systemctl not available — skipping (container/CI?)"
+    exit 0
+fi
+if ! systemctl --user show-environment >/dev/null 2>&1; then
+    echo "[paseo-daemon] systemd --user not running — skipping."
+    exit 0
+fi
+
+SERVICE_FILE="$HOME/.config/systemd/user/paseo-daemon.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+    echo "[paseo-daemon] Missing unit file: $SERVICE_FILE — chezmoi may not have applied yet"
+    exit 1
+fi
+
+if [ ! -x "$HOME/.bun/bin/paseo" ]; then
+    echo "[paseo-daemon] paseo binary not found at \$HOME/.bun/bin/paseo — run_onchange_after_13-install-npm-globals should have installed it"
+    exit 1
+fi
+
+# Stop any out-of-systemd daemon started manually (paseo daemon start without
+# --foreground forks; that PID is outside our cgroup and would EADDRINUSE on
+# 6767 once the unit starts). Best-effort, ignore failures.
+if "$HOME/.bun/bin/paseo" daemon status --json >/dev/null 2>&1; then
+    if ! systemctl --user is-active --quiet paseo-daemon.service; then
+        echo "[paseo-daemon] Stopping pre-existing (non-systemd) daemon…"
+        "$HOME/.bun/bin/paseo" daemon stop >/dev/null 2>&1 || true
+    fi
+fi
+
+echo "[paseo-daemon] Reloading user systemd daemon…"
+systemctl --user daemon-reload
+
+echo "[paseo-daemon] Enabling paseo-daemon.service…"
+systemctl --user enable paseo-daemon.service
+
+echo "[paseo-daemon] Restarting paseo-daemon.service…"
+systemctl --user restart paseo-daemon.service
+
+echo ""
+echo "[paseo-daemon] Status:"
+systemctl --user --no-pager status paseo-daemon.service | head -n 10 || true
+
+echo ""
+echo "🌐 Paseo daemon listens on http://127.0.0.1:6767"
+echo "   Logs: journalctl --user -u paseo-daemon -f"
+echo ""

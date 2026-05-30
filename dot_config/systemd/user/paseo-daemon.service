@@ -1,0 +1,21 @@
+[Unit]
+Description=Paseo daemon — local agent control plane
+Documentation=https://paseo.sh/docs
+After=network.target
+
+[Service]
+Type=simple
+# paseo CLI is node-based (shebang: env -S node). node lives in linuxbrew on
+# Bluefin; PATH must include it. The launcher itself sits in ~/.bun/bin.
+Environment=HOME=%h
+Environment=PATH=%h/.bun/bin:/home/linuxbrew/.linuxbrew/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.bun/bin/paseo daemon start --foreground
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=10
+KillMode=control-group
+
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
