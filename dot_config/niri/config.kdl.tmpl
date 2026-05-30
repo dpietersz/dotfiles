@@ -224,21 +224,34 @@ window-rule {
     default-window-height { fixed 420; }
 }
 
-// showmethekey (OBS demo keystroke visualizer) — two windows: settings/main
-// and the floating overlay. Float both so they don't disturb the tiling
-// layout. Overlay default size matches the gsettings 1500x200 default.
+// showmethekey settings/main window — v1.17.0 can't be configured to
+// start with the settings panel hidden, and closing the settings window
+// terminates the whole app. Stash it on the scratchpad workspace so it
+// stays out of the way; toggle the whole app off via Mod+Shift+I, which
+// pkills the gtk process (both windows die together). Off-screen
+// positioning was tried first but niri clamps coords to monitor bounds.
 window-rule {
     match app-id="one.alynx.showmethekey"
     open-floating true
+    open-focused false
+    open-on-workspace "scratchpad"
     default-column-width { fixed 800; }
     default-window-height { fixed 600; }
 }
 
+// showmethekey floating overlay (the keystroke display) — bottom-center
+// of the panel, 50px above the bottom edge. Standard streamer/YouTuber
+// position (EposVox-style). Logical desktop on the P14s is 2048x1280
+// after 1.25x scale; overlay is 1500x200 so x = (2048-1500)/2 = 274.
+// For OBS recordings, add this window as its own Window Capture source
+// in OBS and re-position it on the canvas where you want — the desktop
+// position is only for your own visual feedback while recording.
 window-rule {
     match app-id="showmethekey-gtk"
     open-floating true
     default-column-width { fixed 1500; }
     default-window-height { fixed 200; }
+    default-floating-position x=274 y=50 relative-to="bottom-left"
 }
 
 window-rule {
