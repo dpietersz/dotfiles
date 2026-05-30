@@ -14,6 +14,8 @@ MODE="${1:-region}"
 OUTDIR="${XDG_PICTURES_DIR:-$HOME/dev/Pictures}/Screenshots"
 mkdir -p "$OUTDIR"
 
+OUT="$OUTDIR/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png"
+
 case "$MODE" in
   region)
     grim -g "$(slurp -d)" -
@@ -33,4 +35,14 @@ case "$MODE" in
     echo "'$MODE' is not supported, aborting!" >&2
     exit 1
     ;;
-esac | satty --filename - --output-filename "$OUTDIR/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png"
+esac | satty --filename - --output-filename "$OUT"
+
+# Satty's copy-command pushes the PNG to the clipboard when the user hits
+# Ctrl+C. When they hit Ctrl+S satty writes the file but doesn't touch the
+# clipboard — so we follow up with a text/plain wl-copy of the saved path.
+# This lands as a separate cliphist entry on top of any image entry, so the
+# clipboard-history picker shows: [newest] file path → image → ...
+# Skipped silently if satty was closed without saving (file won't exist).
+if [ -f "$OUT" ]; then
+  printf '%s' "$OUT" | wl-copy --type text/plain
+fi
