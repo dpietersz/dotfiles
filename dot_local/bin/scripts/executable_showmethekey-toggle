@@ -1,0 +1,21 @@
+#!/bin/bash
+# Toggle showmethekey-gtk keystroke overlay on/off in recording-optimized mode.
+# Bound to Mod+Shift+I in niri (for OBS demo recordings).
+#
+# Requires showmethekey from the pesader COPR — baked in bluefin-udx commit
+# 61d91c1+. Until that image is on this machine, this script is a no-op.
+#
+# -k show keys | -A always on top | -C click-through (input falls through overlay)
+
+set -euo pipefail
+
+if ! command -v showmethekey-gtk >/dev/null; then
+  echo "showmethekey-toggle: showmethekey-gtk not installed — rebase to latest bluefin-udx" >&2
+  exit 0
+fi
+
+if pgrep -x showmethekey-gtk >/dev/null 2>&1; then
+  pkill -x showmethekey-gtk
+else
+  exec showmethekey-gtk -kAC
+fi
