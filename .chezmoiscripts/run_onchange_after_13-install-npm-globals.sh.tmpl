@@ -6,6 +6,8 @@ exit 0
 # Global npm packages that aren't available via brew.
 # - pi      → @earendil-works/pi-coding-agent  (terminal coding harness)
 # - auggie  → @augmentcode/auggie               (Augment CLI)
+# - mcp-hub → mcp-hub                            (MCP server hub)
+# - paseo   → @getpaseo/cli                      (Paseo CLI; desktop baked in bluefin-udx)
 #
 # Installed via bun (preferred) or npm fallback. Bun globals live in ~/.bun/bin
 # (already on PATH via dot_config/shell/10-path.sh.tmpl).
@@ -26,7 +28,7 @@ if ! command -v bun >/dev/null 2>&1; then
   done
 fi
 
-PKGS=( "@earendil-works/pi-coding-agent" "@augmentcode/auggie" "mcp-hub" )
+PKGS=( "@earendil-works/pi-coding-agent" "@augmentcode/auggie" "mcp-hub" "@getpaseo/cli" )
 
 install_one() {
   local pkg="$1"
