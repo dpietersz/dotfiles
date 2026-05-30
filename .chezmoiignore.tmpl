@@ -12,6 +12,10 @@
 # Vibe Typer is Linux-only (AppImage); the parent dir doesn't exist on macOS
 .config/vibe-typer/
 .config/autostart/
+# OBS Studio is baked in bluefin-udx (Linux atomic). On macOS, install via brew cask.
+.config/xdg-desktop-portal/
+.config/obs-studio/
+.local/bin/scripts/obs
 {{- end }}
 
 {{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
@@ -50,10 +54,13 @@
 .config/vibe-typer/
 .config/espanso/
 .config/wireplumber/
+.config/xdg-desktop-portal/
+.config/obs-studio/
 .local/bin/scripts/niri-idle-daemon.sh
 .local/bin/scripts/dot-screenshot
 .local/bin/scripts/notify-pending-reboot.sh
 .local/bin/scripts/ensure-speaker-output
+.local/bin/scripts/obs
 
 # --- GUI / desktop install + config scripts ---
 .chezmoiscripts/run_once_before_00b-install-polkit-agent.sh
