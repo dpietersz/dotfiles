@@ -141,6 +141,20 @@ Loudness normalization to YouTube's -14 LUFS target happens in **post** (DaVinci
 6. Add second source for second window if needed; switch scenes via Studio Mode
 7. When done recording: focus the recorded window → `Mod+Shift+O` again → niri restores its prior size
 
+### Adding the showmethekey keystroke overlay as a second source
+
+Window Capture only captures the kitty/browser window — it does **not** include the showmethekey overlay floating elsewhere on the desktop. To include keystrokes in the recording, add the overlay as its own OBS source and composite it on the canvas.
+
+1. Press `Mod+Shift+I` (or launch from Noctalia) → overlay appears at bottom-center of the screen; settings window is stashed on the `scratchpad` workspace (out of your way)
+2. In OBS: Sources → `+` → **Screen Capture (PipeWire)** → name `Keystrokes`
+3. niri portal dialog → **Window** tab → pick `showmethekey-gtk` ("Floating Window - Show Me The Key") → **Share**
+4. The 1500×200 overlay appears on the OBS canvas — drag/resize to position it where you want **on the canvas** (typical: bottom-center of the 1920×1080 frame, ~30 px above the bottom). The desktop position of the overlay no longer matters — OBS captures the window content regardless.
+5. Right-click the source → **Filters** → optional **Chroma Key** with the overlay's background color if you want the keystrokes to float against your kitty screen instead of sitting in a solid box. showmethekey draws a configurable background; if you keep the default semi-opaque dark, no chroma key needed.
+6. Order matters in the Sources list: `Keystrokes` source must be **above** `Window` in the list so it renders on top.
+7. Press `Mod+Shift+I` again when done → both overlay windows die, OBS shows a black rectangle where the source was → safe to leave or hide the source in OBS.
+
+The alternative (Display/Monitor Capture instead of Window Capture for the main source) captures everything visible on your screen including the overlay, but you lose the clean 1:1 window-only recording and reveal everything else on your desktop. Not recommended for technical demos.
+
 ## Virtual camera (Teams / Zoom / browser meetings)
 
 OBS → `Start Virtual Camera`. In any meeting app, camera picker → "OBS Virtual Camera". The system `exclusive_caps=1` modprobe option (in bluefin-udx) is what makes Chromium-family apps detect the loopback as a real device.
