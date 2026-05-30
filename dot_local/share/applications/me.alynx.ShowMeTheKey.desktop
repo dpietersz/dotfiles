@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Show Me The Key
+GenericName=Keystroke Visualizer
+Comment=Display pressed keys on screen — recording-optimized: always on top, click-through
+Exec=showmethekey-gtk -kAC
+Icon=me.alynx.ShowMeTheKey
+Terminal=false
+Type=Application
+Categories=Utility;AudioVideo;Recorder;
+StartupNotify=true
+StartupWMClass=showmethekey-gtk
+Keywords=keystroke;keys;overlay;screencast;recording;obs;

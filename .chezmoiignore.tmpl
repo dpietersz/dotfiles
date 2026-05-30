@@ -15,6 +15,8 @@
 # OBS Studio is baked in bluefin-udx (Linux atomic). On macOS, install via brew cask.
 .config/xdg-desktop-portal/
 .config/obs-studio/
+# showmethekey is baked in bluefin-udx; the .desktop override is Linux-only.
+.local/share/applications/me.alynx.ShowMeTheKey.desktop
 {{- end }}
 
 {{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
@@ -55,6 +57,7 @@
 .config/wireplumber/
 .config/xdg-desktop-portal/
 .config/obs-studio/
+.local/share/applications/
 .local/bin/scripts/niri-idle-daemon.sh
 .local/bin/scripts/dot-screenshot
 .local/bin/scripts/notify-pending-reboot.sh
