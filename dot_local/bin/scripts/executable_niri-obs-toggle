@@ -1,0 +1,30 @@
+#!/bin/bash
+# Toggle the focused window between 1920x1080 (OBS recording size) and its
+# previous size. State per window-id in $XDG_RUNTIME_DIR/niri-obs-toggle/.
+#
+# Bound to Mod+Shift+O in niri.
+
+set -euo pipefail
+
+OBS_W=1920
+OBS_H=1080
+
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/niri-obs-toggle"
+mkdir -p "$STATE_DIR"
+
+WINDOW_JSON=$(niri msg --json focused-window)
+WINDOW_ID=$(echo "$WINDOW_JSON" | jq -r '.id')
+CUR_W=$(echo "$WINDOW_JSON" | jq -r '.window_size[0]')
+CUR_H=$(echo "$WINDOW_JSON" | jq -r '.window_size[1]')
+STATE_FILE="$STATE_DIR/$WINDOW_ID"
+
+if [[ -f "$STATE_FILE" ]]; then
+  read -r ORIG_W ORIG_H < "$STATE_FILE"
+  rm -f "$STATE_FILE"
+  niri msg action set-column-width "$ORIG_W"
+  niri msg action set-window-height "$ORIG_H"
+else
+  printf '%s %s\n' "$CUR_W" "$CUR_H" > "$STATE_FILE"
+  niri msg action set-column-width "$OBS_W"
+  niri msg action set-window-height "$OBS_H"
+fi
