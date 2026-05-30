@@ -14,9 +14,14 @@ mkdir -p "$STATE_DIR"
 
 WINDOW_JSON=$(niri msg --json focused-window)
 WINDOW_ID=$(echo "$WINDOW_JSON" | jq -r '.id')
-CUR_W=$(echo "$WINDOW_JSON" | jq -r '.window_size[0]')
-CUR_H=$(echo "$WINDOW_JSON" | jq -r '.window_size[1]')
+CUR_W=$(echo "$WINDOW_JSON" | jq -r '.layout.window_size[0]')
+CUR_H=$(echo "$WINDOW_JSON" | jq -r '.layout.window_size[1]')
 STATE_FILE="$STATE_DIR/$WINDOW_ID"
+
+if [[ "$CUR_W" == "null" || "$CUR_H" == "null" ]]; then
+  echo "niri-obs-toggle: focused window has no size info — abort" >&2
+  exit 1
+fi
 
 if [[ -f "$STATE_FILE" ]]; then
   read -r ORIG_W ORIG_H < "$STATE_FILE"
