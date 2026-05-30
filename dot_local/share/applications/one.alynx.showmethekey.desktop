@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Show Me The Key
+GenericName=Show Me The Key (recording mode)
+Comment=Show keys you typed on screen — auto-activate floating overlay for OBS demos.
+Icon=one.alynx.showmethekey
+Exec=/usr/bin/showmethekey-gtk -a
+TryExec=/usr/bin/showmethekey-gtk
+StartupNotify=false
+Terminal=false
+Categories=Utility;Accessibility;AudioVideo;Recorder;
+StartupWMClass=showmethekey-gtk
+Keywords=keystroke;keys;overlay;screencast;recording;obs;

@@ -1,11 +1,15 @@
 #!/bin/bash
-# Toggle showmethekey-gtk keystroke overlay on/off in recording-optimized mode.
+# Toggle the showmethekey-gtk floating-overlay window on/off.
 # Bound to Mod+Shift+I in niri (for OBS demo recordings).
 #
-# Requires showmethekey from the pesader COPR — baked in bluefin-udx commit
-# 61d91c1+. Until that image is on this machine, this script is a no-op.
+# v1.17.0 (pesader/showmethekey COPR) only exposes -a/--active to auto-spawn
+# the floating overlay. "Always on top" and "click-through" are not CLI flags
+# in this version — they're per-session GUI toggles inside the overlay's
+# settings panel, and 'open-floating' niri rules handle the tiling concern.
 #
-# -k show keys | -A always on top | -C click-through (input falls through overlay)
+# The proc name 'showmethekey-gtk' is 17 chars > the 15-char kernel comm
+# limit, so pkill -x / pgrep -x can't match it. We use -f against the full
+# command line instead.
 
 set -euo pipefail
 
@@ -14,8 +18,16 @@ if ! command -v showmethekey-gtk >/dev/null; then
   exit 0
 fi
 
-if pgrep -x showmethekey-gtk >/dev/null 2>&1; then
-  pkill -x showmethekey-gtk
+if pgrep -f '^/usr/bin/showmethekey-gtk\b' >/dev/null 2>&1; then
+  pkill -f '^/usr/bin/showmethekey-gtk\b'
+  # Known v1.17.0 leak: the polkit-elevated /usr/bin/showmethekey-cli helper
+  # keeps running as root after the GTK frontend dies, and user-space pkill
+  # returns EPERM on it. SIGINT to the frontend doesn't trigger orderly
+  # helper shutdown either. Each toggle-on leaves one stale helper until
+  # next reboot — or until you manually run:
+  #     sudo pkill -f '^/usr/bin/showmethekey-cli\b'
+  # Negligible per-process footprint; revisit if pesader/showmethekey COPR
+  # picks up a release that fixes the orderly-shutdown path.
 else
-  exec showmethekey-gtk -kAC
+  exec /usr/bin/showmethekey-gtk -a
 fi

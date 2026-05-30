@@ -224,6 +224,23 @@ window-rule {
     default-window-height { fixed 420; }
 }
 
+// showmethekey (OBS demo keystroke visualizer) — two windows: settings/main
+// and the floating overlay. Float both so they don't disturb the tiling
+// layout. Overlay default size matches the gsettings 1500x200 default.
+window-rule {
+    match app-id="one.alynx.showmethekey"
+    open-floating true
+    default-column-width { fixed 800; }
+    default-window-height { fixed 600; }
+}
+
+window-rule {
+    match app-id="showmethekey-gtk"
+    open-floating true
+    default-column-width { fixed 1500; }
+    default-window-height { fixed 200; }
+}
+
 window-rule {
     match app-id="window-switcher"
     open-floating true
@@ -285,7 +302,7 @@ binds {
     // === Overview / hotkey overlay ===
     Mod+O hotkey-overlay-title="Toggle overview" { toggle-overview; }
     Mod+Shift+O hotkey-overlay-title="Toggle focused window between OBS 1920x1080 and previous size" { spawn "niri-obs-toggle"; }
-    Mod+Shift+I hotkey-overlay-title="Toggle showmethekey keystroke overlay (OBS recording mode: -kAC)" { spawn "showmethekey-toggle"; }
+    Mod+Shift+I hotkey-overlay-title="Toggle showmethekey keystroke overlay (recording mode: -a, auto-spawn floating overlay)" { spawn "showmethekey-toggle"; }
     Mod+Shift+Slash hotkey-overlay-title="Show hotkey overlay" { show-hotkey-overlay; }
 
     // === fzf popups (search & pickers) ===
