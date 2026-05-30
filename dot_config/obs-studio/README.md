@@ -178,11 +178,13 @@ There used to be a `~/.local/bin/scripts/obs` wrapper in this repo that set thos
 
 ## Deferred items (track as follow-ups)
 
-- **OBS profile auto-deploy** — once the manually-applied profile is stable, capture `~/.config/obs-studio/basic/profiles/<name>/basic.ini` as a chezmoi `.tmpl` with `.hasNvidia` gates for the encoder block
-- **Scene collection auto-deploy** — Intro / Main-Code / Main-Code+Cam / Talking-Head / BRB / Outro with the mic filter chain baked into source filters, exported to `~/.config/obs-studio/basic/scenes/YouTube.json`
-- **Plugin install script** — pinned releases of Move Transition, Advanced Scene Switcher, Source Record, Input Overlay from GitHub with SHA256 verification, extracted to `~/.config/obs-studio/plugins/`
-- **ReaPlugs** — closed-source freeware (`reaper.fm/reaplugs/`), one-time manual download. Documents the EQ between Noise Suppression and Compressor in the mic chain
-- **bluefin-udx**: add `v4l-utils` (for `v4l2-ctl`), `mediainfo` (verification CLI), and pin `video_nr=10` in `/etc/modprobe.d/v4l2loopback.conf` so the loopback lands at `/dev/video10` instead of competing with the real webcam at `/dev/video0`
+Full procedures for each — copy-pasteable commands, traps, machine-divergence notes — in [`DEFERRED.md`](./DEFERRED.md). Quick index:
+
+- **OBS plugins** — Source Record, Advanced Scene Switcher, Move Transition, Input Overlay. Manual install per plugin (no script — upstream packaging too inconsistent across the four to maintain a script for 2 laptops). See DEFERRED §1.
+- **ReaPlugs / ReaEQ** — closed-source freeware; manual download. Slots into the mic filter chain as Filter 3 between Noise Suppression and Compressor. See DEFERRED §2.
+- **OBS profile auto-deploy** — capture `basic.ini` to `.tmpl` with `.hasNvidia` gates after the profile settles (~5 real recordings). See DEFERRED §3.
+- **Scene collection auto-deploy** — snapshot `scenes/<name>.json` once the scene structure is stable across real takes. See DEFERRED §4 (includes the per-machine device-id scrub).
+- **bluefin-udx (now done)**: `v4l-utils` + `mediainfo` baked + `video_nr=10` pin — shipped in bluefin-udx commits `4fed634` and `442f45d`. Rebase the P14s to pick up.
 
 ## References
 
