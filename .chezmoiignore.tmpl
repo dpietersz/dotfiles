@@ -17,6 +17,10 @@
 .config/obs-studio/
 # showmethekey is baked in bluefin-udx; the .desktop override is Linux-only.
 .local/share/applications/me.alynx.ShowMeTheKey.desktop
+# Browserpass native-messaging-host manifests target the Linux Fedora RPM at
+# /usr/bin/browserpass-native; macOS uses a different path layout.
+.mozilla/
+.zen/
 {{- end }}
 
 {{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
@@ -62,6 +66,8 @@
 .local/bin/scripts/dot-screenshot
 .local/bin/scripts/notify-pending-reboot.sh
 .local/bin/scripts/ensure-speaker-output
+.mozilla/
+.zen/
 
 # --- GUI / desktop install + config scripts ---
 .chezmoiscripts/run_once_before_00b-install-polkit-agent.sh
