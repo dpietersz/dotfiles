@@ -1,0 +1,27 @@
+{{- if and (not .remote) (or .isBluefin .isBazzite (eq .chezmoi.os "linux")) -}}
+#!/bin/bash
+# Enable the battery-notifier user timer. Idempotent — `--now` reloads
+# state if already enabled. The timer's ConditionPathExistsGlob makes it
+# self-skip on machines without /sys/class/power_supply/BAT*, so this is
+# safe to run image-wide (desktops, VMs).
+
+set -euo pipefail
+
+# Skip cleanly when there's no battery at all (desktop). Cheaper than
+# leaving the timer enabled and inert.
+shopt -s nullglob
+bats=(/sys/class/power_supply/BAT*)
+shopt -u nullglob
+if (( ${#bats[@]} == 0 )); then
+  echo "battery-notifier: no battery detected, skipping enable" >&2
+  exit 0
+fi
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "battery-notifier: systemctl missing, skipping enable" >&2
+  exit 0
+fi
+
+systemctl --user daemon-reload
+systemctl --user enable --now battery-notifier.timer
+{{- end }}

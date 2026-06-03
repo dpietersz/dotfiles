@@ -1,0 +1,14 @@
+[Unit]
+Description=Poll battery for funny escalating notifications
+ConditionPathExistsGlob=/sys/class/power_supply/BAT*
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30s
+AccuracySec=10s
+# After resume from sleep, fire promptly so we don't notify based on a
+# pre-suspend reading taken minutes ago.
+OnUnitInactiveSec=30s
+
+[Install]
+WantedBy=timers.target

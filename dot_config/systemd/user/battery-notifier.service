@@ -1,0 +1,8 @@
+[Unit]
+Description=Funny low-battery notifications (with escalating doom)
+# Skip on systems without a battery (desktops, remote containers).
+ConditionPathExistsGlob=/sys/class/power_supply/BAT*
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/scripts/battery-notifier.sh

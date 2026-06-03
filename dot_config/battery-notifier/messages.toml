@@ -1,0 +1,91 @@
+# Battery notifier message catalog.
+#
+# Buckets fire ONCE on entry (state file tracks last bucket). A random line is
+# picked from the bucket's array. Add/remove freely — script just reads the
+# array length and `shuf -n1`s.
+#
+# Tone: dumb, fond, slightly unhinged. Never actually scary. The laptop has a
+# personality and is mildly dramatic about its own mortality.
+
+[chill]
+# 20–16%. Once-per-discharge nudge. Urgency: low. No sound.
+title = "Battery (chill)"
+messages = [
+  "20%. I'm fine. Totally fine. Narrator: she was not fine.",
+  "Heads up — laptop is starting to feel its mortality.",
+  "20%. About as much juice as a sad raisin.",
+  "Pre-snack warning: you don't have to plug in. But like… do.",
+  "I have entered my villain era. Cable, please.",
+  "Battery is doing that thing where it pretends to be okay.",
+  "20%. The cable is right there. RIGHT there.",
+  "I'm not saying I'll die. I'm just saying. You know. Soon.",
+  "Battery: 'one more thing,' she said, ominously.",
+  "FYI: the void is at 20%. Polite reminder.",
+]
+
+[nudge]
+# 15–11%. Urgency: normal. No sound.
+title = "Battery (nudge)"
+messages = [
+  "15%. I will absolutely die on this hill. Plug me in.",
+  "We are now in 'mild panic' territory. You're welcome.",
+  "Cable. Cable. Cable. Cable. Cable.",
+  "Battery has questions. Mostly: 'why are you like this?'",
+  "13%. I would like to register a complaint with management.",
+  "I've started writing my will. You're not in it. Plug in.",
+  "12%. The laptop's therapist has been notified.",
+  "Friendly reminder that USB-C is shaped like 'rescue me'.",
+  "Honestly? Embarrassing. For both of us.",
+  "Battery to brain: WE'VE BEEN OVER THIS.",
+]
+
+[concern]
+# 10–6%. Urgency: normal. No sound. (Soft sound optional — keeping silent so
+# panic/doom hit harder.)
+title = "Battery (concern)"
+messages = [
+  "10%. The laptop has called its lawyer.",
+  "I am writing this from underwater.",
+  "9%. I'm not angry, I'm just disappointed.",
+  "Single-digit club. Membership: involuntary.",
+  "7%. Battery is now charging exclusively on spite.",
+  "If I had hands I'd be plugging myself in.",
+  "8%. Status: existentially perturbed.",
+  "I see you reading this. I see you NOT plugging in.",
+  "We have entered the 'this is fine, dog in fire' phase.",
+  "6%. The credits are starting to roll.",
+]
+
+[panic]
+# 5–3%. Urgency: critical. Soft sound (bell).
+title = "Battery (panic)"
+sound = "bell.oga"
+messages = [
+  "5%. THIS IS NOT A DRILL. (It's a cable. Use it.)",
+  "I can see the white light. It's a USB-C port. PLUG. IT. IN.",
+  "This is fine. (The 'this is fine' dog has left the building.)",
+  "4%. I have begun composing my final tweet.",
+  "Battery is now operating on vibes and regret.",
+  "3%. Tell my children I loved them. — Your laptop",
+  "I am SO close to becoming a very thin brick.",
+  "Last call at the electron bar.",
+  "Battery has stopped negotiating and started bargaining.",
+  "Look. I'm not above begging. PLEASE.",
+]
+
+[doom]
+# 2–1%. Urgency: critical. Louder sound (alarm-clock-elapsed).
+title = "Battery (DOOM)"
+sound = "alarm-clock-elapsed.oga"
+messages = [
+  "1%. Goodbye cruel world. RIP my unsaved tabs.",
+  "Final words: 'I should have been a calculator.'",
+  "🪦 Here lies battery. Cause of death: optimism.",
+  "2%. The laptop is being read its last rites.",
+  "Plot twist: the villain was the empty battery all along.",
+  "1%. I forgive you. (I don't.)",
+  "Tell Roos I loved her. Also: cable. Now.",
+  "Going dark. Send help. Send electrons. Send anything.",
+  "This is my Joan-of-Arc moment, except dumber.",
+  "Last chance. Even a USB-A would do at this point. Please.",
+]
