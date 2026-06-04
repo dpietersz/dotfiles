@@ -1,0 +1,13 @@
+# EB Garamond — used by the `classic` pandoc style.
+# Source: github.com/octaviopardo/EBGaramond12 (the upstream / Google Fonts source).
+#
+# Archive layout: EBGaramond12-master/fonts/ttf/EBGaramond-*.ttf
+# stripComponents=3 flattens those 3 leading dirs so TTFs land directly under
+# .fonts/EBGaramond/ — chezmoi otherwise won't create the intermediate dirs and
+# fails with "no such file or directory" on apply.
+[".fonts/EBGaramond"]
+type = "archive"
+url = "https://github.com/octaviopardo/EBGaramond12/archive/refs/heads/master.zip"
+include = ["**/*.ttf"]
+stripComponents = 3
+refreshPeriod = "720h"

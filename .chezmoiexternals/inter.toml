@@ -1,0 +1,13 @@
+# Inter — used by the `clean` pandoc style (default). Also a great UI font.
+# Source: github.com/rsms/inter releases.
+#
+# Archive layout: InterVariable*.ttf at the root, plus deep extras/ttf/*.ttf.
+# We only keep the top-level variable fonts — typst handles variable fonts
+# natively and a single VF replaces ~30 static weight files. include="*.ttf"
+# (single star) matches root only, skipping nested extras/ — that also dodges
+# the chezmoi "no such file or directory" failure on nested archive paths.
+[".fonts/Inter"]
+type = "archive"
+url = "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip"
+include = ["*.ttf"]
+refreshPeriod = "720h"

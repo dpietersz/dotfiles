@@ -1,0 +1,27 @@
+#!/bin/bash
+# run_onchange_after_19-fc-cache — refresh the user fontconfig cache when any
+# font external has changed. fontconfig auto-scans ~/.fonts/ on its own
+# schedule, but typst/pandoc queries within seconds of an apply would otherwise
+# miss the just-extracted TTFs. Re-running on every apply would be wasteful;
+# embedding the externals' content hashes makes this onchange-gated.
+#
+# Fingerprints (embedded so a font URL bump retriggers this script):
+# inter:         {{ include ".chezmoiexternals/inter.toml" | sha256sum }}
+# eb-garamond:   {{ include ".chezmoiexternals/eb-garamond.toml" | sha256sum }}
+# ibm-plex-sans: {{ include ".chezmoiexternals/ibm-plex-sans.toml" | sha256sum }}
+# meslo:         {{ include ".chezmoiexternals/meslo.toml.tmpl" | sha256sum }}
+# departuremono: {{ include ".chezmoiexternals/departuremono.toml" | sha256sum }}
+set -euo pipefail
+
+if ! command -v fc-cache >/dev/null 2>&1; then
+    # macOS has no fc-cache; CoreText auto-discovers ~/Library/Fonts/. On Linux
+    # without fontconfig there's nothing useful to do here either.
+    exit 0
+fi
+
+# -f forces a rebuild of cached files even when mtimes look fresh; quiet stays
+# out of the apply log. ~/.fonts/ is the legacy path fontconfig still scans by
+# default — same dir the existing meslo/departuremono externals use.
+fc-cache -f "$HOME/.fonts" >/dev/null 2>&1 || true
+
+echo "→ fc-cache refreshed (font externals changed)"

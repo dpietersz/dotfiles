@@ -1,0 +1,12 @@
+# IBM Plex Sans — used by the `compact` pandoc style.
+# Source: github.com/IBM/plex releases (per-family zip, smaller than monorepo).
+#
+# Archive layout: ibm-plex-sans/fonts/complete/ttf/IBMPlexSans-*.ttf
+# stripComponents=4 flattens the leading dirs so TTFs land directly under
+# .fonts/IBMPlexSans/ (chezmoi won't auto-create deep intermediate dirs).
+[".fonts/IBMPlexSans"]
+type = "archive"
+url = "https://github.com/IBM/plex/releases/download/%40ibm%2Fplex-sans%401.1.0/ibm-plex-sans.zip"
+include = ["**/*.ttf"]
+stripComponents = 4
+refreshPeriod = "720h"
