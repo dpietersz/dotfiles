@@ -1,0 +1,18 @@
+; ~/.aws/config — managed by chezmoi (private_dot_aws/config.tmpl).
+;
+; `credential_process` makes every AWS-aware tool (awscli, terraform, sdk)
+; pull short-lived STS creds from aws-vault transparently. You can also use
+; `aws-vault exec personal -- <cmd>` explicitly when you want a sub-shell
+; with the env vars already exported (e.g. for aws-nuke).
+;
+; Bootstrap once: `aws-vault add personal` — keys land in pass under
+; aws-vault/personal and sync via the password-store git remote.
+
+[default]
+region = eu-central-1
+output = json
+
+[profile personal]
+region = eu-central-1
+output = json
+credential_process = aws-vault exec personal --json --no-session

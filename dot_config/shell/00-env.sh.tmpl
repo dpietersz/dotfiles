@@ -56,6 +56,15 @@ if command -v dagger >/dev/null; then
   export DAGGER_NO_NAG=1
 fi
 
+# aws-vault — store credentials in pass (gpg-agent caches passphrase, so
+# `aws-vault exec PROFILE -- ...` mints STS creds without re-prompting).
+# Bootstrap once per account: `aws-vault add personal`. Keys land at
+# pass:aws-vault/personal and sync to every machine via the password-store git remote.
+export AWS_VAULT_BACKEND=pass
+export AWS_VAULT_PASS_PREFIX=aws-vault
+export AWS_SESSION_TOKEN_TTL=12h
+export AWS_ASSUME_ROLE_TTL=1h
+
 
 {{ if not .remote }}
 # Only load secrets via pass in interactive shells (requires GPG with TTY).

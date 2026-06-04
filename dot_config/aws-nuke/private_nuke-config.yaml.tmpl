@@ -1,0 +1,49 @@
+{{- /*
+  ~/.config/aws-nuke/nuke-config.yaml — managed by chezmoi.
+
+  DESTRUCTIVE: aws-nuke deletes every matching resource in every region.
+  Always do a dry run first (omit --no-dry-run). The alias check is ON by
+  default — your AWS account must have an IAM alias set, and it must match
+  the value implied by your account-id below.
+
+  Two pass entries drive this file. Missing entries render `REPLACE_ME`
+  placeholders so chezmoi apply succeeds; aws-nuke will refuse to run
+  until they are real. Bootstrap once per identity:
+    pass insert aws/account-id   # 12-digit AWS account id
+    pass insert aws/iam-user     # IAM username that runs aws-nuke
+    chezmoi apply
+
+  Run with:
+    aws-vault exec personal -- aws-nuke run \
+      --config ~/.config/aws-nuke/nuke-config.yaml          # dry run
+    aws-vault exec personal -- aws-nuke run \
+      --config ~/.config/aws-nuke/nuke-config.yaml --no-dry-run
+*/ -}}
+{{- $accountId := output "sh" "-c" "pass show aws/account-id 2>/dev/null | head -1 || true" | trim -}}
+{{- $iamUser := output "sh" "-c" "pass show aws/iam-user 2>/dev/null | head -1 || true" | trim -}}
+{{- if eq $accountId "" }}{{ $accountId = "REPLACE_ME_account_id" }}{{ end -}}
+{{- if eq $iamUser "" }}{{ $iamUser = "REPLACE_ME_iam_user" }}{{ end }}
+regions:
+  - "global"
+  - "all"
+
+# Hard safety net: account-ids listed here can never be nuked even if
+# accidentally referenced under `accounts:`. Add any prod/shared-account
+# IDs you ever touch from this workstation.
+blocklist:
+  - "000000000000"   # placeholder — replace with real prod account-id if any
+
+accounts:
+  "{{ $accountId }}":
+    # Filters = resources to KEEP (skip during nuke). Starter set: don't
+    # nuke the IAM user that runs aws-nuke itself. Tune as you learn what
+    # survives a run.
+    filters:
+      IAMUser:
+        - "{{ $iamUser }}"
+      IAMUserPolicyAttachment:
+        - property: RoleName
+          value: "{{ $iamUser }}"
+      IAMUserAccessKey:
+        - property: UserName
+          value: "{{ $iamUser }}"
