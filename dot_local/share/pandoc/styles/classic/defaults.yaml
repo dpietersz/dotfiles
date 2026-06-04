@@ -1,0 +1,17 @@
+# classic — serif, larger type, wider margins. Best for letters and long-form.
+# See clean/defaults.yaml for cross-format parity notes.
+metadata:
+  mainfont: "EB Garamond"
+  sansfont: "Inter"
+  monofont: "JetBrains Mono"
+  fontsize: "12pt"
+  linestretch: 1.5
+  margin-left: "3cm"
+  margin-right: "3cm"
+  margin-top: "3cm"
+  margin-bottom: "3cm"
+  geometry: "margin=3cm"
+  colorlinks: true
+  linkcolor: "#7c3aed"
+  urlcolor: "#7c3aed"
+  papersize: "a4"

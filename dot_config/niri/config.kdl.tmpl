@@ -211,6 +211,13 @@ window-rule {
 }
 
 window-rule {
+    match app-id="pandoc-popup"
+    open-floating true
+    default-column-width { fixed 1100; }
+    default-window-height { fixed 750; }
+}
+
+window-rule {
     match app-id="workspace-template-popup"
     open-floating true
     default-column-width { fixed 900; }
@@ -325,6 +332,7 @@ binds {
     Mod+G     hotkey-overlay-title="fzf: pick SSH host → open kitty" { spawn "kitty" "--class" "fssh-popup" "--" "niri-fssh-popup"; }
     Mod+F     hotkey-overlay-title="fzf+fabric: pick pattern(s) → run → copy" { spawn "kitty" "--class" "fabric-popup" "--" "niri-fabric-popup"; }
     Mod+C     hotkey-overlay-title="fzf+kondo: pick scan root → clean build dirs" { spawn "kitty" "--class" "kondo-popup" "--" "niri-kondo-popup"; }
+    Mod+M     hotkey-overlay-title="fzf+pandoc: pick note → convert to pdf/docx/html" { spawn "kitty" "--class" "pandoc-popup" "--" "niri-pandoc-popup"; }
     Mod+T     hotkey-overlay-title="fzf: switch focused window" { spawn "kitty" "--class" "window-switcher" "--" "niri-window-switch"; }
     Mod+E     hotkey-overlay-title="fzf: workspace template (Environment) — open/close" { spawn "kitty" "--class" "workspace-template-popup" "--" "niri-workspace-template-popup"; }
 

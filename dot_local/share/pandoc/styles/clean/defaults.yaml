@@ -1,0 +1,25 @@
+# clean — modern sans-serif, the default.
+# Pandoc defaults file (https://pandoc.org/MANUAL.html#defaults-files).
+# Loaded via `pandoc --defaults=…/clean/defaults.yaml`.
+#
+# Cross-format parity strategy: set typography via `metadata:` so the same
+# values flow into typst (PDF), the HTML template, AND the LaTeX engine if
+# ever used. DOCX is the weak link — pandoc's docx writer ignores `mainfont`
+# without a reference.docx. To fix that, hand-style a reference.docx in
+# Word/LibreOffice and drop it next to this file as `reference.docx`; the
+# popup will pick it up automatically.
+metadata:
+  mainfont: "Inter"
+  sansfont: "Inter"
+  monofont: "JetBrains Mono"
+  fontsize: "11pt"
+  linestretch: 1.4
+  margin-left: "2.5cm"
+  margin-right: "2.5cm"
+  margin-top: "2.5cm"
+  margin-bottom: "2.5cm"
+  geometry: "margin=2.5cm"
+  colorlinks: true
+  linkcolor: "#1a5fb4"
+  urlcolor: "#1a5fb4"
+  papersize: "a4"

@@ -1,0 +1,178 @@
+#!/bin/bash
+# niri-pandoc-popup — floating fzf picker for pandoc conversion of Notes.
+#
+# Flow:
+#   1. fzf over $NOTES_DIR/**.md (vim-modal: NORMAL j/k/g/G, i → SEARCH, esc back/quit),
+#      with bat preview on the right.
+#   2. fzf over formats (pdf first = default ⏎, then docx, html).
+#   3. fzf over styles (clean / classic / compact — clean is the default).
+#      Each style is a folder under $PANDOC_STYLES_DIR (~/.local/share/pandoc/styles)
+#      with a defaults.yaml (mainfont/fontsize/margins), optional style.css for
+#      html, and optional reference.docx for docx.
+#   4. Run pandoc with the style's --defaults and any matching per-format file.
+#      PDF uses --pdf-engine=typst. Output is written next to the source .md.
+#   5. Print path + size, prompt "Open it? [y/N]", auto-close (viewer detached).
+#
+# Bound to Mod+M in niri, spawned inside a floating kitty with app-id
+# "pandoc-popup" (see window-rule).
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/dev/Notes}"
+
+for cmd in pandoc fd fzf bat; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Missing: $cmd" >&2
+        echo "Install via: brew install pandoc typst fd fzf bat" >&2
+        exec sleep infinity
+    fi
+done
+
+if ! command -v typst >/dev/null 2>&1; then
+    echo "Missing PDF engine: typst. Install via: brew install typst" >&2
+    exec sleep infinity
+fi
+
+if [ ! -d "$NOTES_DIR" ]; then
+    echo "Notes dir not found: $NOTES_DIR" >&2
+    exec sleep infinity
+fi
+
+# Reuse theme-managed fzf colors if present (same pattern as kitty-session).
+if [ -r "$HOME/.config/themes/state/fzf-colors.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.config/themes/state/fzf-colors.sh"
+fi
+FZF_BASE_OPTS="--height=100% --layout=reverse --border=rounded --info=inline"
+
+# Vim-modal fzf — copy of _fzf_modal in ~/.local/bin/kitty-session.
+# NORMAL: j/k move, g/G top/bottom, ctrl-d/u half-page, i → SEARCH, esc quits.
+# SEARCH: type to filter (nav keys unbound so they type), esc → NORMAL.
+_fzf_modal() {
+    local label="$1"; shift
+    local pn="${label} NORMAL ❯ "
+    local ps="${label} SEARCH ❯ "
+    fzf $FZF_BASE_OPTS --no-multi --disabled --prompt "$pn" \
+        --bind 'j:down,k:up,g:first,G:last,ctrl-d:half-page-down,ctrl-u:half-page-up' \
+        --bind "i:enable-search+change-prompt($ps)+unbind(j,k,g,G,i)" \
+        --bind "esc:transform:case \"\$FZF_PROMPT\" in *SEARCH*) echo \"rebind(j,k,g,G,i)+disable-search+change-prompt($pn)+clear-query\";; *) echo abort;; esac" \
+        "$@"
+}
+
+# ─── 1. PICK NOTE ─────────────────────────────────────────────────────────────
+file=$(
+    fd --type f -e md . "$NOTES_DIR" \
+    | _fzf_modal 'md2x' \
+        --header='j/k move · i search · esc back/quit · enter convert' \
+        --preview='bat --style=plain --color=always --line-range=:300 {} 2>/dev/null || head -300 {}' \
+        --preview-window='right,60%,border-left' \
+    || true
+)
+[ -z "$file" ] && exit 0
+[ -f "$file" ] || { echo "Not a file: $file" >&2; exec sleep infinity; }
+
+# ─── 2. PICK FORMAT (pdf first = default on ⏎) ────────────────────────────────
+fmt_menu=$(cat <<'EOF'
+pdf	PDF — typst engine, fast, single-binary. Best for sharing/printing.
+docx	DOCX — round-trips to Word/Office.
+html	HTML — standalone single file, no asset folder.
+EOF
+)
+
+fmt_pick=$(
+    printf '%s\n' "$fmt_menu" \
+    | _fzf_modal 'format' \
+        --delimiter=$'\t' --with-nth=2 \
+        --header="${file/#$HOME/~} → ?" \
+    || true
+)
+[ -z "$fmt_pick" ] && exit 0
+fmt=$(printf '%s' "$fmt_pick" | cut -f1)
+
+# ─── 3. PICK STYLE (clean first = default on ⏎) ───────────────────────────────
+STYLES_DIR="${PANDOC_STYLES_DIR:-$HOME/.local/share/pandoc/styles}"
+
+style_menu=$(cat <<'EOF'
+clean	clean — Inter sans, 11pt, 2.5cm margins. Modern reports.
+classic	classic — EB Garamond serif, 12pt, 3cm margins. Letters, long-form.
+compact	compact — IBM Plex Sans, 10pt, 1.8cm margins. Dense, technical.
+EOF
+)
+
+style_pick=$(
+    printf '%s\n' "$style_menu" \
+    | _fzf_modal 'style' \
+        --delimiter=$'\t' --with-nth=2 \
+        --header="${file/#$HOME/~} → $fmt → ?" \
+    || true
+)
+[ -z "$style_pick" ] && exit 0
+style=$(printf '%s' "$style_pick" | cut -f1)
+style_dir="$STYLES_DIR/$style"
+
+# Build pandoc args. --defaults brings in the style's font/size/margins/colors;
+# format-specific resources (style.css, reference.docx) are added only if the
+# file exists, so partial styles degrade gracefully.
+args=( --from=gfm )
+[ -f "$style_dir/defaults.yaml" ] && args+=( --defaults="$style_dir/defaults.yaml" )
+
+base="${file%.md}"
+case "$fmt" in
+    pdf)
+        out="${base}.pdf"
+        args+=( --pdf-engine=typst )
+        ;;
+    docx)
+        out="${base}.docx"
+        args+=( -t docx )
+        # Reference doc is the ONLY real way to control DOCX styling. None shipped
+        # by default — pandoc's built-in (Calibri 11pt) is used until you hand-style
+        # a reference.docx in Word/LibreOffice and drop it next to defaults.yaml.
+        [ -f "$style_dir/reference.docx" ] && args+=( --reference-doc="$style_dir/reference.docx" )
+        ;;
+    html)
+        out="${base}.html"
+        args+=( -t html --standalone )
+        # --embed-resources inlines CSS + images so the .html is a single portable file.
+        [ -f "$style_dir/style.css" ] && args+=( --css="$style_dir/style.css" --embed-resources )
+        ;;
+    *)
+        echo "Unknown format: $fmt" >&2
+        exec sleep infinity
+        ;;
+esac
+
+echo "→ pandoc ${args[*]} \"${file/#$HOME/~}\" -o \"${out/#$HOME/~}\""
+pandoc "${args[@]}" "$file" -o "$out"
+
+size=$(du -h "$out" 2>/dev/null | cut -f1)
+echo
+echo "✓ Wrote: ${out/#$HOME/~}  ($size)"
+echo
+
+# ─── 3. OPTIONAL OPEN ─────────────────────────────────────────────────────────
+read -r -p "Open it? [y/N] " ans || ans=N
+case "${ans:-N}" in
+    y|Y)
+        # Two-part dance:
+        # 1) setsid -f forks the opener into its own session with no controlling
+        #    tty, so when kitty exits its SIGHUP doesn't reach the viewer.
+        # 2) Brief sleep gives xdg-open time to dispatch to the desktop's app
+        #    launcher (via gio/DBUS) before kitty tears down. Without the sleep,
+        #    `exit 0` races the handoff and the viewer never starts.
+        # On Bluefin, xdg-open often execs the viewer directly (blocking), so
+        # foregrounding it would also block kitty's auto-close — hence the fork.
+        if command -v xdg-open >/dev/null 2>&1; then
+            setsid -f xdg-open "$out" </dev/null >/dev/null 2>&1 || true
+            sleep 0.4
+        elif command -v open >/dev/null 2>&1; then
+            # macOS `open` hands off to LaunchServices and returns immediately.
+            open "$out" >/dev/null 2>&1 || true
+        else
+            echo "No xdg-open / open found — file stays put." >&2
+        fi
+        ;;
+esac
+
+# Happy-path: close the popup immediately after the y/N answer.
+# Error paths above still use `exec sleep infinity` so messages stay readable.
+exit 0

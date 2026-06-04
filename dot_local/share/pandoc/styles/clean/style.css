@@ -1,0 +1,83 @@
+/* clean — modern sans-serif. Matches the typst PDF output as closely as
+   a browser engine can: Inter @ 11pt-equivalent, 1.4 line-height, 2.5cm
+   margins (rendered as max-width + auto margins for screen). */
+
+:root {
+  --fg: #1d2021;
+  --bg: #fbf1c7;
+  --muted: #665c54;
+  --rule: #d5c4a1;
+  --link: #1a5fb4;
+  --code-bg: #ebdbb2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #ebdbb2;
+    --bg: #1d2021;
+    --muted: #a89984;
+    --rule: #3c3836;
+    --link: #83a598;
+    --code-bg: #282828;
+  }
+}
+
+html { font-size: 16px; }                /* 16px ≈ 12pt screen ≈ 11pt print */
+body {
+  font-family: "Inter", "Liberation Sans", system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 42rem;                       /* ~720px, matches 2.5cm A4 margins */
+  margin: 2.5rem auto;
+  padding: 0 1.25rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 1.8em 0 0.6em;
+}
+h1 { font-size: 1.9rem; border-bottom: 1px solid var(--rule); padding-bottom: 0.2em; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.2rem; }
+h4, h5, h6 { font-size: 1rem; color: var(--muted); }
+
+p, ul, ol, blockquote { margin: 0.8em 0; }
+ul, ol { padding-left: 1.6em; }
+li + li { margin-top: 0.2em; }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+blockquote {
+  border-left: 3px solid var(--rule);
+  margin-left: 0;
+  padding: 0.2em 1em;
+  color: var(--muted);
+}
+
+code, pre, kbd {
+  font-family: "JetBrains Mono", "Liberation Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px; }
+pre {
+  background: var(--code-bg);
+  padding: 0.9em 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.35;
+}
+pre code { background: transparent; padding: 0; }
+
+table { border-collapse: collapse; margin: 1em 0; width: 100%; }
+th, td { border: 1px solid var(--rule); padding: 0.4em 0.7em; text-align: left; }
+th { background: var(--code-bg); font-weight: 600; }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+
+img { max-width: 100%; height: auto; }

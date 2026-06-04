@@ -1,0 +1,17 @@
+# compact — dense sans-serif, smaller type, tight margins. Technical docs.
+# See clean/defaults.yaml for cross-format parity notes.
+metadata:
+  mainfont: "IBM Plex Sans"
+  sansfont: "IBM Plex Sans"
+  monofont: "IBM Plex Mono"
+  fontsize: "10pt"
+  linestretch: 1.3
+  margin-left: "1.8cm"
+  margin-right: "1.8cm"
+  margin-top: "1.8cm"
+  margin-bottom: "1.8cm"
+  geometry: "margin=1.8cm"
+  colorlinks: true
+  linkcolor: "#0e7c66"
+  urlcolor: "#0e7c66"
+  papersize: "a4"

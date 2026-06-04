@@ -1,0 +1,86 @@
+/* classic — serif, 12pt-equivalent, 1.5 line-height, 3cm-equivalent margins.
+   Pairs with classic/defaults.yaml. */
+
+:root {
+  --fg: #1d2021;
+  --bg: #fbf1c7;
+  --muted: #665c54;
+  --rule: #d5c4a1;
+  --link: #7c3aed;
+  --code-bg: #ebdbb2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #ebdbb2;
+    --bg: #1d2021;
+    --muted: #a89984;
+    --rule: #3c3836;
+    --link: #d3869b;
+    --code-bg: #282828;
+  }
+}
+
+html { font-size: 17px; }                /* slightly larger to mirror 12pt body */
+body {
+  font-family: "EB Garamond", "Liberation Serif", Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 38rem;                       /* tighter measure for serif readability */
+  margin: 3rem auto;
+  padding: 0 1.25rem;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "onum" 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1.8em 0 0.6em;
+}
+h1 { font-size: 2rem; text-align: center; margin-bottom: 1.2em; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; font-style: italic; font-weight: 600; }
+
+p { margin: 0.9em 0; text-align: justify; hyphens: auto; }
+p + p { text-indent: 1.5em; margin-top: 0; }   /* indented continuing paragraphs */
+
+ul, ol { padding-left: 1.8em; margin: 0.9em 0; }
+li + li { margin-top: 0.25em; }
+
+a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+a:hover { border-bottom-style: solid; }
+
+blockquote {
+  border-left: 2px solid var(--rule);
+  margin: 1.2em 0 1.2em 1em;
+  padding: 0.2em 1em;
+  font-style: italic;
+  color: var(--muted);
+}
+
+code, pre {
+  font-family: "JetBrains Mono", "Liberation Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  font-style: normal;
+}
+code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px; }
+pre {
+  background: var(--code-bg);
+  padding: 0.9em 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.4;
+}
+pre code { background: transparent; padding: 0; }
+
+table { border-collapse: collapse; margin: 1.2em 0; width: 100%; }
+th, td { border-bottom: 1px solid var(--rule); padding: 0.45em 0.7em; text-align: left; }
+th { font-weight: 700; border-bottom: 2px solid var(--fg); }
+
+hr { border: 0; text-align: center; margin: 2.5em 0; }
+hr::before { content: "❦"; color: var(--muted); font-size: 1.2em; }
+
+img { max-width: 100%; height: auto; display: block; margin: 1.5em auto; }
