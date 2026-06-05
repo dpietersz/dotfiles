@@ -1,0 +1,12 @@
+Generate or edit images using OpenAI's Image API. Use only when the user explicitly asks to create, generate, render, or edit an image.
+
+Usage notes:
+  - Requires OPENAI_API_KEY in the environment.
+  - action="generate" creates images from a prompt.
+  - action="edit" modifies or uses one or more local input images as references; provide inputImages paths and optional maskPath.
+  - Results are saved to local files and returned as paths. Prefer paths over inline image data to keep context small.
+  - Use quality="low" for fast drafts, quality="medium" or "high" for final assets.
+  - outputFormat can be png, jpeg, or webp. JPEG/WebP support outputCompression 0-100.
+  - gpt-image-2 does not support transparent backgrounds; use background="auto" or "opaque".
+  - Complex prompts can take up to 2 minutes. Increase timeoutSec when needed.
+  - If a request is moderation-blocked, revise the prompt or inputs rather than retrying unchanged.

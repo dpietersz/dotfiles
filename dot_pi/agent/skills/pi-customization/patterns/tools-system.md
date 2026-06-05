@@ -10,6 +10,8 @@ A global, dynamically-loaded custom tools framework for pi. Tools live in
 ├── index.ts          # Loader: discovers *.ts, calls register(), provides /tools command
 ├── webfetch.ts       # Tool implementation
 ├── webfetch.txt      # Tool description (LLM-facing, loaded into system prompt)
+├── openai-image.ts   # OpenAI Image API generation/editing tool
+├── openai-image.txt  # Image generation usage guidance
 ├── playwright.ts     # Compact browser automation via Playwright distrobox
 ├── playwright.txt    # Frontend/E2E verification guidance
 ```
@@ -94,6 +96,7 @@ export function register(pi: ExtensionAPI) {
   to showing the tool name and raw text content.
 - **`/tools` command**: Lists all custom tools. Registered by `index.ts`.
 - **Browser tools**: Prefer compact, task-specific outputs over MCP-style full tool surfaces. Save screenshots/HARs to files and return paths; only include summaries, failures, and key controls in text output.
+- **Generated media tools**: Save generated media to local files and return artifact paths by default. Only return inline `image` content behind an explicit parameter to avoid injecting large base64 blobs into context.
 - **Responsive testing**: Support both viewport presets and Playwright `devices[...]` profiles. Device profiles should emulate userAgent, viewport, DPR, mobile behavior, and touch; optional overrides cover color scheme, reduced motion, locale/timezone, JavaScript, and offline state.
 
 ## Authentication Pattern
@@ -119,3 +122,8 @@ The live `playwright` tool is the reference for context-efficient browser automa
 - `~/.pi/agent/extensions/tools/playwright.ts`
 - `~/.pi/agent/extensions/tools/playwright.txt`
 - Use managed distrobox commands for Linux/Bluefin, keep output compact, and return artifact paths for screenshots.
+
+The live `openai_image` tool is the reference for generated media tools:
+- `~/.pi/agent/extensions/tools/openai-image.ts`
+- `~/.pi/agent/extensions/tools/openai-image.txt`
+- Use direct REST calls when it avoids new dependencies, read credentials at call time, save generated files under `ctx.cwd` by default, and keep base64 out of model context unless explicitly requested.
