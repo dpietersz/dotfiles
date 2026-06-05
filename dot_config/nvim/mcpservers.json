@@ -1,10 +1,8 @@
 {
   "mcpServers": {
     "perplexity-search": {
-      "command": "npx",
+      "command": "smithery",
       "args": [
-        "-y",
-        "@smithery/cli@latest",
         "run",
         "@arjunkmrm/perplexity-search",
         "--key",
@@ -14,10 +12,8 @@
       ]
     },
     "context7-mcp": {
-      "command": "npx",
+      "command": "smithery",
       "args": [
-        "-y",
-        "@smithery/cli@latest",
         "run",
         "@upstash/context7-mcp",
         "--key",
@@ -25,10 +21,8 @@
       ]
     },
     "server-sequential-thinking": {
-      "command": "npx",
+      "command": "smithery",
       "args": [
-        "-y",
-        "@smithery/cli@latest",
         "run",
         "@smithery-ai/server-sequential-thinking",
         "--key",
@@ -38,10 +32,8 @@
       ]
     },
     "playwright-mcp": {
-      "command": "npx",
+      "command": "smithery",
       "args": [
-        "-y",
-        "@smithery/cli@latest",
         "run",
         "@microsoft/playwright-mcp",
         "--key",
@@ -49,10 +41,8 @@
       ]
     },
     "mem0-memory-mcp": {
-      "command": "npx",
+      "command": "smithery",
       "args": [
-        "-y",
-        "@smithery/cli@latest",
         "run",
         "@mem0ai/mem0-memory-mcp",
         "--key",

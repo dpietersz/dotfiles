@@ -1,0 +1,57 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# Global npm packages installed with Bun.
+#
+# Upstream versions are rendered into comments so this run_onchange_ script
+# re-runs when any managed package publishes a new latest version.
+# Add new Bun-managed global CLIs to BOTH this version block and BUN_GLOBAL_PKGS.
+#
+# latest @earendil-works/pi-coding-agent: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@earendil-works/pi-coding-agent") }}
+# latest @augmentcode/auggie: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@augmentcode/auggie") }}
+# latest mcp-hub: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "mcp-hub") }}
+# latest @getpaseo/cli: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@getpaseo/cli") }}
+# latest @smithery/cli: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@smithery/cli") }}
+# latest @playwright/mcp: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@playwright/mcp") }}
+# version-pin: 1
+
+set -euo pipefail
+
+# bun lives in ~/.bun/bin (pai-deps installer) or brew. chezmoi's subshell
+# doesn't inherit user shell rc, so PATH may be missing it. Try both.
+if ! command -v bun >/dev/null 2>&1; then
+  [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$cand" ] && eval "$("$cand" shellenv bash)" && break
+  done
+fi
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "[bun-globals] bun not found; earlier install scripts should provide it. Skipping."
+  exit 0
+fi
+
+BUN_GLOBAL_PKGS=(
+  "@earendil-works/pi-coding-agent"
+  "@augmentcode/auggie"
+  "mcp-hub"
+  "@getpaseo/cli"
+  "@smithery/cli"
+  "@playwright/mcp"
+)
+
+install_one() {
+  local pkg="$1"
+  echo "[bun-globals] Installing/updating ${pkg}@latest..."
+  bun install -g "${pkg}@latest"
+}
+
+for p in "${BUN_GLOBAL_PKGS[@]}"; do
+  install_one "$p"
+done
+
+echo "[bun-globals] ✓ Done"

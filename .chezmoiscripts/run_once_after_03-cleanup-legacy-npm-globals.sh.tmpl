@@ -1,0 +1,75 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# Migration cleanup: npm-global fallback installs were replaced by Bun globals in
+# run_onchange_after_02a-install-bun-globals.sh.tmpl.
+#
+# This script runs once per machine. It only removes a legacy npm package after
+# the replacement Bun-global binary exists, so a failed Bun install does not
+# remove the last working CLI.
+#
+# migration-version: 1
+
+set -euo pipefail
+
+LEGACY_NPM_ROOT="$HOME/.local/share/npm/node_modules"
+LEGACY_NPM_BIN="$LEGACY_NPM_ROOT/.bin"
+LEGACY_PATH_BIN="$HOME/.local/share/npm/bin"
+BUN_BIN="$HOME/.bun/bin"
+
+if [ ! -d "$LEGACY_NPM_ROOT" ]; then
+  echo "[legacy-npm-cleanup] No legacy npm root at $LEGACY_NPM_ROOT; nothing to clean."
+  exit 0
+fi
+
+cleanup_pkg() {
+  local pkg_dir="$1"
+  local required_bun_bin="$2"
+  shift 2
+  local legacy_bins=("$@")
+
+  if [ ! -x "$BUN_BIN/$required_bun_bin" ]; then
+    echo "[legacy-npm-cleanup] Skipping $pkg_dir; Bun replacement missing: $BUN_BIN/$required_bun_bin"
+    return 0
+  fi
+
+  if [ -d "$LEGACY_NPM_ROOT/$pkg_dir" ]; then
+    echo "[legacy-npm-cleanup] Removing legacy npm package: $LEGACY_NPM_ROOT/$pkg_dir"
+    rm -rf "$LEGACY_NPM_ROOT/$pkg_dir"
+  fi
+
+  for bin in "${legacy_bins[@]}"; do
+    rm -f "$LEGACY_NPM_BIN/$bin" "$LEGACY_PATH_BIN/$bin" 2>/dev/null || true
+  done
+}
+
+cleanup_pkg "@earendil-works/pi-coding-agent" "pi" "pi" "pi-ai"
+cleanup_pkg "@augmentcode/auggie" "auggie" "auggie"
+cleanup_pkg "mcp-hub" "mcp-hub" "mcp-hub"
+cleanup_pkg "@getpaseo/cli" "paseo" "paseo"
+cleanup_pkg "@smithery/cli" "smithery" "smithery"
+cleanup_pkg "@playwright/mcp" "playwright-mcp" "playwright-mcp"
+
+# Remove empty scoped-package directories left behind after package cleanup.
+for scope_dir in \
+  "$LEGACY_NPM_ROOT/@earendil-works" \
+  "$LEGACY_NPM_ROOT/@augmentcode" \
+  "$LEGACY_NPM_ROOT/@getpaseo" \
+  "$LEGACY_NPM_ROOT/@smithery" \
+  "$LEGACY_NPM_ROOT/@playwright"; do
+  rmdir "$scope_dir" 2>/dev/null || true
+done
+
+# Remove the old broken nested-bin symlink created by the npm --prefix fallback,
+# but only if it points into the legacy npm tree.
+if [ -L "$LEGACY_PATH_BIN/.bin" ]; then
+  target="$(readlink "$LEGACY_PATH_BIN/.bin" || true)"
+  if [[ "$target" == "$LEGACY_NPM_BIN" || "$target" == */.local/share/npm/node_modules/.bin ]]; then
+    echo "[legacy-npm-cleanup] Removing legacy bin/.bin symlink: $LEGACY_PATH_BIN/.bin"
+    rm -f "$LEGACY_PATH_BIN/.bin"
+  fi
+fi
+
+echo "[legacy-npm-cleanup] ✓ Done"

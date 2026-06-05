@@ -10,9 +10,11 @@ Chezmoi deploys this directory to `~/.pi/agent/`. The minion-subagents extension
 agents/                     # 11 subagent definitions (markdown frontmatter)
 extensions/
 ├── auth-sync/              # OAuth token sync across machines via daemon
+├── caveman-mode.ts         # Always-on full Caveman response compression
 ├── context-window.ts       # /ctx command — visual context usage overlay
 ├── minion-subagents/       # Subagent framework (execution, chains, traits, TUI)
 ├── ref-docs.ts             # Injects cached doc indexes into system prompt
+├── todo.ts                 # Session-scoped todo tool + /todos UI for multi-step work
 └── tools/                  # Custom tools (auto-discovered by index.ts)
 skills/                     # 9 skills loaded on-demand via progressive disclosure
 standards/                  # Code quality and security rules
@@ -25,10 +27,13 @@ traits.yaml                 # Behavioral trait definitions (expertise, personali
 - `settings.json` — Default model (`claude-opus-4-6`), theme (`midnight-ocean`), thinking level (`high`), installed packages
 - `traits.yaml` — Three trait dimensions (expertise, personality, approach) + presets (security-auditor, careful-implementer, deep-researcher, etc.)
 - `agents/agent-template.hbs` — Handlebars template composing agent context + traits into system prompt
+- `extensions/caveman-mode.ts` — Injects always-on Caveman full-mode brevity rules into the system prompt
 - `extensions/minion-subagents/index.ts` — Main extension: `subagent` tool, `/agents`, `/chain`, `/run` commands
 - `extensions/minion-subagents/compose-traits.ts` — Trait resolution and system prompt composition
 - `extensions/tools/index.ts` — Auto-discovers `.ts` tool modules in the tools directory
+- `extensions/tools/playwright.ts` — Compact browser automation via managed Playwright distrobox; use for frontend verification, screenshots, responsive checks, and bounded E2E flows without MCP tool bloat
 - `extensions/tools/pm-tool.ts` — Linear project management (requires `LINEAR_ACCESS_TOKEN`)
+- `extensions/todo.ts` — Todo tracking for 2+ step work; use before acting on multi-step requests
 - `standards/code-quality.md` — Code quality rules injected via load-context
 
 ## Subagent Model Mapping
@@ -58,6 +63,11 @@ traits.yaml                 # Behavioral trait definitions (expertise, personali
 
 - **Subagent delegation**: Each subagent gets a fresh context window — no inherited noise
 - **Trait composition**: `{ agent: "scout", traits: ["security", "skeptical"], task: "..." }` injects behavioral shaping without loading additional context
+- **Chains**: `research-plan-implement` for ACE/FCA workflow (research.md → plan.md → implementation) and `quick-dev` for small well-defined tasks
 - **Presets**: Named trait combos — `security-auditor` (scout + security, skeptical, thorough), `careful-implementer` (engineer + implementation, disciplined, systematic)
 - **Progressive disclosure**: Skills load on-demand. Only descriptions always in context.
 - **Target**: 40-60% context utilization. Delegate exploration to keep main session lean.
+- **Intent gate**: answer/research requests stay read-only; implement only when explicitly asked. Clarify when scope is ambiguous or interpretations differ materially.
+- **Todo discipline**: For 2+ step tasks, create todos first, keep exactly one `in_progress`, mark completion immediately, and update todos when scope changes.
+- **High-leverage review**: Prefer reviewing research and plans before code. Bad research creates thousands of bad lines; bad plans create hundreds.
+- **Browser verification**: Use the `playwright` tool after frontend changes to inspect real pages, check responsive viewports, capture screenshots, and validate short E2E flows. Return artifact paths, not large DOM dumps.

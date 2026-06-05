@@ -16,8 +16,8 @@ set -euo pipefail
 #   4. Starts the MCP server via systemd
 #
 # On macOS:
-#   1. Installs Playwright browsers natively
-#   2. Starts the MCP server via launchd
+#   1. Installs Playwright browsers natively via bunx
+#   2. Starts the Bun-global Playwright MCP server via launchd
 #
 # On remote: Skips entirely
 
@@ -30,32 +30,27 @@ exit 0
 # ------------------ macOS: Native installation ------------------
 echo "[playwright] macOS detected, using native installation..."
 
-# Check if node/npx is available
-if ! command -v npx >/dev/null 2>&1; then
-  echo "[playwright] npx not found, skipping. Install Node.js first."
+# Check if bunx is available
+if ! command -v bunx >/dev/null 2>&1; then
+  [ -x "$HOME/.bun/bin/bunx" ] && export PATH="$HOME/.bun/bin:$PATH"
+fi
+if ! command -v bunx >/dev/null 2>&1; then
+  echo "[playwright] bunx not found, skipping. Earlier Bun install scripts should provide it."
   exit 0
 fi
 
 # Install Playwright browsers if not already installed
 if [ ! -d "$HOME/Library/Caches/ms-playwright" ]; then
   echo "[playwright] Installing Playwright browsers..."
-  INSTALL_DIR=/tmp/playwright-install
-  mkdir -p "$INSTALL_DIR"
-  cd "$INSTALL_DIR"
-  if [ ! -f package.json ]; then
-    npm init -y >/dev/null 2>&1
-    npm install @playwright/test >/dev/null 2>&1
-  fi
-  npx playwright install chromium
+  bunx --package @playwright/test playwright install chromium
 fi
 
-# Detect actual npx path (mise installs to dynamic location)
-NPX_PATH=$(command -v npx)
-if [ -z "$NPX_PATH" ]; then
-  echo "[playwright] npx not found, skipping."
+PLAYWRIGHT_MCP_PATH="$HOME/.bun/bin/playwright-mcp"
+if [ ! -x "$PLAYWRIGHT_MCP_PATH" ]; then
+  echo "[playwright] $PLAYWRIGHT_MCP_PATH not found, skipping. run_onchange_after_02a-install-bun-globals should install @playwright/mcp."
   exit 0
 fi
-echo "[playwright] Using npx at: $NPX_PATH"
+echo "[playwright] Using Playwright MCP at: $PLAYWRIGHT_MCP_PATH"
 
 # Create launchd plist for playwright-mcp
 PLIST_FILE="$HOME/Library/LaunchAgents/com.playwright.mcp.plist"
@@ -75,8 +70,7 @@ cat > "$PLIST_FILE" << EOF
     </dict>
     <key>ProgramArguments</key>
     <array>
-        <string>$NPX_PATH</string>
-        <string>@playwright/mcp@latest</string>
+        <string>$PLAYWRIGHT_MCP_PATH</string>
         <string>--headless</string>
         <string>--browser</string>
         <string>chromium</string>
@@ -121,7 +115,7 @@ if ! command -v distrobox >/dev/null 2>&1; then
 fi
 
 # Check if playwright distrobox exists, create if not
-if ! distrobox list | grep -q "playwright"; then
+if ! distrobox list --no-color | awk -F'|' 'NR > 1 { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); if ($2 == "playwright") found=1 } END { exit found ? 0 : 1 }'; then
   echo "[playwright] Creating playwright distrobox..."
   DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
   if [ -f "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" ]; then
@@ -151,16 +145,8 @@ distrobox enter playwright -- bash -c '
   # Fix permissions for browser profiles
   sudo chmod -R 777 /opt/playwright-browsers 2>/dev/null || true
   
-  # Install chromium using a temp project context
-  INSTALL_DIR=/tmp/playwright-install
-  if [ ! -f "$INSTALL_DIR/package.json" ]; then
-    mkdir -p "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
-    npm init -y >/dev/null 2>&1
-    npm install @playwright/test >/dev/null 2>&1
-  fi
-  cd "$INSTALL_DIR"
-  npx playwright install chromium 2>&1 || true
+  # Install chromium using Bun npx replacement. Home is mounted into the container.
+  "$HOME/.bun/bin/bun" x --package @playwright/test playwright install chromium 2>&1 || true
 '
 echo "[playwright] Browsers ready."
 

@@ -1,0 +1,27 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# OpenCode resolves plugins itself and caches node_modules/bun.lock.
+# These Bun registry lookups make this run_onchange_ script rerun when an
+# OpenCode plugin publishes a new latest version, then the cache is cleared so
+# OpenCode re-resolves on next launch.
+#
+# latest oh-my-opencode: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "oh-my-opencode") }}
+# latest opencode-antigravity-auth: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "opencode-antigravity-auth") }}
+# latest opencode-openai-codex-auth: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "opencode-openai-codex-auth") }}
+# latest @franlol/opencode-md-table-formatter: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "@franlol/opencode-md-table-formatter") }}
+# version-pin: 1
+
+set -euo pipefail
+
+CACHE_DIR="$HOME/.cache/opencode"
+if [ ! -d "$CACHE_DIR" ]; then
+  echo "[opencode-plugins] Cache not present; nothing to clear."
+  exit 0
+fi
+
+echo "[opencode-plugins] Clearing plugin cache so OpenCode re-resolves latest plugins..."
+rm -rf "$CACHE_DIR/node_modules" "$CACHE_DIR/bun.lock"
+echo "[opencode-plugins] ✓ Done"

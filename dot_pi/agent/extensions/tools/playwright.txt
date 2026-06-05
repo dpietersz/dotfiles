@@ -1,0 +1,17 @@
+Browser automation via Playwright CLI/Node runner, optimized for frontend validation without MCP context bloat.
+
+Use for checking actual webpages, responsive layouts, screenshots, console/network errors, and small end-to-end flows after frontend changes.
+
+Actions:
+- inspect: visit a URL and return compact page state (title, headings, visible controls, console errors, failed requests, text excerpt). Use first when understanding a page.
+- screenshot: capture a viewport/device/full-page screenshot to a file path. Use when visual inspection matters; then read the image file if needed.
+- run: execute a bounded action flow (goto, click, fill, select, press, wait, assertText, screenshot) and return compact results.
+
+Responsive/device testing:
+- Use viewport presets for quick checks: desktop, tablet, mobile, mobile-landscape, or custom width/height.
+- Use device for realistic Playwright device emulation: e.g. "iPhone 13", "iPhone 14", "Pixel 5", "iPad Pro 11", "Desktop Chrome". Device profiles include userAgent, screen size, viewport, DPR, mobile behavior, and touch support.
+- Test common responsive matrix: desktop chromium, mobile Safari-like iPhone, mobile Chrome-like Pixel, tablet/iPad. Add dark mode when UI supports themes.
+
+Useful options: browser (chromium/firefox/webkit), colorScheme (light/dark), reducedMotion, media (screen/print), locale, timezoneId, javaScriptEnabled, offline, deviceScaleFactor, isMobile, hasTouch.
+
+Prefer localhost URLs directly (for dev servers); the Playwright distrobox can reach host localhost on this setup. Keep output compact. Do not request full DOM/accessibility trees unless essential.

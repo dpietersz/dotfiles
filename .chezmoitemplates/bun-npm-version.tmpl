@@ -1,0 +1,21 @@
+{{- $pkg := .package -}}
+{{- output "bash" "-lc" (printf `BUN="$(command -v bun 2>/dev/null || true)"
+if [ -z "$BUN" ] && [ -x "$HOME/.bun/bin/bun" ]; then
+  BUN="$HOME/.bun/bin/bun"
+fi
+if [ -z "$BUN" ]; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [ -x "$cand" ]; then
+      eval "$("$cand" shellenv bash)"
+      BUN="$(command -v bun 2>/dev/null || true)"
+      [ -n "$BUN" ] && break
+    fi
+  done
+fi
+[ -z "$BUN" ] && exit 0
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+printf '{}\n' > "$TMPDIR/package.json"
+cd "$TMPDIR"
+"$BUN" info '%s' version 2>/dev/null || true
+` $pkg) | trim -}}

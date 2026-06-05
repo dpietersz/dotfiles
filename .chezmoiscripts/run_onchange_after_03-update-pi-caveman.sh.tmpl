@@ -1,0 +1,51 @@
+#!/bin/bash
+# caveman upstream HEAD: {{ output "bash" "-lc" "git ls-remote https://github.com/JuliusBrussee/caveman refs/heads/main 2>/dev/null | awk '{print $1}' || true" | trim }}
+
+set -euo pipefail
+
+SETTINGS="$HOME/.pi/agent/settings.json"
+CAVEMAN_SOURCE="git:github.com/JuliusBrussee/caveman"
+
+PI_BIN="${PI_BIN:-}"
+if [ -z "$PI_BIN" ]; then
+  if command -v pi >/dev/null 2>&1; then
+    PI_BIN="$(command -v pi)"
+  elif [ -x "$HOME/.bun/bin/pi" ]; then
+    PI_BIN="$HOME/.bun/bin/pi"
+  fi
+fi
+
+if [ -z "$PI_BIN" ]; then
+  echo "[pi-caveman] pi not found; skipping Caveman package update"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$SETTINGS")"
+if [ ! -f "$SETTINGS" ]; then
+  printf '{\n  "packages": []\n}\n' > "$SETTINGS"
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "[pi-caveman] jq not found; cannot merge Caveman package into settings"
+  exit 0
+fi
+
+tmp="$(mktemp)"
+jq --arg source "$CAVEMAN_SOURCE" '
+  .packages = (.packages // [])
+  | .packages = ([
+      .packages[]
+      | if type == "string" and . == $source then empty
+        elif type == "object" and .source == $source then empty
+        else . end
+    ] + [{
+      "source": $source,
+      "extensions": [],
+      "prompts": [],
+      "themes": []
+    }])
+' "$SETTINGS" > "$tmp"
+mv "$tmp" "$SETTINGS"
+
+echo "[pi-caveman] Updating Pi packages/extensions for Caveman upstream change..."
+"$PI_BIN" update --extensions

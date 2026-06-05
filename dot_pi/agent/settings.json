@@ -9,6 +9,12 @@
     "npm:pi-review-loop",
     "npm:pi-skill-palette",
     "npm:pi-prompt-template-model",
-    "npm:pi-interactive-shell"
+    "npm:pi-interactive-shell",
+    {
+      "source": "git:github.com/JuliusBrussee/caveman",
+      "extensions": [],
+      "prompts": [],
+      "themes": []
+    }
   ]
 }
