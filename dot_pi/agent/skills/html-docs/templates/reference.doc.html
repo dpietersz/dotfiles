@@ -1,0 +1,34 @@
+---
+id: reference
+name: Reference Guide
+description: Neutral, accurate lookup material for APIs, configuration, commands, data structures, or system facts.
+diataxis: [reference]
+use_when:
+  - User asks for reference docs, API docs, CLI docs, configuration docs, schema docs, catalog, or facts list
+avoid_when:
+  - User wants rationale, persuasion, or guided task steps
+required_inputs: [subject, facts or source to extract from]
+recommended_inputs: [version, stability, examples, related concepts]
+clarifying_questions:
+  - What exact surface should be documented: API, CLI, config, schema, module, or process?
+  - What source of truth should facts be extracted from?
+  - Is this stable public reference or internal draft reference?
+output_path_pattern: docs/reference/{slug}.html
+visual_policy: optional
+image_slots:
+  - id: reference-map
+    required: false
+    purpose: Show structure of the referenced surface
+    suggested_prompt_focus: Show modules/categories and relationships, not procedural steps
+    max_text_labels: 10
+status: active
+---
+<article class="space-y-6" data-doc-template="reference">
+  <header class="doc-hero"><p class="doc-kicker">Reference</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{summary}}</p><figure class="doc-figure" data-image-slot="reference-map"><img src="{{asset_path}}/reference-map.png" alt="{{reference_map_alt}}"><figcaption class="doc-figcaption">{{reference_map_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="overview"><h2 class="doc-section-title">Overview</h2>{{overview}}</section>
+  <section class="doc-section" data-doc-part="surface"><h2 class="doc-section-title">Reference Surface</h2>{{reference_surface}}</section>
+  <section class="doc-section" data-doc-part="parameters"><h2 class="doc-section-title">Parameters / Fields / Options</h2>{{parameters}}</section>
+  <section class="doc-section" data-doc-part="examples"><h2 class="doc-section-title">Examples</h2>{{examples}}</section>
+  <section class="doc-section" data-doc-part="errors"><h2 class="doc-section-title">Errors & Edge Cases</h2>{{errors}}</section>
+  <section class="doc-section" data-doc-part="compat"><h2 class="doc-section-title">Compatibility & Versioning</h2>{{compatibility}}</section>
+</article>

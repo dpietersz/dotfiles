@@ -1,7 +1,7 @@
 ---
 name: eagle-scout
-description: Deep codebase research for complex codebases — multi-file tracing, architecture mapping, dependency analysis. Use when scout (haiku) struggles with complexity.
-model: anthropic/claude-sonnet-4-6
+description: Deep codebase research for complex codebases — multi-file tracing, architecture mapping, dependency analysis. Use when scout struggles with complexity.
+model: opencode-go/kimi-k2.6
 thinking: medium
 defaultProgress: true
 ---

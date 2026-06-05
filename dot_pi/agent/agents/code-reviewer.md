@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: "Deep code quality reviewer using PR diff analysis. Reviews for correctness, security, performance, maintainability, and standards compliance."
-# Model mapping: see README.md (previous: openai-codex/gpt-5.3-codex)
+# Model mapping: see README.md (current: openai-codex/gpt-5.4-mini)
 model: openai-codex/gpt-5.4-mini
 thinking: medium
 tools: read, grep, find, ls, bash, write

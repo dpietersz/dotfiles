@@ -1,0 +1,50 @@
+---
+id: prd
+name: Product Requirements Document
+description: Defines product intent, users, scope, requirements, success metrics, assumptions, and open questions for downstream product/design/engineering work.
+diataxis: [explanation, reference]
+use_when:
+  - User asks for a PRD, product requirements, product spec, requirements document, or MVP requirements
+avoid_when:
+  - User only needs a quick implementation plan or task procedure
+required_inputs: [problem, target users, scope, success criteria]
+recommended_inputs: [user journeys, non-goals, constraints, stakeholders, platform, risks]
+clarifying_questions:
+  - Who is the primary reader and what downstream decision or work must this PRD enable?
+  - What is explicitly in scope and out of scope for the first version?
+  - How will we know the product succeeded?
+output_path_pattern: docs/product/{slug}.html
+visual_policy: strategic
+image_slots:
+  - id: hero
+    required: false
+    purpose: Product/problem/solution mental model
+    suggested_prompt_focus: Show user pain, product intervention, and success outcome as one flow
+    max_text_labels: 8
+  - id: user-journey-map
+    required: when_journeys_exist
+    purpose: Core user journey flow
+    suggested_prompt_focus: Show entry state, key actions, value moment, and resolution
+    max_text_labels: 8
+  - id: system-context
+    required: when_platform_or_integrations_matter
+    purpose: Product surface and external system boundaries
+    suggested_prompt_focus: Show actors, product surfaces, integrations, and data boundaries
+    max_text_labels: 10
+status: active
+---
+<article class="space-y-6" data-doc-template="prd">
+  <header class="doc-hero"><p class="doc-kicker">Product Requirements Document</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{summary}}</p><figure class="doc-figure" data-image-slot="hero"><img src="{{asset_path}}/hero.png" alt="{{hero_alt}}"><figcaption class="doc-figcaption">{{hero_caption}}</figcaption></figure></header>
+  <nav class="toc">{{toc}}</nav>
+  <section class="doc-section" data-doc-part="purpose"><h2 class="doc-section-title">Document Purpose</h2><p>{{purpose}}</p></section>
+  <section class="doc-section" data-doc-part="vision"><h2 class="doc-section-title">Vision</h2>{{vision}}</section>
+  <section class="doc-section" data-doc-part="users"><h2 class="doc-section-title">Target Users</h2><div class="doc-grid">{{users}}</div><h3>Jobs To Be Done</h3>{{jobs_to_be_done}}</section>
+  <section class="doc-section" data-doc-part="journeys"><h2 class="doc-section-title">User Journeys</h2><figure class="doc-figure" data-image-slot="user-journey-map"><img src="{{asset_path}}/user-journey-map.png" alt="{{journey_alt}}"><figcaption class="doc-figcaption">{{journey_caption}}</figcaption></figure>{{journeys}}</section>
+  <section class="doc-section" data-doc-part="glossary"><h2 class="doc-section-title">Glossary</h2><dl>{{glossary}}</dl></section>
+  <section class="doc-section" data-doc-part="scope"><h2 class="doc-section-title">Scope</h2><div class="doc-grid"><div class="doc-card"><h3>In Scope</h3>{{in_scope}}</div><div class="doc-card"><h3>Out of Scope</h3>{{out_scope}}</div></div></section>
+  <section class="doc-section" data-doc-part="features"><h2 class="doc-section-title">Features & Requirements</h2>{{features_and_requirements}}</section>
+  <section class="doc-section" data-doc-part="system-context"><h2 class="doc-section-title">System Context</h2><figure class="doc-figure" data-image-slot="system-context"><img src="{{asset_path}}/system-context.png" alt="{{context_alt}}"><figcaption class="doc-figcaption">{{context_caption}}</figcaption></figure>{{system_context}}</section>
+  <section class="doc-section" data-doc-part="metrics"><h2 class="doc-section-title">Success Metrics</h2>{{success_metrics}}</section>
+  <section class="doc-section" data-doc-part="risks"><h2 class="doc-section-title">Risks, Constraints & Guardrails</h2>{{risks_constraints}}</section>
+  <section class="doc-section" data-doc-part="assumptions"><h2 class="doc-section-title">Assumptions & Open Questions</h2>{{assumptions_open_questions}}</section>
+</article>

@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pi Agent Configuration Explained</title>
+  <meta name="doc-template" content="explanation">
+  <meta name="diataxis" content="explanation">
+  <meta name="doc-status" content="draft">
+  <meta name="audience" content="maintainers,AI agent operators,developers">
+  <meta name="generated-by" content="pi html-docs skill">
+  <meta name="has-generated-images" content="true">
+  <script type="application/json" id="html-docs-metadata">{"template":"explanation","diataxis":["explanation"],"status":"draft","audience":"maintainers,AI agent operators,developers","visuals":["architecture-layers","request-lifecycle","trait-composition","capability-decision-map"],"sourceRoot":"dot_pi/agent"}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-doc-bg: #0a0e1a;
+      --color-doc-panel: #111827;
+      --color-doc-panel-2: #172033;
+      --color-doc-line: #263244;
+      --color-doc-ink: #f8fafc;
+      --color-doc-muted: #94a3b8;
+      --color-doc-accent: #60a5fa;
+      --color-doc-cyan: #22d3ee;
+      --color-doc-amber: #f59e0b;
+      --color-doc-green: #34d399;
+      --color-doc-red: #f87171;
+    }
+    @layer components {
+      .doc-shell { @apply min-h-screen bg-doc-bg text-doc-ink antialiased selection:bg-doc-cyan/30; }
+      .doc-wrap { @apply mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-14; }
+      .doc-hero { @apply overflow-hidden rounded-3xl border border-doc-line bg-gradient-to-br from-doc-panel via-doc-panel to-blue-950/40 p-8 shadow-2xl shadow-black/20 lg:p-12; }
+      .doc-kicker { @apply text-sm font-bold uppercase tracking-[0.22em] text-doc-cyan; }
+      .doc-title { @apply mt-3 text-4xl font-black tracking-tight text-white md:text-6xl; }
+      .doc-summary { @apply mt-5 max-w-4xl text-lg leading-8 text-slate-200; }
+      .doc-section { @apply my-6 rounded-2xl border border-doc-line bg-doc-panel/90 p-6 shadow-xl shadow-black/10 lg:p-8; }
+      .doc-section-title { @apply mb-4 border-b border-doc-line pb-3 text-2xl font-bold tracking-tight text-doc-cyan; }
+      .doc-card { @apply rounded-2xl border border-doc-line bg-doc-panel-2/80 p-5 shadow-lg shadow-black/10; }
+      .doc-grid { @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3; }
+      .doc-badge { @apply inline-flex items-center rounded-full border border-doc-line bg-white/5 px-3 py-1 text-xs font-medium text-doc-muted; }
+      .doc-callout { @apply rounded-2xl border-l-4 border-doc-accent bg-blue-500/10 p-4 text-slate-200; }
+      .doc-callout-warning { @apply border-doc-amber bg-amber-500/10; }
+      .doc-callout-risk { @apply border-doc-red bg-red-500/10; }
+      .doc-callout-ok { @apply border-doc-green bg-emerald-500/10; }
+      .doc-figure { @apply my-6 overflow-hidden rounded-2xl border border-doc-line bg-black/20 p-3; }
+      .doc-figure img, .doc-figure svg { @apply w-full rounded-xl; }
+      .doc-figcaption { @apply mt-3 px-1 text-sm leading-6 text-doc-muted; }
+      .doc-table { @apply w-full border-collapse overflow-hidden rounded-xl text-left text-sm; }
+      .doc-table th { @apply border-b border-doc-line bg-white/5 px-4 py-3 font-semibold text-doc-cyan; }
+      .doc-table td { @apply border-b border-doc-line px-4 py-3 align-top text-slate-200; }
+      .doc-prose { @apply max-w-none text-slate-200; }
+      .doc-prose p { @apply my-4 leading-8; }
+      .doc-prose ul { @apply my-4 list-disc space-y-2 pl-6; }
+      .doc-prose code { @apply rounded-md border border-doc-line bg-slate-950 px-1.5 py-0.5 text-sm text-doc-amber; }
+      .doc-link { @apply text-doc-accent underline decoration-doc-accent/40 underline-offset-4 hover:text-doc-cyan; }
+    }
+  </style>
+</head>
+<body class="doc-shell">
+<main class="doc-wrap">
+<article class="space-y-6" data-doc-template="explanation">
+  <header class="doc-hero">
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="doc-badge">Explanation</span>
+      <span class="doc-badge">Pi config</span>
+      <span class="doc-badge">dotfiles</span>
+      <span class="doc-badge">visual guide</span>
+    </div>
+    <p class="doc-kicker mt-8">Readable mental model</p>
+    <h1 class="doc-title">Pi Agent Configuration Explained</h1>
+    <p class="doc-summary">Your <code>dot_pi/agent</code> directory turns Pi into an extensible coding-agent workbench. The important idea is not “many files”: it is a routing system that keeps the main conversation lean while loading skills, spawning trait-composed subagents, and calling concrete tools only when they are useful. The subagent + trait combination is the multiplier: a small set of base agents can become many on-the-fly specialists.</p>
+    <figure class="doc-figure" data-image-slot="architecture-layers">
+      <img src="../assets/pi-agent-configuration/architecture-layers.png" alt="Pi configuration map showing Settings, Extensions, Tools, Skills, Base Agents, Trait Overlays, Chains, and Outputs, with traits wrapping base agents to form dynamic specialists.">
+      <figcaption class="doc-figcaption"><strong>Reader question:</strong> what are the parts and how do they relate? Settings form the foundation; extensions expose tools and commands; skills guide the main session; base agents run isolated contexts; trait overlays wrap those agents at runtime to create specialists.</figcaption>
+    </figure>
+  </header>
+
+  <nav class="doc-section" aria-label="Table of contents">
+    <h2 class="doc-section-title">Contents</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <a class="doc-card hover:border-doc-cyan/70" href="#map">1. Configuration map</a>
+      <a class="doc-card hover:border-doc-cyan/70" href="#lifecycle">2. Request lifecycle</a>
+      <a class="doc-card hover:border-doc-cyan/70" href="#traits-agents">3. Traits + subagents</a>
+      <a class="doc-card hover:border-doc-cyan/70" href="#capabilities">4. Capabilities</a>
+      <a class="doc-card hover:border-doc-cyan/70" href="#decision">5. What to use when</a>
+    </div>
+  </nav>
+
+  <section id="map" class="doc-section" data-doc-part="mental-model">
+    <h2 class="doc-section-title">Configuration Map</h2>
+    <div class="doc-prose">
+      <p>The Pi config is deployed by chezmoi from <code>dot_pi/agent/</code> to <code>~/.pi/agent/</code>. It has five practical zones. Each zone has a different job, and mixing them up is where confusion usually starts.</p>
+    </div>
+    <div class="grid gap-4 lg:grid-cols-5">
+      <div class="doc-card border-doc-cyan/40">
+        <div class="text-3xl">⚙️</div>
+        <h3 class="mt-3 text-lg font-bold text-white">Settings</h3>
+        <p class="mt-2 text-sm text-slate-300"><code>settings.json</code> sets the default model, provider, theme, thinking level, and packages.</p>
+      </div>
+      <div class="doc-card border-doc-green/40">
+        <div class="text-3xl">🧩</div>
+        <h3 class="mt-3 text-lg font-bold text-white">Extensions</h3>
+        <p class="mt-2 text-sm text-slate-300">TypeScript modules add tools, slash commands, context overlays, cached docs, todos, and subagents.</p>
+      </div>
+      <div class="doc-card border-doc-amber/40">
+        <div class="text-3xl">🛠️</div>
+        <h3 class="mt-3 text-lg font-bold text-white">Tools</h3>
+        <p class="mt-2 text-sm text-slate-300">Operational capabilities: browser checks, image generation, docs fetching, Linear, Fabric, web fetch, doc serving.</p>
+      </div>
+      <div class="doc-card border-doc-accent/40">
+        <div class="text-3xl">📦</div>
+        <h3 class="mt-3 text-lg font-bold text-white">Skills</h3>
+        <p class="mt-2 text-sm text-slate-300">On-demand methods. Only descriptions are always visible; full instructions hydrate when the task matches.</p>
+      </div>
+      <div class="doc-card border-doc-red/40">
+        <div class="text-3xl">🤖</div>
+        <h3 class="mt-3 text-lg font-bold text-white">Agents</h3>
+        <p class="mt-2 text-sm text-slate-300">Isolated workers for research, planning, implementation, review, PM work, and context building.</p>
+      </div>
+    </div>
+
+    <div class="mt-6 overflow-hidden rounded-2xl border border-doc-line bg-slate-950/60 p-4">
+      <svg viewBox="0 0 1100 380" role="img" aria-label="Inline precise map of Pi config directories" class="w-full rounded-xl">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#172033"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+        </defs>
+        <rect width="1100" height="380" rx="22" fill="url(#g)"/>
+        <text x="44" y="56" fill="#f8fafc" font-size="28" font-weight="800">dot_pi/agent</text>
+        <text x="44" y="88" fill="#94a3b8" font-size="16">Chezmoi source → ~/.pi/agent runtime</text>
+        <g font-size="15" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+          <rect x="44" y="125" width="185" height="160" rx="16" fill="#111827" stroke="#22d3ee"/>
+          <text x="68" y="160" fill="#22d3ee" font-weight="700">settings.json</text>
+          <text x="68" y="192" fill="#cbd5e1">model</text><text x="68" y="218" fill="#cbd5e1">theme</text><text x="68" y="244" fill="#cbd5e1">packages</text>
+          <rect x="260" y="125" width="185" height="160" rx="16" fill="#111827" stroke="#34d399"/>
+          <text x="284" y="160" fill="#34d399" font-weight="700">extensions/</text>
+          <text x="284" y="192" fill="#cbd5e1">tools</text><text x="284" y="218" fill="#cbd5e1">commands</text><text x="284" y="244" fill="#cbd5e1">hooks/UI</text>
+          <rect x="476" y="125" width="185" height="160" rx="16" fill="#111827" stroke="#60a5fa"/>
+          <text x="500" y="160" fill="#60a5fa" font-weight="700">skills/</text>
+          <text x="500" y="192" fill="#cbd5e1">progressive</text><text x="500" y="218" fill="#cbd5e1">disclosure</text><text x="500" y="244" fill="#cbd5e1">templates</text>
+          <rect x="692" y="125" width="185" height="160" rx="16" fill="#111827" stroke="#f59e0b"/>
+          <text x="716" y="160" fill="#f59e0b" font-weight="700">agents/</text>
+          <text x="716" y="192" fill="#cbd5e1">subagents</text><text x="716" y="218" fill="#cbd5e1">chains</text><text x="716" y="244" fill="#cbd5e1">models</text>
+          <rect x="908" y="125" width="148" height="160" rx="16" fill="#111827" stroke="#f87171"/>
+          <text x="932" y="160" fill="#f87171" font-weight="700">traits</text>
+          <text x="932" y="192" fill="#cbd5e1">expertise</text><text x="932" y="218" fill="#cbd5e1">personality</text><text x="932" y="244" fill="#cbd5e1">approach</text>
+        </g>
+        <path d="M229 205h31M445 205h31M661 205h31M877 205h31" stroke="#60a5fa" stroke-width="4" stroke-linecap="round"/>
+        <text x="432" y="340" fill="#94a3b8" font-size="16">small always-on config · task-specific hydration · isolated execution</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="lifecycle" class="doc-section" data-doc-part="why">
+    <h2 class="doc-section-title">How a Request Moves Through Pi</h2>
+    <figure class="doc-figure" data-image-slot="request-lifecycle">
+      <img src="../assets/pi-agent-configuration/request-lifecycle.png" alt="Lifecycle map showing Intent, Route, Hydrate, Delegate, Act, Verify, Compact, Output, and Reload steps.">
+      <figcaption class="doc-figcaption"><strong>Reader question:</strong> how does work happen without context bloat? Pi routes intent, hydrates only needed instructions, delegates broad work, compacts findings, acts with tools, verifies, and outputs.</figcaption>
+    </figure>
+
+    <div class="grid gap-4 lg:grid-cols-3">
+      <div class="doc-card">
+        <h3 class="text-xl font-bold text-doc-cyan">1. Route</h3>
+        <p class="mt-2 text-slate-300">The main session decides whether the task is an answer, skill workflow, tool call, subagent run, or chain.</p>
+      </div>
+      <div class="doc-card">
+        <h3 class="text-xl font-bold text-doc-cyan">2. Isolate</h3>
+        <p class="mt-2 text-slate-300">Broad exploration goes to <code>scout</code>, <code>eagle-scout</code>, <code>researcher</code>, or specialized agents so raw search does not pollute the parent context.</p>
+      </div>
+      <div class="doc-card">
+        <h3 class="text-xl font-bold text-doc-cyan">3. Compact</h3>
+        <p class="mt-2 text-slate-300">Subagents return compact summaries or artifacts. Chains pass structured outputs between steps instead of full transcripts.</p>
+      </div>
+    </div>
+
+    <div class="mt-6 rounded-2xl border border-doc-line bg-doc-panel-2/70 p-5">
+      <h3 class="text-lg font-bold text-white">Request routing sequence</h3>
+      <div class="mt-4 grid gap-3 md:grid-cols-6">
+        <div class="rounded-xl bg-blue-500/10 p-3 text-center text-sm font-semibold text-doc-accent">Intent</div>
+        <div class="rounded-xl bg-cyan-500/10 p-3 text-center text-sm font-semibold text-doc-cyan">Skill?</div>
+        <div class="rounded-xl bg-emerald-500/10 p-3 text-center text-sm font-semibold text-doc-green">Tool?</div>
+        <div class="rounded-xl bg-amber-500/10 p-3 text-center text-sm font-semibold text-doc-amber">Subagent?</div>
+        <div class="rounded-xl bg-fuchsia-500/10 p-3 text-center text-sm font-semibold text-fuchsia-300">Chain?</div>
+        <div class="rounded-xl bg-white/10 p-3 text-center text-sm font-semibold text-slate-200">Verified Output</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="traits-agents" class="doc-section" data-doc-part="mental-model">
+    <h2 class="doc-section-title">Traits + Subagents: Dynamic Specialists</h2>
+    <figure class="doc-figure" data-image-slot="trait-composition">
+      <img src="../assets/pi-agent-configuration/trait-composition.png" alt="Runtime composition pipeline where a task selects a base agent, expertise trait, personality trait, and approach trait, then launches a fresh specialist context that returns a compact handoff.">
+      <figcaption class="doc-figcaption"><strong>Reader question:</strong> how can a small agent set cover many jobs? Pi composes a base agent with expertise, personality, and approach traits at runtime, producing a focused specialist without adding a new permanent agent file.</figcaption>
+    </figure>
+
+    <div class="doc-prose">
+      <p>A subagent file defines the <strong>execution shape</strong>: role, model, tools, default reads, progress behavior, and output expectations. A trait defines the <strong>behavioral overlay</strong>: what to pay attention to, how to reason, and how to execute. The composition engine loads <code>traits.yaml</code>, resolves requested trait keys, and renders <code>agent-template.hbs</code> into one composed system prompt.</p>
+      <p>This makes the system combinatorial. You do not need separate agents for security scout, performance scout, skeptical reviewer, disciplined implementer, or analytical planner. You choose the closest base agent and add 1-3 compact traits.</p>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-3">
+      <div class="doc-card border-doc-cyan/40">
+        <h3 class="text-xl font-bold text-doc-cyan">1. Base Agent</h3>
+        <p class="mt-2 text-slate-300">Pick by work shape: <code>scout</code> for recon, <code>planner</code> for plans, <code>engineer</code> for edits, <code>reviewer</code> for critique, <code>project-manager</code> for Linear.</p>
+      </div>
+      <div class="doc-card border-doc-amber/40">
+        <h3 class="text-xl font-bold text-doc-amber">2. Traits</h3>
+        <p class="mt-2 text-slate-300">Add domain focus, thinking style, and method: <code>security</code>, <code>skeptical</code>, <code>thorough</code>; or <code>implementation</code>, <code>disciplined</code>, <code>systematic</code>.</p>
+      </div>
+      <div class="doc-card border-doc-green/40">
+        <h3 class="text-xl font-bold text-doc-green">3. Fresh Context</h3>
+        <p class="mt-2 text-slate-300">The composed prompt launches isolated from the parent thread and returns a compact handoff, preserving context quality.</p>
+      </div>
+    </div>
+
+    <table class="doc-table mt-6">
+      <thead><tr><th>Need</th><th>Base agent</th><th>Traits</th><th>Resulting specialist</th></tr></thead>
+      <tbody>
+        <tr><td>Audit auth boundaries</td><td><code>scout</code></td><td><code>security</code>, <code>skeptical</code>, <code>thorough</code></td><td>Security auditor with codebase-recon scope.</td></tr>
+        <tr><td>Implement a planned refactor</td><td><code>engineer</code></td><td><code>implementation</code>, <code>disciplined</code>, <code>systematic</code></td><td>Careful implementer that verifies each phase.</td></tr>
+        <tr><td>Trace a complex subsystem</td><td><code>eagle-scout</code></td><td><code>codebase-research</code>, <code>analytical</code>, <code>thorough</code></td><td>Deep researcher that maps dependencies and data flow.</td></tr>
+        <tr><td>Review architectural fit</td><td><code>reviewer</code></td><td><code>code-review</code>, <code>analytical</code>, <code>thorough</code></td><td>Architecture reviewer focused on mental-model alignment.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="doc-callout doc-callout-ok mt-6"><strong>Operational rule:</strong> default to trait-composed subagents for any exploratory or specialized work that would otherwise load many files into the main session. The main session should coordinate, decide, and preserve compact artifacts.</div>
+  </section>
+
+  <section id="capabilities" class="doc-section" data-doc-part="context">
+    <h2 class="doc-section-title">Capabilities You Already Have</h2>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="doc-card">
+        <h3 class="text-xl font-bold text-white">Subagents</h3>
+        <p class="mt-2 text-slate-300">Use these when a task benefits from a fresh context window.</p>
+        <table class="doc-table mt-4">
+          <thead><tr><th>Agent</th><th>Best use</th></tr></thead>
+          <tbody>
+            <tr><td><code>scout</code></td><td>Fast codebase reconnaissance.</td></tr>
+            <tr><td><code>eagle-scout</code></td><td>Deep multi-file tracing and architecture mapping.</td></tr>
+            <tr><td><code>planner</code></td><td>Phased plans with checkable criteria.</td></tr>
+            <tr><td><code>engineer</code></td><td>Standard implementation work.</td></tr>
+            <tr><td><code>lead-engineer</code></td><td>Complex refactors and architecture-sensitive changes.</td></tr>
+            <tr><td><code>reviewer</code></td><td>Design/code review and mental-model alignment.</td></tr>
+            <tr><td><code>project-manager</code></td><td>Linear issue/project workflows.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="doc-card">
+        <h3 class="text-xl font-bold text-white">Skills</h3>
+        <p class="mt-2 text-slate-300">Use these when a repeatable method matters more than a new execution context.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="doc-badge">advanced-context-engineering</span>
+          <span class="doc-badge">prompting</span>
+          <span class="doc-badge">skill-design</span>
+          <span class="doc-badge">agent-design</span>
+          <span class="doc-badge">chain-design</span>
+          <span class="doc-badge">agents-md</span>
+          <span class="doc-badge">pi-customization</span>
+          <span class="doc-badge">linear-templates</span>
+          <span class="doc-badge">excalidraw-diagram</span>
+          <span class="doc-badge">html-docs</span>
+        </div>
+        <div class="doc-callout doc-callout-ok mt-5"><strong>Key pattern:</strong> skill descriptions are always available, but the full skill text loads only when useful.</div>
+      </div>
+    </div>
+
+    <div class="doc-grid mt-6">
+      <div class="doc-card"><h3 class="font-bold text-doc-cyan">Tools</h3><p class="mt-2 text-sm text-slate-300">docsfetch, fabric, webfetch, playwright, pm, openai_image, html_docs_server.</p></div>
+      <div class="doc-card"><h3 class="font-bold text-doc-cyan">Commands</h3><p class="mt-2 text-sm text-slate-300">/agents, /run, /chain, /parallel, /ctx, /todos, /tools, /fabric, caveman prompts.</p></div>
+      <div class="doc-card"><h3 class="font-bold text-doc-cyan">Traits</h3><p class="mt-2 text-sm text-slate-300">Expertise + personality + approach fragments that shape subagents cheaply.</p></div>
+    </div>
+  </section>
+
+  <section id="decision" class="doc-section" data-doc-part="tradeoffs">
+    <h2 class="doc-section-title">What To Use When</h2>
+    <figure class="doc-figure" data-image-slot="capability-decision-map">
+      <img src="../assets/pi-agent-configuration/capability-decision-map.png" alt="Decision map showing Answer, Skill, Tool, Subagent, and Chain positioned by speed, depth, and repeatability.">
+      <figcaption class="doc-figcaption"><strong>Reader question:</strong> which capability should I reach for? Use direct answers for simple one-offs, skills for repeatable methods, tools for concrete actions, subagents for isolated depth, and chains for repeatable multi-step workflows.</figcaption>
+    </figure>
+
+    <table class="doc-table">
+      <thead><tr><th>Situation</th><th>Use</th><th>Reason</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Small known answer</td><td>Direct answer</td><td>Lowest overhead.</td><td>“What file defines the default model?”</td></tr>
+        <tr><td>Repeatable method</td><td>Skill</td><td>Hydrates instructions without separate execution.</td><td>Create HTML docs, design a skill, write prompts.</td></tr>
+        <tr><td>Concrete capability</td><td>Tool</td><td>Does real external/local work.</td><td>Generate image, fetch docs, inspect browser, manage Linear.</td></tr>
+        <tr><td>Broad exploration</td><td>Subagent</td><td>Fresh context, compressed handoff.</td><td>Map a module or audit security boundaries.</td></tr>
+        <tr><td>Repeatable multi-step work</td><td>Chain</td><td>Structured artifacts between phases.</td><td>Research → plan → implement.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc-section" data-doc-part="tradeoffs">
+    <h2 class="doc-section-title">Design Trade-offs</h2>
+    <div class="grid gap-4 lg:grid-cols-2">
+      <div class="doc-callout"><strong>Mixed model layer:</strong> subagents use task-fit Pi model notation such as <code>google/gemini-3.5-flash</code>, <code>opencode-go/kimi-k2.6</code>, <code>openai-codex/gpt-5.5</code>, and <code>opencode/claude-opus-4-8</code>; specialization comes from agent context and traits.</div>
+      <div class="doc-callout"><strong>Many tools:</strong> large capability surface, but each tool name/description must stay clear to avoid routing confusion.</div>
+      <div class="doc-callout"><strong>Subagent isolation:</strong> protects main context, but requires compact, high-signal handoffs.</div>
+      <div class="doc-callout"><strong>Trait composition:</strong> creates many dynamic specialists, but the operator must choose the right base agent plus a small number of traits.</div>
+      <div class="doc-callout"><strong>HTML docs:</strong> higher human readability and visual bandwidth, but needs previews, assets, and validation.</div>
+    </div>
+  </section>
+
+  <section class="doc-section" data-doc-part="implications">
+    <h2 class="doc-section-title">Practical Operating Rules</h2>
+    <div class="doc-prose">
+      <ul>
+        <li>Use <code>html-docs</code> for documentation humans should read in a browser, especially when visual explanation matters.</li>
+        <li>Use <code>playwright</code> after frontend or HTML changes; screenshots catch layout truth better than text inspection.</li>
+        <li>Use <code>docsfetch</code> to cache external docs globally or per project before building docs that depend on a framework.</li>
+        <li>Use trait-composed subagents for broad research, specialized review, planning, PM, or anything that would load many files; keep the parent thread for decisions and compact artifacts.</li>
+        <li>Pick base agent by work shape, then add 1-3 traits for expertise/personality/approach. Example: <code>scout + security + skeptical + thorough</code>.</li>
+        <li>After changing dotfiles source, run <code>chezmoi apply</code> and reload Pi before expecting runtime behavior to change.</li>
+      </ul>
+    </div>
+    <div class="doc-callout doc-callout-warning mt-5"><strong>Open improvement:</strong> this document now explains the configuration visually, but a separate reference document could list every command/tool parameter exactly. That would be a different Diátaxis quadrant.</div>
+  </section>
+</article>
+</main>
+</body>
+</html>

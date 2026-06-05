@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Code review specialist — reviews implementation against plans for mental model alignment, correctness, and design coherence. Triages bot comments.
-# Model mapping: see README.md (previous: openai-codex/gpt-5.3-codex, thinking: high)
+# Model mapping: see README.md (current: openai-codex/gpt-5.4-mini)
 model: openai-codex/gpt-5.4-mini
 thinking: medium
 defaultReads: plan.md, progress.md

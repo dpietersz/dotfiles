@@ -1,8 +1,8 @@
 ---
 name: scout
 description: Fast codebase recon — explores, documents, and maps codebases. Returns compressed structured findings for handoff.
-# Model mapping: see README.md (previous: anthropic/claude-haiku-4-5)
-model: google/gemini-2.5-flash
+# Model mapping: see README.md (current: google/gemini-3.5-flash)
+model: google/gemini-3.5-flash
 defaultProgress: true
 ---
 

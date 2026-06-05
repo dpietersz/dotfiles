@@ -24,7 +24,7 @@ traits.yaml                 # Behavioral trait definitions (expertise, personali
 
 ## Key Files
 
-- `settings.json` — Default model (`claude-opus-4-6`), theme (`midnight-ocean`), thinking level (`high`), installed packages
+- `settings.json` — Default provider/model (`openai-codex` / `gpt-5.5`), theme (`midnight-ocean`), thinking level (`high`), installed packages
 - `traits.yaml` — Three trait dimensions (expertise, personality, approach) + presets (security-auditor, careful-implementer, deep-researcher, etc.)
 - `agents/agent-template.hbs` — Handlebars template composing agent context + traits into system prompt
 - `extensions/caveman-mode.ts` — Injects always-on Caveman full-mode brevity rules into the system prompt
@@ -40,16 +40,16 @@ traits.yaml                 # Behavioral trait definitions (expertise, personali
 
 | Agent | Model | Thinking | Purpose |
 |-------|-------|----------|---------|
-| scout | claude-haiku-4-5 | — | Fast codebase recon |
-| eagle-scout | claude-sonnet-4-5 | high | Deep multi-file research |
-| planner | claude-opus-4-6 | high | Implementation planning |
-| engineer | claude-sonnet-4-5 | medium | General implementation |
-| lead-engineer | claude-opus-4-6 | high | Complex architecture |
-| researcher | claude-sonnet-4-5 | medium | Web research synthesis |
-| code-reviewer | openai-codex/gpt-5.4-mini | high | Code review |
-| reviewer | claude-sonnet-4-5 | medium | General review |
+| scout | google/gemini-3.5-flash | — | Fast codebase recon |
+| eagle-scout | opencode-go/kimi-k2.6 | medium | Deep multi-file research |
+| planner | openai-codex/gpt-5.5 | high | Implementation planning |
+| engineer | opencode-go/kimi-k2.6 | medium | General implementation |
+| lead-engineer | opencode/claude-opus-4-8 | high | Complex architecture |
+| researcher | google/gemini-3.5-flash | — | Web research synthesis |
+| code-reviewer | openai-codex/gpt-5.4-mini | medium | Code review |
+| reviewer | openai-codex/gpt-5.4-mini | medium | General review |
 | project-manager | openai-codex/gpt-5.4-mini | medium | Linear PM operations |
-| context-builder | claude-haiku-4-5 | — | Context + meta-prompt generation |
+| context-builder | openai-codex/gpt-5.4-mini | low | Context + meta-prompt generation |
 
 ## Conventions
 
@@ -61,10 +61,11 @@ traits.yaml                 # Behavioral trait definitions (expertise, personali
 
 ## Context Engineering
 
-- **Subagent delegation**: Each subagent gets a fresh context window — no inherited noise
-- **Trait composition**: `{ agent: "scout", traits: ["security", "skeptical"], task: "..." }` injects behavioral shaping without loading additional context
-- **Chains**: `research-plan-implement` for ACE/FCA workflow (research.md → plan.md → implementation) and `quick-dev` for small well-defined tasks
-- **Presets**: Named trait combos — `security-auditor` (scout + security, skeptical, thorough), `careful-implementer` (engineer + implementation, disciplined, systematic)
+- **Subagent delegation**: Each subagent gets a fresh context window — no inherited noise. Prefer delegation for exploration, review, planning, PM work, broad file inspection, and any task that would otherwise load many files into the main context.
+- **Trait composition**: Base agent + traits = dynamic on-the-fly specialist. Example: `{ agent: "scout", traits: ["security", "skeptical", "thorough"], task: "audit auth module" }` creates a security-auditor scout without a new agent file.
+- **Dynamic subagent creation**: Choose the smallest base agent that matches execution shape (`scout`, `eagle-scout`, `planner`, `engineer`, `reviewer`, etc.), then add 1-3 traits for domain focus, thinking style, and work method. Traits are compact prompt overlays, not role-play.
+- **Chains**: `research-plan-implement` for ACE/FCA workflow (research.md → plan.md → implementation) and `quick-dev` for small well-defined tasks. Chain steps should use traits to specialize each isolated context.
+- **Presets**: Named trait combos — `security-auditor` (scout + security, skeptical, thorough), `careful-implementer` (engineer + implementation, disciplined, systematic). Presets are shortcuts; ad-hoc trait composition is encouraged when the task shape is unique.
 - **Progressive disclosure**: Skills load on-demand. Only descriptions always in context.
 - **Target**: 40-60% context utilization. Delegate exploration to keep main session lean.
 - **Intent gate**: answer/research requests stay read-only; implement only when explicitly asked. Clarify when scope is ambiguous or interpretations differ materially.

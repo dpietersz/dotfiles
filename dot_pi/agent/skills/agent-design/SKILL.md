@@ -59,29 +59,29 @@ Level 4: Task Prompt (chain step body or user task)
 
 Each provider has a strength. Pick based on what the agent primarily does.
 
-**Is this agent primarily shaping the plan or architecture?** → Use **OpenAI GPT**.
+**Is this agent primarily shaping the plan or architecture?** → Use **OpenAI Codex**.
 GPT-5.x excels at planning, decomposition, structured outputs, and trade-off reasoning.
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| Critical planning, risk analysis, test strategy | `openai-codex/gpt-5.4` | high | `anthropic/claude-opus-4-6` |
-| PM, task routing, coordination, dependency graphs | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` |
-| Code review, surgical patches, read→critique→modify | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` |
+| Critical planning, risk analysis, test strategy | `openai-codex/gpt-5.5` | high | `opencode/claude-opus-4-8` |
+| PM, task routing, coordination, dependency graphs | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` |
+| Code review, surgical patches, read→critique→modify | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` |
 
-**Is this agent primarily manipulating code or reasoning over large context?** → Use **Anthropic Claude**.
-Claude ranks at or near the top for complex coding and long-context tasks.
+**Is this agent primarily manipulating code or reasoning over large context?** → Use **OpenCode Go** for routine implementation, **OpenCode Zen Claude** for premium escalation.
+OpenCode Go provides strong open coding models; Zen Claude Opus handles architecture-sensitive work.
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| Deep refactors, aligning implementation with design intent | `anthropic/claude-opus-4-6` | high | `openai-codex/gpt-5.4` |
-| Day-to-day implementation, bug fixes, tests | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` |
+| Deep refactors, aligning implementation with design intent | `opencode/claude-opus-4-8` | high | `openai-codex/gpt-5.5` |
+| Day-to-day implementation, bug fixes, tests | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.5` |
 
 **Neither — fetch, summarize, scout, or lightly transform?** → Use **Google Gemini Flash**.
 Great value for high-volume, expendable work where correctness is easy to verify.
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| Scanning, summaries, web research, boilerplate | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` |
+| Scanning, summaries, web research, boilerplate | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.4-mini` |
 
 **Escalation pairs**: scout→eagle-scout, engineer→lead-engineer. Cheap handles common cases, expensive handles complex ones.
 
@@ -89,16 +89,16 @@ Great value for high-volume, expendable work where correctness is easy to verify
 
 | Agent | Model | Thinking | Fallback | Why this provider |
 |-------|-------|----------|----------|-------------------|
-| scout | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` | Cheap scouting |
-| eagle-scout | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` | Deep code reasoning |
-| researcher | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` | High-volume web research |
-| engineer | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` | Day-to-day coding |
-| lead-engineer | `anthropic/claude-opus-4-6` | high | `openai-codex/gpt-5.4` | Deep refactors, architecture |
-| planner | `openai-codex/gpt-5.4` | high | `anthropic/claude-opus-4-6` | Critical planning |
-| reviewer | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Code review |
-| code-reviewer | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Code review |
-| project-manager | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Coordination, task routing |
-| context-builder | `openai-codex/gpt-5.4-mini` | low | `anthropic/claude-sonnet-4-6` | Meta-prompt generation |
+| scout | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.4-mini` | Cheap scouting |
+| eagle-scout | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.5` | Deep code reasoning |
+| researcher | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.4-mini` | High-volume web research |
+| engineer | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.5` | Day-to-day coding |
+| lead-engineer | `opencode/claude-opus-4-8` | high | `openai-codex/gpt-5.5` | Deep refactors, architecture |
+| planner | `openai-codex/gpt-5.5` | high | `opencode/claude-opus-4-8` | Critical planning |
+| reviewer | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Code review |
+| code-reviewer | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Code review |
+| project-manager | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Coordination, task routing |
+| context-builder | `openai-codex/gpt-5.4-mini` | low | `opencode-go/kimi-k2.6` | Meta-prompt generation |
 
 **⛔ CRITICAL: When you change an agent's model, you MUST also update every chain step that uses that agent with a `model:` override. Chain step `model:` overrides the agent default — the agent definition alone is not enough.**
 

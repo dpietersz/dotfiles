@@ -1,0 +1,44 @@
+---
+id: explanation
+name: Explanation
+description: Builds understanding with context, background, why, trade-offs, mental models, and alternatives.
+diataxis: [explanation]
+use_when:
+  - User asks why, explain, concept doc, design rationale, trade-off analysis, backgrounder, or mental model
+avoid_when:
+  - User needs exact lookup facts or executable steps
+required_inputs: [topic, audience, reason for explaining]
+recommended_inputs: [history, alternatives, misconceptions, examples, consequences]
+clarifying_questions:
+  - What should the reader understand differently after reading?
+  - What misconception or decision pressure motivated this explanation?
+  - How technical should the mental model be?
+output_path_pattern: docs/explanation/{slug}.html
+visual_policy: strategic
+image_slots:
+  - id: mental-model
+    required: false
+    purpose: Establish the core conceptual shape of the topic
+    suggested_prompt_focus: Show the major parts, boundaries, and relationships behind the concept
+    max_text_labels: 8
+  - id: workflow-map
+    required: when_process_or_sequence_matters
+    purpose: Explain how the moving parts interact over time
+    suggested_prompt_focus: Show sequence, feedback loops, handoffs, and outputs
+    max_text_labels: 10
+  - id: tradeoff-landscape
+    required: when_tradeoffs_matter
+    purpose: Show competing forces and the chosen balance
+    suggested_prompt_focus: Show tensions, constraints, and decision center of gravity
+    max_text_labels: 8
+status: active
+---
+<article class="space-y-6" data-doc-template="explanation">
+  <header class="doc-hero"><p class="doc-kicker">Explanation</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{summary}}</p><figure class="doc-figure" data-image-slot="mental-model"><img src="{{asset_path}}/mental-model.png" alt="{{mental_model_alt}}"><figcaption class="doc-figcaption">{{mental_model_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="context"><h2 class="doc-section-title">Context</h2>{{context}}</section>
+  <section class="doc-section" data-doc-part="model"><h2 class="doc-section-title">Mental Model</h2>{{mental_model}}<div class="visual-detail" data-inline-visual="structure-map">{{structure_map_html_or_svg}}</div></section>
+  <section class="doc-section" data-doc-part="why"><h2 class="doc-section-title">Why It Works This Way</h2><figure class="doc-figure" data-image-slot="workflow-map"><img src="{{asset_path}}/workflow-map.png" alt="{{workflow_alt}}"><figcaption class="doc-figcaption">{{workflow_caption}}</figcaption></figure>{{why}}</section>
+  <section class="doc-section" data-doc-part="tradeoffs"><h2 class="doc-section-title">Trade-offs</h2><figure class="doc-figure" data-image-slot="tradeoff-landscape"><img src="{{asset_path}}/tradeoff-landscape.png" alt="{{tradeoff_alt}}"><figcaption class="doc-figcaption">{{tradeoff_caption}}</figcaption></figure>{{tradeoffs}}</section>
+  <section class="doc-section" data-doc-part="alternatives"><h2 class="doc-section-title">Alternatives Considered</h2>{{alternatives}}</section>
+  <section class="doc-section" data-doc-part="implications"><h2 class="doc-section-title">Implications</h2>{{implications}}</section>
+</article>

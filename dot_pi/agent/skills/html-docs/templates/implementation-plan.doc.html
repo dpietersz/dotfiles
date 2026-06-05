@@ -1,0 +1,39 @@
+---
+id: implementation-plan
+name: Implementation Plan
+description: Stepwise engineering plan with phases, file impacts, sequencing, risks, and verification.
+diataxis: [how-to, reference]
+use_when:
+  - User asks for implementation plan, engineering plan, rollout plan, or plan before coding
+avoid_when:
+  - User needs a product alignment document rather than build steps
+required_inputs: [goal, target codebase or system, desired outcome]
+recommended_inputs: [constraints, relevant files, test commands, rollout needs, risks]
+clarifying_questions:
+  - What repository/system should this plan target?
+  - What is the smallest demonstrable success at the end?
+  - Are there constraints on compatibility, migration, downtime, or testing?
+output_path_pattern: docs/plans/{slug}.html
+visual_policy: required
+image_slots:
+  - id: hero
+    required: true
+    purpose: Big-picture implementation shape
+    suggested_prompt_focus: Show before state, planned change zones, and after state
+    max_text_labels: 8
+  - id: phase-flow
+    required: true
+    purpose: Sequencing and dependency flow
+    suggested_prompt_focus: Show phases as connected milestones with validation gates
+    max_text_labels: 10
+status: active
+---
+<article class="space-y-6" data-doc-template="implementation-plan">
+  <header class="doc-hero"><p class="doc-kicker">Implementation Plan</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{summary}}</p><figure class="doc-figure" data-image-slot="hero"><img src="{{asset_path}}/hero.png" alt="{{hero_alt}}"><figcaption class="doc-figcaption">{{hero_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="goal"><h2 class="doc-section-title">Goal & Current State</h2>{{goal_current_state}}</section>
+  <section class="doc-section" data-doc-part="approach"><h2 class="doc-section-title">Solution Approach</h2>{{approach}}</section>
+  <section class="doc-section" data-doc-part="phases"><h2 class="doc-section-title">Implementation Phases</h2><figure class="doc-figure" data-image-slot="phase-flow"><img src="{{asset_path}}/phase-flow.png" alt="{{phase_alt}}"><figcaption class="doc-figcaption">{{phase_caption}}</figcaption></figure>{{phases}}</section>
+  <section class="doc-section" data-doc-part="files"><h2 class="doc-section-title">File & Module Impact</h2>{{file_impact}}</section>
+  <section class="doc-section" data-doc-part="validation"><h2 class="doc-section-title">Validation Plan</h2>{{validation}}</section>
+  <section class="doc-section" data-doc-part="risks"><h2 class="doc-section-title">Risks, Rollback & Edge Cases</h2>{{risks_rollback}}</section>
+</article>

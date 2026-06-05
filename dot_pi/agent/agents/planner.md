@@ -1,8 +1,8 @@
 ---
 name: planner
 description: Implementation planning specialist — creates phased plans with ISC criteria from research context. Highest-leverage artifact in any chain.
-# Model mapping: see README.md (previous: claude-opus-4-6, thinking: high)
-model: openai-codex/gpt-5.4
+# Model mapping: see README.md (current: openai-codex/gpt-5.5)
+model: openai-codex/gpt-5.5
 thinking: high
 defaultReads: context.md
 ---

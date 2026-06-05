@@ -1,0 +1,10 @@
+Serve HTML documentation in the current repo with a local hot-reloading dashboard.
+
+Actions:
+- start: Start a webserver rooted at the current working directory or provided root. Scans HTML files recursively, builds a folder tree, groups docs by Diátaxis quadrant/template/status, and hot-reloads when files change. Defaults to fixed port 43110; returns an existing server for the same root if one is already running. Set fallbackPort=true only when you explicitly want the tool to use the next free port.
+- status: Show running documentation servers.
+- stop: Stop a running server by id, or all servers when all=true.
+
+Use when the user wants to preview generated HTML docs, browse repo documentation, launch a docs dashboard, or quickly serve local HTML documentation.
+
+Security: server only serves files under the configured root. Excludes .git, node_modules, build/cache directories by default.

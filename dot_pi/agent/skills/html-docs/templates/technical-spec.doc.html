@@ -1,0 +1,35 @@
+---
+id: technical-spec
+name: Technical Specification
+description: Build contract for a technical change: why, capabilities, constraints, interfaces, data, acceptance, and validation.
+diataxis: [reference, explanation]
+use_when:
+  - User asks for a technical spec, build spec, engineering spec, implementation contract, or feature specification
+avoid_when:
+  - User wants a learning tutorial or executive product story
+required_inputs: [why, capabilities, constraints, success signal]
+recommended_inputs: [interfaces, file paths, data contracts, test plan, non-goals]
+clarifying_questions:
+  - What exact capability must exist when this is done?
+  - What constraints or non-goals should prevent scope creep?
+  - What test or demonstration proves success?
+output_path_pattern: docs/specs/{slug}.html
+visual_policy: strategic
+image_slots:
+  - id: contract-map
+    required: false
+    purpose: Capability and interface overview
+    suggested_prompt_focus: Show capability nodes, inputs, outputs, and validation loop
+    max_text_labels: 8
+status: active
+---
+<article class="space-y-6" data-doc-template="technical-spec">
+  <header class="doc-hero"><p class="doc-kicker">Technical Specification</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{why}}</p><figure class="doc-figure" data-image-slot="contract-map"><img src="{{asset_path}}/contract-map.png" alt="{{contract_alt}}"><figcaption class="doc-figcaption">{{contract_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="capabilities"><h2 class="doc-section-title">Capabilities</h2>{{capabilities}}</section>
+  <section class="doc-section" data-doc-part="constraints"><h2 class="doc-section-title">Constraints & Non-goals</h2>{{constraints_non_goals}}</section>
+  <section class="doc-section" data-doc-part="interfaces"><h2 class="doc-section-title">Interfaces & Contracts</h2>{{interfaces}}</section>
+  <section class="doc-section" data-doc-part="data"><h2 class="doc-section-title">Data Shapes</h2>{{data_shapes}}</section>
+  <section class="doc-section" data-doc-part="implementation"><h2 class="doc-section-title">Implementation Notes</h2>{{implementation_notes}}</section>
+  <section class="doc-section" data-doc-part="validation"><h2 class="doc-section-title">Acceptance & Validation</h2>{{acceptance_validation}}</section>
+  <section class="doc-section" data-doc-part="questions"><h2 class="doc-section-title">Assumptions & Open Questions</h2>{{assumptions_open_questions}}</section>
+</article>

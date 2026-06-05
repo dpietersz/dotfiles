@@ -5,7 +5,7 @@ description: "Research → Plan → Implement. Thorough codebase research, detai
 
 ## eagle-scout
 output: research.md
-model: anthropic/claude-sonnet-4-6
+model: opencode-go/kimi-k2.6
 thinking: medium
 traits: codebase-research, analytical, thorough
 
@@ -29,7 +29,7 @@ TASK: {task}
 ## planner
 reads: research.md
 output: plan.md
-model: openai-codex/gpt-5.4
+model: openai-codex/gpt-5.5
 thinking: high
 traits: planning, analytical, systematic
 
@@ -43,7 +43,7 @@ RESEARCH: {previous}
 ## lead-engineer
 reads: plan.md
 progress: true
-model: anthropic/claude-opus-4-7
+model: opencode/claude-opus-4-8
 thinking: high
 traits: implementation, disciplined, systematic
 

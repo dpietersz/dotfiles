@@ -1,0 +1,34 @@
+---
+id: how-to
+name: How-To Guide
+description: Goal-oriented directions for a competent user solving a real-world task or problem.
+diataxis: [how-to]
+use_when:
+  - User asks how to do a specific task, solve an operational problem, configure something, troubleshoot something
+avoid_when:
+  - User wants to learn a broad skill from scratch or needs conceptual background
+required_inputs: [task goal, starting state, target environment]
+recommended_inputs: [constraints, prerequisites, decision points, verification, rollback]
+clarifying_questions:
+  - What exact task or problem should the guide solve?
+  - What starting state should the reader already have?
+  - How can the reader verify success?
+output_path_pattern: docs/how-to/{slug}.html
+visual_policy: optional
+image_slots:
+  - id: task-flow
+    required: false
+    purpose: Show branching path or multi-system task flow
+    suggested_prompt_focus: Show start, decisions, actions, verification, rollback
+    max_text_labels: 8
+status: active
+---
+<article class="space-y-6" data-doc-template="how-to">
+  <header class="doc-hero"><p class="doc-kicker">How-To Guide</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">This guide shows how to {{task_goal}}.</p><figure class="doc-figure" data-image-slot="task-flow"><img src="{{asset_path}}/task-flow.png" alt="{{task_flow_alt}}"><figcaption class="doc-figcaption">{{task_flow_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="when"><h2 class="doc-section-title">When To Use This Guide</h2>{{when_to_use}}</section>
+  <section class="doc-section" data-doc-part="prerequisites"><h2 class="doc-section-title">Prerequisites</h2>{{prerequisites}}</section>
+  <section class="doc-section" data-doc-part="steps"><h2 class="doc-section-title">Steps</h2>{{steps}}</section>
+  <section class="doc-section" data-doc-part="verify"><h2 class="doc-section-title">Verify Success</h2>{{verification}}</section>
+  <section class="doc-section" data-doc-part="troubleshooting"><h2 class="doc-section-title">Troubleshooting</h2>{{troubleshooting}}</section>
+  <section class="doc-section" data-doc-part="related"><h2 class="doc-section-title">Related Reference</h2>{{related_reference}}</section>
+</article>

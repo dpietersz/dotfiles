@@ -1,7 +1,7 @@
 ---
 name: project-manager
 description: Linear project management specialist — handles all Linear operations including issue CRUD, project updates, milestone tracking, and status transitions.
-# Model mapping: see README.md (previous: openai-codex/gpt-5.2)
+# Model mapping: see README.md (current: openai-codex/gpt-5.4-mini)
 model: openai-codex/gpt-5.4-mini
 thinking: medium
 defaultProgress: true

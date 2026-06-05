@@ -1,0 +1,35 @@
+---
+id: test-strategy
+name: Test Strategy
+description: Defines quality risks, test scope, levels, coverage, environments, automation, traceability, and release confidence.
+diataxis: [reference, explanation]
+use_when:
+  - User asks for test strategy, QA plan, test plan, quality plan, NFR test plan, or coverage strategy
+avoid_when:
+  - User only needs individual test cases or code review
+required_inputs: [system under test, quality goals, risk areas]
+recommended_inputs: [requirements, architecture, environments, test data, CI constraints, release criteria]
+clarifying_questions:
+  - What failures would be most expensive or embarrassing?
+  - What quality attributes matter most for release confidence?
+  - What environments and automation already exist?
+output_path_pattern: docs/quality/{slug}-test-strategy.html
+visual_policy: strategic
+image_slots:
+  - id: quality-map
+    required: false
+    purpose: Risk-to-test coverage map
+    suggested_prompt_focus: Show risk areas mapped to test levels and confidence gates
+    max_text_labels: 10
+status: active
+---
+<article class="space-y-6" data-doc-template="test-strategy">
+  <header class="doc-hero"><p class="doc-kicker">Test Strategy</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{summary}}</p><figure class="doc-figure" data-image-slot="quality-map"><img src="{{asset_path}}/quality-map.png" alt="{{quality_map_alt}}"><figcaption class="doc-figcaption">{{quality_map_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="scope"><h2 class="doc-section-title">Scope & Quality Goals</h2>{{scope_quality_goals}}</section>
+  <section class="doc-section" data-doc-part="risks"><h2 class="doc-section-title">Quality Risks</h2>{{quality_risks}}</section>
+  <section class="doc-section" data-doc-part="levels"><h2 class="doc-section-title">Test Levels & Coverage</h2>{{test_levels}}</section>
+  <section class="doc-section" data-doc-part="nfr"><h2 class="doc-section-title">Non-Functional Requirements</h2>{{nfr_strategy}}</section>
+  <section class="doc-section" data-doc-part="automation"><h2 class="doc-section-title">Automation & CI</h2>{{automation_ci}}</section>
+  <section class="doc-section" data-doc-part="data-env"><h2 class="doc-section-title">Test Data & Environments</h2>{{test_data_environments}}</section>
+  <section class="doc-section" data-doc-part="release"><h2 class="doc-section-title">Release Criteria</h2>{{release_criteria}}</section>
+</article>

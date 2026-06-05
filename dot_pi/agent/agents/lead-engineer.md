@@ -1,8 +1,8 @@
 ---
 name: lead-engineer
 description: Senior implementation specialist — architecture decisions, complex refactors, cross-system changes, quality-critical code. Opus-level reasoning.
-# Model mapping: see README.md (previous: claude-opus-4-6, thinking: medium)
-model: anthropic/claude-opus-4-6
+# Model mapping: see README.md (current: opencode/claude-opus-4-8)
+model: opencode/claude-opus-4-8
 thinking: high
 defaultReads: context.md, plan.md
 defaultProgress: true

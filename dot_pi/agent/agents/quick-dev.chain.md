@@ -5,7 +5,7 @@ description: "Quick flow: clarify intent → plan → implement → self-review 
 
 ## scout
 output: quick-research.md
-model: google/gemini-2.5-flash
+model: google/gemini-3.5-flash
 traits: codebase-research, rapid
 
 You are doing fast reconnaissance for a small, well-defined task.
@@ -48,7 +48,7 @@ TASK: {task}
 ## engineer
 reads: quick-research.md
 output: implementation.md
-model: anthropic/claude-sonnet-4-6
+model: opencode-go/kimi-k2.6
 thinking: medium
 traits: implementation, disciplined
 

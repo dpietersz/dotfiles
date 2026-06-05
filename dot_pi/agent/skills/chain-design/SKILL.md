@@ -64,17 +64,17 @@ For each step, determine:
 
 | Step purpose | Agent | Traits | Primary model | Fallback |
 |-------------|-------|--------|---------------|----------|
-| Branch/setup | engineer | systematic | `google/gemini-2.5-flash` | `anthropic/claude-sonnet-4-6` |
-| Fast recon | scout | codebase-research, rapid | `google/gemini-2.5-flash` | `openai-codex/gpt-5.2` |
-| Deep research | eagle-scout | codebase-research, thorough | `anthropic/claude-sonnet-4-6` | `openai-codex/gpt-5.2` |
-| Web research | researcher | (per task) | `google/gemini-2.5-flash` | `openai-codex/gpt-5.2` |
-| Planning | planner | planning, analytical | `openai-codex/gpt-5.4` | `anthropic/claude-opus-4-6` |
-| Standard impl | engineer | implementation, disciplined | `anthropic/claude-sonnet-4-6` | `openai-codex/gpt-5.2` |
-| Complex impl | lead-engineer | implementation, disciplined, systematic | `anthropic/claude-opus-4-6` | `openai-codex/gpt-5.4` |
-| Code review | reviewer | code-review, analytical | `openai-codex/gpt-5.4-mini` | `anthropic/claude-sonnet-4-6` |
-| PR creation | engineer | systematic | `openai-codex/gpt-5.4-mini` | `anthropic/claude-sonnet-4-6` |
-| Review triage | reviewer | code-review, skeptical | `openai-codex/gpt-5.4-mini` | `anthropic/claude-sonnet-4-6` |
-| PM / Linear ops | project-manager | (per task) | `openai-codex/gpt-5.4-mini` | `anthropic/claude-sonnet-4-6` |
+| Branch/setup | engineer | systematic | `google/gemini-3.5-flash` | `opencode-go/kimi-k2.6` |
+| Fast recon | scout | codebase-research, rapid | `google/gemini-3.5-flash` | `openai-codex/gpt-5.2` |
+| Deep research | eagle-scout | codebase-research, thorough | `opencode-go/kimi-k2.6` | `openai-codex/gpt-5.2` |
+| Web research | researcher | (per task) | `google/gemini-3.5-flash` | `openai-codex/gpt-5.2` |
+| Planning | planner | planning, analytical | `openai-codex/gpt-5.5` | `opencode/claude-opus-4-8` |
+| Standard impl | engineer | implementation, disciplined | `opencode-go/kimi-k2.6` | `openai-codex/gpt-5.2` |
+| Complex impl | lead-engineer | implementation, disciplined, systematic | `opencode/claude-opus-4-8` | `openai-codex/gpt-5.5` |
+| Code review | reviewer | code-review, analytical | `openai-codex/gpt-5.4-mini` | `opencode-go/kimi-k2.6` |
+| PR creation | engineer | systematic | `openai-codex/gpt-5.4-mini` | `opencode-go/kimi-k2.6` |
+| Review triage | reviewer | code-review, skeptical | `openai-codex/gpt-5.4-mini` | `opencode-go/kimi-k2.6` |
+| PM / Linear ops | project-manager | (per task) | `openai-codex/gpt-5.4-mini` | `opencode-go/kimi-k2.6` |
 
 See **Model Selection for New Agents** (below) for the decision framework behind these choices.
 
@@ -180,7 +180,7 @@ skills: false          # explicitly disable (including agent defaults)
 ```markdown
 ## engineer
 output: implementation.md
-model: anthropic/claude-sonnet-4-6
+model: opencode-go/kimi-k2.6
 traits: implementation, disciplined
 skills: linear-app-integration
 ```
@@ -280,9 +280,9 @@ Yes → Use **OpenAI GPT**. GPT-5.x excels at planning, decomposition, structure
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| Critical planning: requirement digestion, decomposition, risk analysis, test strategy | `openai-codex/gpt-5.4` | high | `anthropic/claude-opus-4-6` |
-| Lighter coordination: PM, task routing, progress summaries, dependency graphs | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` |
-| Code review, surgical patches, read→critique→modify | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` |
+| Critical planning: requirement digestion, decomposition, risk analysis, test strategy | `openai-codex/gpt-5.5` | high | `opencode/claude-opus-4-8` |
+| Lighter coordination: PM, task routing, progress summaries, dependency graphs | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` |
+| Code review, surgical patches, read→critique→modify | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` |
 
 **Question 2: Is this step primarily manipulating code or reasoning over large technical context?**
 
@@ -290,8 +290,8 @@ Yes → Use **Anthropic Claude**. Claude ranks at or near the top for complex co
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| Deep refactors, tricky logic, aligning implementation with design intent | `anthropic/claude-opus-4-6` | high | `openai-codex/gpt-5.4` |
-| Day-to-day implementation, bug fixes, tests, moderate-context coding | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` |
+| Deep refactors, tricky logic, aligning implementation with design intent | `opencode/claude-opus-4-8` | high | `openai-codex/gpt-5.5` |
+| Day-to-day implementation, bug fixes, tests, moderate-context coding | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.2` |
 
 **Neither? The job is fetch, summarize, scout, or lightly transform:**
 
@@ -299,7 +299,7 @@ Use **Google Gemini Flash**. Great value for high-volume, expendable work where 
 
 | Scope | Model | Thinking | Fallback |
 |-------|-------|----------|----------|
-| File scanning, rough summaries, candidate surfacing, web research, boilerplate | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` |
+| File scanning, rough summaries, candidate surfacing, web research, boilerplate | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.2` |
 
 ### Provider Summary
 
@@ -314,11 +314,11 @@ Gemini  → cheap scouting, research, utility transforms (Flash=high-volume)
 `model:` and `thinking:` are separate fields. Set both when overriding in a chain step.
 
 ```yaml
-model: anthropic/claude-sonnet-4-6
+model: opencode-go/kimi-k2.6
 thinking: medium
 ```
 
-Formats: `anthropic/claude-{tier}-{version}`, `openai-codex/gpt-{version}`, `google/gemini-{version}`
+Formats: `opencode/claude-{tier}-{version}`, `opencode-go/{model-id}`, `openai-codex/gpt-{version}`, `google/gemini-{version}`
 
 **⛔ CRITICAL: Chain step `model:` overrides the agent default. When changing an agent's model, update BOTH the agent .md file AND every chain step that uses that agent with a `model:` override. If you only update the agent definition, chains will still use the old model.**
 
@@ -326,16 +326,16 @@ Formats: `anthropic/claude-{tier}-{version}`, `openai-codex/gpt-{version}`, `goo
 
 | Agent | Default model | Thinking | Fallback | Why this provider |
 |-------|--------------|----------|----------|-------------------|
-| scout | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` | Cheap scouting |
-| eagle-scout | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` | Deep code reasoning |
-| researcher | `google/gemini-2.5-flash` | off | `openai-codex/gpt-5.2` | High-volume web research |
-| engineer | `anthropic/claude-sonnet-4-6` | medium | `openai-codex/gpt-5.2` | Day-to-day coding |
-| lead-engineer | `anthropic/claude-opus-4-6` | high | `openai-codex/gpt-5.4` | Deep refactors, architecture |
-| planner | `openai-codex/gpt-5.4` | high | `anthropic/claude-opus-4-6` | Critical planning |
-| reviewer | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Code review (read→critique→modify) |
-| code-reviewer | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Code review |
-| project-manager | `openai-codex/gpt-5.4-mini` | medium | `anthropic/claude-sonnet-4-6` | Coordination, task routing |
-| context-builder | `openai-codex/gpt-5.4-mini` | low | `anthropic/claude-sonnet-4-6` | Meta-prompt generation |
+| scout | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.2` | Cheap scouting |
+| eagle-scout | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.2` | Deep code reasoning |
+| researcher | `google/gemini-3.5-flash` | off | `openai-codex/gpt-5.2` | High-volume web research |
+| engineer | `opencode-go/kimi-k2.6` | medium | `openai-codex/gpt-5.2` | Day-to-day coding |
+| lead-engineer | `opencode/claude-opus-4-8` | high | `openai-codex/gpt-5.5` | Deep refactors, architecture |
+| planner | `openai-codex/gpt-5.5` | high | `opencode/claude-opus-4-8` | Critical planning |
+| reviewer | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Code review (read→critique→modify) |
+| code-reviewer | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Code review |
+| project-manager | `openai-codex/gpt-5.4-mini` | medium | `opencode-go/kimi-k2.6` | Coordination, task routing |
+| context-builder | `openai-codex/gpt-5.4-mini` | low | `opencode-go/kimi-k2.6` | Meta-prompt generation |
 
 ## Reference
 

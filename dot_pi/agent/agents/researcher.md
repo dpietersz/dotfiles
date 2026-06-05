@@ -1,8 +1,8 @@
 ---
 name: researcher
 description: Web research specialist — searches, evaluates, and synthesizes focused research briefs with authoritative sources.
-# Model mapping: see README.md (previous: anthropic/claude-sonnet-4-6, thinking: medium)
-model: google/gemini-2.5-flash
+# Model mapping: see README.md (current: google/gemini-3.5-flash)
+model: google/gemini-3.5-flash
 defaultProgress: true
 ---
 

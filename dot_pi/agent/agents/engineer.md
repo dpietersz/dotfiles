@@ -1,8 +1,8 @@
 ---
 name: engineer
 description: Standard implementation specialist — day-to-day coding, test writing, refactoring. The workhorse agent. Use lead-engineer for architecture decisions.
-# Model mapping: see README.md (previous: anthropic/claude-sonnet-4-6, thinking: medium)
-model: anthropic/claude-sonnet-4-6
+# Model mapping: see README.md (current: opencode-go/kimi-k2.6)
+model: opencode-go/kimi-k2.6
 thinking: medium
 defaultReads: context.md, plan.md
 defaultProgress: true

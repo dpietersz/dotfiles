@@ -1,0 +1,34 @@
+---
+id: tutorial
+name: Tutorial
+description: Guided learning experience where a learner completes a safe, meaningful path and sees results early and often.
+diataxis: [tutorial]
+use_when:
+  - User asks for tutorial, learning guide, hands-on walkthrough, getting started lesson
+avoid_when:
+  - User is already competent and only needs task directions
+required_inputs: [learner profile, learning goal, environment, successful end state]
+recommended_inputs: [prerequisites, sample outputs, reset steps, expected errors]
+clarifying_questions:
+  - What should the learner successfully create or experience by the end?
+  - What can the learner safely assume is already installed or known?
+  - What visible result should appear in the first few minutes?
+output_path_pattern: docs/tutorials/{slug}.html
+visual_policy: strategic
+image_slots:
+  - id: learning-path
+    required: false
+    purpose: Show learner journey and milestones
+    suggested_prompt_focus: Show simple path from setup to first result to completed artifact
+    max_text_labels: 8
+status: active
+---
+<article class="space-y-6" data-doc-template="tutorial">
+  <header class="doc-hero"><p class="doc-kicker">Tutorial</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">In this tutorial, we will {{learner_outcome}}.</p><figure class="doc-figure" data-image-slot="learning-path"><img src="{{asset_path}}/learning-path.png" alt="{{learning_path_alt}}"><figcaption class="doc-figcaption">{{learning_path_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="prerequisites"><h2 class="doc-section-title">Before We Start</h2>{{prerequisites}}</section>
+  <section class="doc-section" data-doc-part="goal"><h2 class="doc-section-title">What We Will Build</h2>{{goal}}</section>
+  <section class="doc-section" data-doc-part="steps"><h2 class="doc-section-title">Step-by-Step Lesson</h2>{{steps_with_expected_results}}</section>
+  <section class="doc-section" data-doc-part="checkpoints"><h2 class="doc-section-title">Checkpoints</h2>{{checkpoints}}</section>
+  <section class="doc-section" data-doc-part="wrapup"><h2 class="doc-section-title">What You Have Done</h2>{{wrapup}}</section>
+  <section class="doc-section" data-doc-part="next"><h2 class="doc-section-title">Next Steps</h2>{{next_steps}}</section>
+</article>

@@ -117,15 +117,15 @@ Use this pattern for npm-distributed CLIs that should stay current across machin
 
 Agent config in `dot_pi/agent/` deploys to `~/.pi/agent/` via chezmoi.
 
-**Subagents** (11 agents with trait composition):
-- `scout` — Fast codebase recon (haiku)
-- `eagle-scout` — Deep research (sonnet, with progress tracking)
-- `planner` — Implementation planning (opus, high thinking)
-- `engineer` — General implementation (sonnet)
-- `lead-engineer` — Complex architecture (opus)
-- `researcher` — Web research synthesis (sonnet)
-- `code-reviewer` / `reviewer` — Code review (codex/sonnet)
-- `project-manager` — Linear PM specialist (gpt-5.4-mini)
+**Subagents** (11 agents with trait composition, mixed current models; see `dot_pi/agent/agents/README.md`):
+- `scout` — Fast codebase recon
+- `eagle-scout` — Deep research with progress tracking
+- `planner` — Implementation planning (high thinking)
+- `engineer` — General implementation
+- `lead-engineer` — Complex architecture-sensitive implementation
+- `researcher` — Web research synthesis
+- `code-reviewer` / `reviewer` — Code review and design alignment
+- `project-manager` — Linear PM specialist
 - `context-builder` — Context + meta-prompt generation
 
 **Extensions**: minion-subagents (trait composition + chains), auth-sync (OAuth token sync), context-window, ref-docs, custom tools (pm-tool, docsfetch, fabric, webfetch)
@@ -134,7 +134,7 @@ Agent config in `dot_pi/agent/` deploys to `~/.pi/agent/` via chezmoi.
 
 ## Context Engineering
 
-- **Trait composition**: Add behavioral traits to shape subagent behavior without extra context loading. Traits defined in `dot_pi/agent/traits.yaml` across three dimensions: expertise, personality, approach.
-- **Presets**: Named trait+agent combos — `security-auditor`, `careful-implementer`, `deep-researcher`, `quick-scout`, `senior-implementer`
-- **Subagent delegation**: Each subagent runs in isolated context window. Returns compressed findings (<1KB for scouts). Keeps main session lean (target 40-60% utilization).
+- **Trait composition**: Base agent + 1-3 traits creates a dynamic specialist without a new agent file. Traits in `dot_pi/agent/traits.yaml` cover expertise, personality, and approach.
+- **Presets**: Named trait+agent combos — `security-auditor`, `careful-implementer`, `deep-researcher`, `quick-scout`, `senior-implementer`. Use ad-hoc traits when the task is unique.
+- **Subagent delegation**: Each subagent runs in isolated context window. Delegate exploration/review/planning/PM/broad file inspection to keep main session lean (target 40-60% utilization). Returns compressed findings (<1KB for scouts).
 - **Progressive disclosure**: Skills load on-demand. Only descriptions are always in context.

@@ -1,0 +1,34 @@
+---
+id: decision-record
+name: Decision Record
+description: Captures a decision, context, options, trade-offs, outcome, consequences, and revisit triggers.
+diataxis: [explanation, reference]
+use_when:
+  - User asks for ADR, architecture decision record, decision log, trade-off record, or decision memo
+avoid_when:
+  - User needs a full architecture document or PRD
+required_inputs: [decision, context, options, chosen outcome]
+recommended_inputs: [drivers, consequences, owner, date, revisit trigger]
+clarifying_questions:
+  - What decision must be recorded and who is bound by it?
+  - What alternatives were seriously considered?
+  - What would cause this decision to be revisited?
+output_path_pattern: docs/decisions/{slug}.html
+visual_policy: optional
+image_slots:
+  - id: tradeoff-map
+    required: false
+    purpose: Compare options and decision forces
+    suggested_prompt_focus: Show decision forces pulling options toward chosen outcome
+    max_text_labels: 8
+status: active
+---
+<article class="space-y-6" data-doc-template="decision-record">
+  <header class="doc-hero"><p class="doc-kicker">Decision Record</p><h1 class="doc-title">{{title}}</h1><p class="doc-summary">{{decision_summary}}</p><figure class="doc-figure" data-image-slot="tradeoff-map"><img src="{{asset_path}}/tradeoff-map.png" alt="{{tradeoff_alt}}"><figcaption class="doc-figcaption">{{tradeoff_caption}}</figcaption></figure></header>
+  <section class="doc-section" data-doc-part="status"><h2 class="doc-section-title">Status</h2>{{status}}</section>
+  <section class="doc-section" data-doc-part="context"><h2 class="doc-section-title">Context</h2>{{context}}</section>
+  <section class="doc-section" data-doc-part="decision"><h2 class="doc-section-title">Decision</h2>{{decision}}</section>
+  <section class="doc-section" data-doc-part="options"><h2 class="doc-section-title">Options Considered</h2>{{options}}</section>
+  <section class="doc-section" data-doc-part="consequences"><h2 class="doc-section-title">Consequences</h2>{{consequences}}</section>
+  <section class="doc-section" data-doc-part="revisit"><h2 class="doc-section-title">Revisit Triggers</h2>{{revisit_triggers}}</section>
+</article>

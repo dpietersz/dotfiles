@@ -2,7 +2,7 @@
 name: context-builder
 description: Analyzes requirements and codebase, generates context and meta-prompt
 tools: read, grep, find, ls, bash, web_search
-# Model mapping: see README.md (previous: openai-codex/gpt-5.2)
+# Model mapping: see README.md (current: openai-codex/gpt-5.4-mini)
 model: openai-codex/gpt-5.4-mini
 thinking: low
 ---
