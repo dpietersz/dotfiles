@@ -86,6 +86,9 @@ if [[ $- == *i* ]] && [[ -z "${BASH_FAST_INIT:-}" ]] && command -v pass &>/dev/n
   export CLOUDFLARE_API_TOKEN="$(pass show Sites/cloudflare.com/api-token/homelab)"
   export OPENAI_API_KEY="$(pass show Sites/openai.com/api-keys/neovim)"
   export OPENAI_KEY="$OPENAI_API_KEY"
+  # OpenCode Go ($5/$10-mo managed coding-model service, includes Kimi K2.6).
+  # Same env var also covers OpenCode Zen; auth.json key (opencode-go vs opencode) disambiguates.
+  export OPENCODE_API_KEY="$(pass show Sites/opencode.ai/zen/PAT-GO | head -n1)"
   export PERPLEXITY_API_KEY="$(pass show Sites/perplexity.ai/api-key)"
   export GEMINI_API_KEY="$(pass show Sites/google.com/api-key/gemini-pro-2-5)"
   export GOOGLE_AI_API_KEY="$GEMINI_API_KEY"
