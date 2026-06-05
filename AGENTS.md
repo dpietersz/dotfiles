@@ -42,6 +42,8 @@ docs/                       # Diátaxis docs (how-to, reference, explanation)
 - `dot_pi/agent/traits.yaml` — Trait definitions for subagent behavioral composition
 - `setup.sh` — Bootstrap: installs chezmoi, applies dotfiles
 - `.chezmoiscripts/run_onchange_after_01-install-packages.sh.tmpl` — Auto `mise install` on config change
+- `.chezmoitemplates/bun-npm-version.tmpl` — Reusable helper that renders latest npm package versions via Bun for `run_onchange_` triggers
+- `.chezmoiscripts/run_onchange_after_02a-install-bun-globals.sh.tmpl` — Bun-managed global CLI installs/updates; latest-version comments force rerun when upstream versions change
 - `.chezmoiscripts/run_onchange_after_17-configure-localsend.sh.tmpl` — Deep-merges managed `flutter.ls_*` keys into LocalSend's host-side `shared_preferences.json` (LocalSend itself runs inside `data-toolbox`; firewall port 53317 opened by `run_once_after_09-configure-firewall-localsend.sh.tmpl`)
 - `.chezmoiscripts/run_once_after_10-enable-fingerprint-pam.sh.tmpl` — Gated on `hasFingerprintReader`. Layers `fprintd`/`fprintd-pam` if missing (Bluefin reboot), enables `authselect with-fingerprint`, hints at `fprintd-enroll`.
 - `.chezmoiscripts/run_once_after_11-install-hyprlock-stack.sh.tmpl` — Gated on `hasFingerprintReader`. Layers `hyprlock` + `swayidle` because noctalia v5's built-in lockscreen does password-only PAM and can't share the fingerprint sensor with fprintd under Wayland's session-lock protocol. On these machines the locker becomes `hyprlock` (native fprintd integration) and idle timing (screen-off → lock → suspend) is owned by `swayidle` via `dot_local/bin/scripts/niri-idle-daemon.sh`; noctalia's own idle behaviors are disabled in `dot_config/noctalia/config.toml.tmpl`. Lock keybind `Ctrl+Alt+L` in niri swaps to `hyprlock` accordingly.
@@ -77,6 +79,18 @@ chezmoi data                          # Show template variables
 - **Commits**: Conventional commits (`type(scope): description`)
 - **Secrets**: Never committed. All secrets loaded from `pass` in `00-env.sh.tmpl` (interactive shells only)
 - **Generated files**: Listed in `.chezmoiignore` (lazy-lock.json, node_modules, .venv)
+
+## Bun Global CLI Pattern
+
+Use this pattern for npm-distributed CLIs that should stay current across machines:
+
+1. Add package to `.chezmoiscripts/run_onchange_after_02a-install-bun-globals.sh.tmpl` in two places:
+   - latest-version comment: `# latest <pkg>: {{ includeTemplate "bun-npm-version.tmpl" (dict "package" "<pkg>") }}`
+   - `BUN_GLOBAL_PKGS=(...)`
+2. Keep script as `run_onchange_`, not `run_after_`; rendered latest-version comments make chezmoi rerun when upstream publishes a new version.
+3. Install with `bun install -g "${pkg}@latest"`; do not add npm/npx fallback installs for managed global CLIs.
+4. If a CLI command name differs from package name, update consumers to call the Bun-global binary from `~/.bun/bin`/PATH.
+5. Use `run_once_` only for one-time cleanup/migration, e.g. removing legacy npm globals.
 
 ## Dotfiles & Chezmoi
 
