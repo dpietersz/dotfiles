@@ -10,6 +10,7 @@ async spawn engine, appear as live widgets, and are navigable via keyboard short
 ~/.pi/agent/agents/              # Agent definitions (markdown with YAML frontmatter)
 ├── engineer.md                  # Primary agent (default, inline)
 ├── explore.md                   # Subagent: fast codebase exploration (OpenCode-style)
+├── perplexity-researcher.md     # Subagent: direct Perplexity Sonar API research
 └── subagent.md                  # Subagent: generic, hidden, used by /sub command
 
 ~/.pi/agent/extensions/subagent/ # Extension (3-file architecture)
@@ -43,7 +44,7 @@ System prompt body goes here. This is passed via --append-system-prompt to the s
 | `description` | Yes | string | LLM-facing description (injected into system prompt) |
 | `mode` | No | `primary` \| `subagent` \| `all` | Default: `subagent`. Controls behavior |
 | `model` | No | `provider/model-id` | Override model for this agent |
-| `tools` | No | comma-separated | Restrict tools (e.g., `read,bash,grep,find,ls`) |
+| `tools` | No | comma-separated | Restrict tools (e.g., `read,bash,grep,find,ls,perplexity`) |
 | `hidden` | No | `true` \| `false` | Hidden agents excluded from LLM's available list |
 
 ### Agent Modes
@@ -193,4 +194,5 @@ The live implementation is the reference:
 - `~/.pi/agent/extensions/subagent/index.ts` — Main extension
 - `~/.pi/agent/agents/engineer.md` — Primary agent
 - `~/.pi/agent/agents/explore.md` — Explore subagent
+- `~/.pi/agent/agents/perplexity-researcher.md` — Direct Perplexity Sonar API research subagent (`tools: perplexity`)
 - `~/.pi/agent/agents/subagent.md` — Generic subagent (hidden)

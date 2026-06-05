@@ -10,6 +10,8 @@ A global, dynamically-loaded custom tools framework for pi. Tools live in
 ├── index.ts          # Loader: discovers *.ts, calls register(), provides /tools command
 ├── webfetch.ts       # Tool implementation
 ├── webfetch.txt      # Tool description (LLM-facing, loaded into system prompt)
+├── perplexity.ts     # Direct Perplexity Sonar API research tool
+├── perplexity.txt    # Perplexity usage guidance
 ├── openai-image.ts   # OpenAI Image API generation/editing tool
 ├── openai-image.txt  # Image generation usage guidance
 ├── playwright.ts     # Compact browser automation via Playwright distrobox
@@ -98,6 +100,7 @@ export function register(pi: ExtensionAPI) {
 - **Browser tools**: Prefer compact, task-specific outputs over MCP-style full tool surfaces. Save screenshots/HARs to files and return paths; only include summaries, failures, and key controls in text output.
 - **Generated media tools**: Save generated media to local files and return artifact paths by default. Only return inline `image` content behind an explicit parameter to avoid injecting large base64 blobs into context.
 - **Responsive testing**: Support both viewport presets and Playwright `devices[...]` profiles. Device profiles should emulate userAgent, viewport, DPR, mobile behavior, and touch; optional overrides cover color scheme, reduced motion, locale/timezone, JavaScript, and offline state.
+- **Direct API tools**: Prefer direct REST calls over MCP/offloaded agents when the tool has a simple API and a stable env var. The `perplexity` tool calls `https://api.perplexity.ai/v1/sonar` with `PERPLEXITY_API_KEY` and formats citations/search results for subagents.
 
 ## Authentication Pattern
 
@@ -117,6 +120,11 @@ function getCreds(): { token: string } {
 The live `webfetch` tool is the reference for HTTP/API tools:
 - `~/.pi/agent/extensions/tools/webfetch.ts`
 - `~/.pi/agent/extensions/tools/webfetch.txt`
+
+The live `perplexity` tool is the reference for direct AI/search API tools:
+- `~/.pi/agent/extensions/tools/perplexity.ts`
+- `~/.pi/agent/extensions/tools/perplexity.txt`
+- Reads `PERPLEXITY_API_KEY` at call time, supports Sonar modes (`search`, `ask`, `research`, `reason`), and returns answer + citations + search results.
 
 The live `playwright` tool is the reference for context-efficient browser automation:
 - `~/.pi/agent/extensions/tools/playwright.ts`

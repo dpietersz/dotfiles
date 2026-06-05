@@ -1,0 +1,11 @@
+Call the Perplexity Sonar API directly using PERPLEXITY_API_KEY for citation-backed web research.
+
+Use when the user asks for Perplexity research, fresh web facts, citation-rich current information, fact-checking, or deep web research. This tool does not use OpenCode/Codex or MCP; it calls https://api.perplexity.ai/v1/sonar directly.
+
+Modes:
+- search: fast cited answer using sonar
+- ask: higher-quality cited answer using sonar-pro
+- research: comprehensive investigation using sonar-deep-research
+- reason: cited reasoning using sonar-reasoning-pro
+
+Return includes answer, citations, search results, related questions, and usage/cost metadata when Perplexity provides it.
