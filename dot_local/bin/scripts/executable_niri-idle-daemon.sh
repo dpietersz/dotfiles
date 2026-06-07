@@ -22,10 +22,17 @@ fi
 # `niri msg action power-off-monitors` toggles DPMS off; any input wakes it.
 # Note: niri auto-restores monitors on input — no explicit `resume` needed for
 # screen-off. We still pass `resume true` so swayidle marks the timeout reusable.
+#
+# `pidof hyprlock || hyprlock` guards BOTH lock actions: without it the
+# `before-sleep` hook (fired when the 900s `systemctl suspend` runs) launches a
+# SECOND hyprlock while the 180s instance still holds the ext-session-lock.
+# Stacked lockers force a double unlock on resume (fingerprint + password
+# fallback) — the "multiple locks" symptom. The guard makes before-sleep a
+# no-op when already locked, and only locks if somehow still unlocked at sleep.
 
 exec swayidle -w \
     timeout 90  'niri msg action power-off-monitors' \
                 resume 'true' \
-    timeout 180 'hyprlock' \
+    timeout 180 'pidof hyprlock || hyprlock' \
     timeout 900 'systemctl suspend' \
-    before-sleep 'hyprlock'
+    before-sleep 'pidof hyprlock || hyprlock'
