@@ -156,13 +156,14 @@ window-rule {
 }
 
 // Persistent scratchpad terminal (toggle via scratchpad-toggle script).
-// Floating, proportion-based like Nick's floating ghostty (1/3 width × 1/2
-// height). Kept around between toggles by the script so the shell session
+// Floating, fixed 1025px width (proportion 0.33 was too narrow), 1/2 height.
+// niri centers floating windows by default (no position set), so it stays
+// centered. Kept around between toggles by the script so the shell session
 // keeps running.
 window-rule {
     match app-id="scratchpad-term"
     open-floating true
-    default-column-width { proportion 0.33; }
+    default-column-width { fixed 1025; }
     default-window-height { proportion 0.5; }
 }
 
