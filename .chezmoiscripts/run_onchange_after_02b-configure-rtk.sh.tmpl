@@ -5,20 +5,21 @@
 exit 0
 {{- end }}
 
-# Configure rtk (https://github.com/rtk-ai/rtk) for the locally-installed AI
-# coding agents. rtk is a CLI proxy that filters/compresses command output to
-# cut LLM token use 60-90%. The binary is installed via the shared Brewfile
-# (`brew "rtk"`); this script wires it into the agents idempotently.
+# Configure rtk (https://github.com/rtk-ai/rtk) for the pi coding agent. rtk is
+# a CLI proxy that filters/compresses command output to cut LLM token use
+# 60-90%. The binary is installed via the shared Brewfile (`brew "rtk"`); this
+# script wires it into pi idempotently via rtk's own installer (single source
+# of truth, always matches the installed binary).
 #
-# Integrations (both via rtk's own idempotent installer — single source of
-# truth, always matches the installed binary):
-#   - Claude Code: PreToolUse Bash hook in ~/.claude/settings.json. We use
-#     --hook-only so rtk does NOT touch ~/.claude/CLAUDE.md (PAI-managed). The
-#     hook MERGES alongside existing PAI hooks (SecurityPipeline, etc.) and is
-#     re-applied idempotently. settings.json is not chezmoi-managed.
-#   - pi: a thin TypeScript extension at ~/.pi/agent/extensions/rtk.ts that
-#     delegates to `rtk rewrite` on each tool_call. pi auto-loads it; chezmoi
-#     does not track it, so there is no drift against dot_pi/agent/extensions/.
+# pi integration: a thin TypeScript extension at ~/.pi/agent/extensions/rtk.ts
+# that delegates to `rtk rewrite` on each tool_call. pi auto-loads it; chezmoi
+# does not track it, so there is no drift against dot_pi/agent/extensions/.
+#
+# Claude Code is intentionally NOT configured here: the PAI harness already
+# ships its own rtk auto-rewrite hook (~/.claude/hooks/ContextReduction.hook.sh
+# on the PreToolUse:Bash matcher), so adding the official `rtk hook claude`
+# would be redundant (two hooks doing the same rewrite). PAI owns the Claude
+# side; we only own pi.
 #
 # Hash trigger: the rtk version comment below re-renders on upgrade, forcing
 # this run_onchange to re-fire so the agent artifacts track the new binary.
@@ -42,16 +43,7 @@ if ! command -v rtk >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "[rtk] $(rtk --version) — configuring agent integrations"
-
-# Claude Code — hook only (no CLAUDE.md/RTK.md mutation; merges into existing
-# PAI hook chain). Skip if ~/.claude doesn't exist (Claude not installed here).
-if [[ -d "$HOME/.claude" ]]; then
-  echo "[rtk] Claude Code: installing PreToolUse Bash hook (hook-only, auto-patch)"
-  rtk init -g --hook-only --auto-patch </dev/null
-else
-  echo "[rtk] Claude Code: ~/.claude absent — skipping"
-fi
+echo "[rtk] $(rtk --version) — configuring pi integration"
 
 # pi coding agent — auto-loaded TypeScript extension.
 if [[ -d "$HOME/.pi/agent" ]]; then
@@ -61,4 +53,4 @@ else
   echo "[rtk] pi: ~/.pi/agent absent — skipping"
 fi
 
-echo "[rtk] ✓ Done. Restart Claude Code / pi to load the rewrite hooks."
+echo "[rtk] ✓ Done. Restart pi to load the rewrite extension."
