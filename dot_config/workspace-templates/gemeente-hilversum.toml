@@ -25,6 +25,8 @@
 #                                                     single-instance apps like
 #                                                     teams-for-linux that won't
 #                                                     spawn a second window.
+#                      wait_timeout = 60             # OPTIONAL per-command wait.
+#                      ignored_titles = ["Splash"]   # OPTIONAL transient titles.
 
 name        = "Hilversum"
 description = "Citrix · Dev tools tab-group · Teams"
@@ -57,7 +59,7 @@ tabs = [
   # workspace. -n guarantees a fresh window for this template's folder.
   # The engine expands ~ at spawn time so the literal "~/dev/..." works.
   { command = ["code", "-n", "~/dev/Repos/dev.azure.com/Hilversum-IM/Lakehouse"] },
-  { command = ["launch-storage-explorer"],    app_id = "storageexplorer" },
+  { command = ["launch-storage-explorer"],    app_id = "StorageExplorer", wait_timeout = 60, ignored_titles = ["StorageExplorer"] },
   { helium  = "https://portal.azure.com" },
   { helium  = "https://outlook.office.com" },
 ]

@@ -36,7 +36,7 @@ TEMPLATE_DIR = Path(
 
 HELIUM_BIN = "helium-browser-bin"
 HELIUM_APP_ID = "helium"
-WINDOW_WAIT_TIMEOUT_S = 20.0    # generous — apps like Teams cold-start slowly
+WINDOW_WAIT_TIMEOUT_S = 20.0    # default; tabs can override with wait_timeout
 WINDOW_POLL_INTERVAL_S = 0.08
 SETTLE_AFTER_CONSUME_S = 0.1
 # How long a newly-sighted command window must stay present before we trust
@@ -86,16 +86,26 @@ def find_first_empty_workspace() -> dict | None:
     return None
 
 
-def wait_for_new_window(known_ids: set[int], app_id: str | None = None) -> dict | None:
-    """Wait for a new window to appear. If app_id is given, restrict to that
-    application; otherwise accept any new window (used for command-launched
-    apps whose final app_id we cannot predict ahead of time)."""
-    deadline = time.monotonic() + WINDOW_WAIT_TIMEOUT_S
+def wait_for_new_window(
+    known_ids: set[int],
+    app_id: str | None = None,
+    timeout_s: float = WINDOW_WAIT_TIMEOUT_S,
+    ignored_titles: set[str] | None = None,
+) -> dict | None:
+    """Wait for a new window to appear.
+
+    If app_id is given, restrict to that application. ignored_titles filters
+    transient splash windows that share the final app_id (Storage Explorer)."""
+    ignored_titles = ignored_titles or set()
+    deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
         for w in windows():
             if w["id"] in known_ids:
                 continue
             if app_id is not None and w.get("app_id") != app_id:
+                continue
+            if w.get("title") in ignored_titles:
+                known_ids.add(w["id"])
                 continue
             return w
         time.sleep(WINDOW_POLL_INTERVAL_S)
@@ -287,10 +297,12 @@ def place_tab(tab: dict, target_ws_id: int, ws_name: str) -> dict | None:
         niri_action("focus-window", "--id", str(existing["id"]))
         return existing
 
-    # No existing match: spawn. We do NOT filter by app_id when waiting for
-    # the spawned window — Storage Explorer's splash and main windows have
-    # different app_ids, and a strict filter would miss whichever one is
-    # the "real" one. The stability check (next) separates splash from main.
+    # No existing match: spawn. If app_id is provided, wait for that exact
+    # niri app_id. Some slow Electron apps (Storage Explorer via distrobox)
+    # need a longer timeout and have splash windows with the same app_id;
+    # templates can set wait_timeout and ignored_titles for those.
+    wait_timeout = float(tab.get("wait_timeout", WINDOW_WAIT_TIMEOUT_S))
+    ignored_titles = set(tab.get("ignored_titles", []))
     known_ids = {w["id"] for w in windows()}
     # Expand ~ and $HOME (and other env vars) in every command arg so
     # templates can use either form for paths. subprocess does NOT expand
@@ -302,7 +314,12 @@ def place_tab(tab: dict, target_ws_id: int, ws_name: str) -> dict | None:
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
-    new = wait_for_new_window(known_ids)
+    new = wait_for_new_window(
+        known_ids,
+        app_id=app_id,
+        timeout_s=wait_timeout,
+        ignored_titles=ignored_titles,
+    )
     if new is None:
         return None
 
@@ -312,7 +329,12 @@ def place_tab(tab: dict, target_ws_id: int, ws_name: str) -> dict | None:
     stable = confirm_window_stable(new["id"], COMMAND_WINDOW_STABILITY_S)
     if stable is None:
         known_ids.add(new["id"])
-        new = wait_for_new_window(known_ids)
+        new = wait_for_new_window(
+            known_ids,
+            app_id=app_id,
+            timeout_s=wait_timeout,
+            ignored_titles=ignored_titles,
+        )
         if new is None:
             return None
 
