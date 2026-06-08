@@ -1,0 +1,17 @@
+Generate or edit images using a selectable provider. Use only when the user explicitly asks to create, generate, render, or edit an image.
+
+Providers:
+  - provider="openai" uses OpenAI Image API. Requires OPENAI_API_KEY. Default model: gpt-image-2.
+  - provider="google" uses Google Gemini image generation / Nano Banana. Requires GEMINI_API_KEY or GOOGLE_API_KEY. Default model: gemini-3.1-flash-image (Nano Banana 2).
+
+Usage notes:
+  - action="generate" creates images from a prompt.
+  - action="edit" modifies or uses local input images as references; provide inputImages.
+  - Results are saved to local files and returned as paths. Prefer paths over inline image data to keep context small.
+  - Use returnImage=true only when the user explicitly needs the image inline in context.
+  - For Nano Banana 2, set provider="google" and model="gemini-3.1-flash-image" or omit model.
+  - Google/Nano Banana supports up to 14 inputImages and currently returns one image per call.
+  - OpenAI supports n=1-4, outputFormat png/jpeg/webp, quality, size, background, moderation, outputCompression, and optional maskPath for edits.
+  - OpenAI gpt-image-2 does not support transparent backgrounds; use background="auto" or "opaque".
+  - Complex prompts can take up to 2 minutes. Increase timeoutSec when needed.
+  - If a request is safety/moderation-blocked, revise the prompt or input images rather than retrying unchanged.
