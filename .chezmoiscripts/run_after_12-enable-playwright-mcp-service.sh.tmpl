@@ -114,24 +114,71 @@ if ! command -v distrobox >/dev/null 2>&1; then
   exit 0
 fi
 
-# Check if playwright distrobox exists, create if not
-if ! distrobox list --no-color | awk -F'|' 'NR > 1 { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); if ($2 == "playwright") found=1 } END { exit found ? 0 : 1 }'; then
-  echo "[playwright] Creating playwright distrobox..."
-  DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
-  if [ -f "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini" ]; then
-    distrobox-assemble create --file "$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini"
-    echo "[playwright] Distrobox created."
-  else
+PLAYWRIGHT_BOX="playwright"
+PLAYWRIGHT_IMAGE="ghcr.io/dpietersz/playwright-toolbox:latest"
+DISTROBOX_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/distrobox"
+PLAYWRIGHT_INI="$DISTROBOX_CONFIG_DIR/playwright-toolbox.ini"
+PLAYWRIGHT_RECREATED=0
+
+box_exists() {
+  distrobox list --no-color 2>/dev/null \
+    | awk -F'|' -v box="$PLAYWRIGHT_BOX" 'NR > 1 { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); if ($2 == box) found=1 } END { exit found ? 0 : 1 }'
+}
+
+# Fetch only the remote manifest digest. If remote/local digests differ, recreate
+# the container so weekly :latest image rebuilds actually land on the host.
+image_is_stale() {
+  local remote_digest local_digest container_image local_image_id
+
+  if ! command -v skopeo >/dev/null 2>&1 || ! command -v podman >/dev/null 2>&1; then
+    echo "[playwright] skopeo/podman not available; skipping stale-image check."
+    return 1
+  fi
+
+  remote_digest=$(skopeo inspect --no-tags --format '{{`{{.Digest}}`}}' "docker://$PLAYWRIGHT_IMAGE" 2>/dev/null || true)
+  [ -z "$remote_digest" ] && return 1
+
+  local_digest=$(podman image inspect "$PLAYWRIGHT_IMAGE" --format '{{`{{.Digest}}`}}' 2>/dev/null || true)
+  if [ -z "$local_digest" ] || [ "$remote_digest" != "$local_digest" ]; then
+    return 0
+  fi
+
+  container_image=$(podman container inspect "$PLAYWRIGHT_BOX" --format '{{`{{.Image}}`}}' 2>/dev/null || true)
+  local_image_id=$(podman image inspect "$PLAYWRIGHT_IMAGE" --format '{{`{{.Id}}`}}' 2>/dev/null || true)
+  [ -n "$container_image" ] && [ -n "$local_image_id" ] && [ "$container_image" != "$local_image_id" ]
+}
+
+create_playwright_box() {
+  if [ ! -f "$PLAYWRIGHT_INI" ]; then
     echo "[playwright] playwright-toolbox.ini not found, skipping."
     exit 0
   fi
+
+  distrobox-assemble create --file "$PLAYWRIGHT_INI"
+  PLAYWRIGHT_RECREATED=1
+  echo "[playwright] Distrobox created."
+}
+
+if box_exists; then
+  if image_is_stale; then
+    echo "[playwright] image is stale -> stopping and recreating distrobox"
+    systemctl --user stop playwright-mcp.service 2>/dev/null || true
+    distrobox stop -Y "$PLAYWRIGHT_BOX" </dev/null >/dev/null 2>&1 || true
+    distrobox rm -f "$PLAYWRIGHT_BOX" </dev/null >/dev/null 2>&1 || true
+    create_playwright_box
+  else
+    echo "[playwright] distrobox exists and image is current."
+  fi
+else
+  echo "[playwright] Creating playwright distrobox..."
+  create_playwright_box
 fi
 
 # Export Playwright CLI tools to host (this is the distrobox way!)
 # This makes playwright, playwright-test, playwright-codegen available on the host
 echo "[playwright] Exporting Playwright CLI tools to host..."
-if [ ! -f "$HOME/.local/bin/playwright" ]; then
-  distrobox enter playwright -- /usr/local/bin/setup-host-integration
+if [ "$PLAYWRIGHT_RECREATED" = 1 ] || [ ! -f "$HOME/.local/bin/playwright" ]; then
+  distrobox enter "$PLAYWRIGHT_BOX" -- /usr/local/bin/setup-host-integration
   echo "[playwright] CLI tools exported to ~/.local/bin/"
 else
   echo "[playwright] CLI tools already exported."
@@ -139,7 +186,7 @@ fi
 
 # Ensure browsers are installed and up-to-date
 echo "[playwright] Ensuring browsers are installed..."
-distrobox enter playwright -- bash -c '
+distrobox enter "$PLAYWRIGHT_BOX" -- bash -c '
   export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
   
   # Fix permissions for browser profiles

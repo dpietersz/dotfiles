@@ -24,7 +24,8 @@ EXPORT_SCRIPT="$HOME/.local/bin/scripts/distrobox-auto-export.sh"
 HASH_DIR="$HOME/.cache/dotfiles/toolbox-export-hashes"
 mkdir -p "$HASH_DIR"
 
-# Playwright is intentionally owned by run_onchange_after_12-enable-playwright-mcp-service.
+# Playwright is intentionally owned by run_after_12-enable-playwright-mcp-service,
+# which has its own service restart + CLI export flow.
 SKIP_INIS=("playwright-toolbox.ini")
 
 # Parse a key from a .ini file (returns first match, no section awareness needed
