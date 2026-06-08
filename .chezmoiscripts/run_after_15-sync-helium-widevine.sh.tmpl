@@ -1,0 +1,135 @@
+#!/bin/bash
+set -euo pipefail
+
+# ------------------ Sync Widevine CDM into Helium ------------------
+# Helium (imput.net's privacy Chromium fork, baked into the bluefin-udx image)
+# intentionally ships WITHOUT Google's Widevine CDM. That blob is required by
+# Spotify's web player to decode its DRM-protected audio stream, so Spotify is
+# silent in Helium while every other site works (YouTube etc. don't need EME).
+# Firefox-based browsers (Zen) auto-fetch their own Widevine, which is why
+# Spotify works there.
+#
+# Fix lives HERE (dotfiles), not in bluefin-udx: the CDM is user-scope data in
+# ~/.config, it updates frequently (baking it into the immutable image would go
+# stale and force a rebuild), and it needs no sudo. Same split as LocalSend —
+# the Helium binary stays baked in the image, its runtime user config lives here.
+#
+# Strategy (cheap, self-healing — runs every apply like the toolbox script,
+# because Widevine bumps are invisible to chezmoi's content-hash gating):
+#   1. Donor: mirror Chromium's component-updated WidevineCdm (Chromium is also
+#      baked in the image and self-fetches Widevine — free, no network).
+#   2. Bootstrap fallback: if no donor exists yet (brand-new machine, Chromium
+#      never launched), extract the CDM from the Google Chrome stable RPM so
+#      Spotify works on first Helium launch without waiting for Chromium.
+# A copied CDM is software-only L3 — fine for Spotify audio; only caps video
+# services (Netflix) at ~720p, which doesn't apply here.
+
+{{- if or .remote .isMacOS .isServer }}
+exit 0
+{{- end }}
+
+log() { echo "[helium-widevine] $*"; }
+
+DATA_DIR="$HOME/.config/net.imput.helium"
+HELIUM_CDM="$DATA_DIR/WidevineCdm"
+DONOR_CDM="$HOME/.config/chromium/WidevineCdm"
+CHROME_RPM_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm"
+
+# --- Only act if Helium is actually installed/used on this machine ----------
+helium_present() {
+  command -v helium-browser-bin >/dev/null 2>&1 && return 0
+  command -v helium >/dev/null 2>&1 && return 0
+  [ -x /usr/bin/helium-browser-bin ] && return 0
+  [ -d "$DATA_DIR" ] && return 0
+  return 1
+}
+if ! helium_present; then
+  log "Helium not present — skipping."
+  exit 0
+fi
+
+# Return the highest version dir under a WidevineCdm dir that holds a real .so,
+# or empty string if none. Arg: path to a WidevineCdm directory.
+cdm_version() {
+  local root="$1" v
+  [ -d "$root" ] || { echo ""; return; }
+  for v in $(ls -1 "$root" 2>/dev/null | sort -V -r); do
+    if [ -f "$root/$v/_platform_specific/linux_x64/libwidevinecdm.so" ]; then
+      echo "$v"; return
+    fi
+  done
+  echo ""
+}
+
+# Atomically install a component-style WidevineCdm (versioned subdir) into
+# Helium and regenerate the machine-local hint file. Arg: a staging dir that IS
+# a WidevineCdm dir containing "<version>/...".
+install_component_layout() {
+  local stage="$1" ver
+  ver="$(cdm_version "$stage")"
+  [ -n "$ver" ] || { log "ERROR: staged CDM has no usable version — aborting."; return 1; }
+  rm -rf "$HELIUM_CDM"
+  mkdir -p "$(dirname "$HELIUM_CDM")"
+  cp -a "$stage" "$HELIUM_CDM"
+  # Hint file is absolute and machine-specific — point it at Helium's own copy.
+  printf '{"Path":"%s/%s"}' "$HELIUM_CDM" "$ver" \
+    > "$HELIUM_CDM/latest-component-updated-widevine-cdm"
+  log "Installed Widevine $ver into Helium."
+}
+
+HELIUM_VER="$(cdm_version "$HELIUM_CDM")"
+DONOR_VER="$(cdm_version "$DONOR_CDM")"
+
+# --- Path 1: donor (Chromium) present -> mirror it if newer/different -------
+if [ -n "$DONOR_VER" ]; then
+  if [ "$DONOR_VER" = "$HELIUM_VER" ]; then
+    log "Up to date (Widevine $HELIUM_VER)."
+    exit 0
+  fi
+  log "Mirroring Widevine $DONOR_VER from Chromium (Helium had: ${HELIUM_VER:-none})."
+  install_component_layout "$DONOR_CDM"
+  exit 0
+fi
+
+# --- Path 2: no donor yet ---------------------------------------------------
+# If Helium already has a valid CDM, leave it alone (don't churn / re-download).
+if [ -n "$HELIUM_VER" ]; then
+  log "No Chromium donor yet, but Helium already has Widevine $HELIUM_VER — keeping it."
+  exit 0
+fi
+
+# Bootstrap: extract the CDM from the Google Chrome stable RPM.
+if ! command -v rpm2cpio >/dev/null 2>&1 || ! command -v cpio >/dev/null 2>&1; then
+  log "No donor and rpm2cpio/cpio unavailable — launch Chromium once, then re-run 'chezmoi apply'."
+  exit 0
+fi
+
+log "No Widevine anywhere yet — bootstrapping from Google Chrome RPM."
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+if ! timeout 180 curl -fsSL -o "$TMP/chrome.rpm" "$CHROME_RPM_URL"; then
+  log "Chrome RPM download failed/timed out — launch Chromium once, then re-run 'chezmoi apply'."
+  exit 0
+fi
+( cd "$TMP" && rpm2cpio chrome.rpm | cpio -idm --quiet './opt/google/chrome/WidevineCdm/*' )
+
+RPM_CDM="$TMP/opt/google/chrome/WidevineCdm"
+RPM_SO="$RPM_CDM/_platform_specific/linux_x64/libwidevinecdm.so"
+if [ ! -f "$RPM_SO" ] || [ ! -f "$RPM_CDM/manifest.json" ]; then
+  log "Chrome RPM had no usable Widevine payload — skipping."
+  exit 0
+fi
+# The RPM layout is flat (no version subdir); reshape it into the component
+# layout Helium expects under the user-data dir, keyed on the manifest version.
+RPM_VER="$(grep -o '"version"[^,]*' "$RPM_CDM/manifest.json" | head -1 | grep -oE '[0-9]+(\.[0-9]+)+')"
+if [ -z "$RPM_VER" ]; then
+  log "Could not read Widevine version from RPM manifest — skipping."
+  exit 0
+fi
+STAGE="$TMP/stage/WidevineCdm/$RPM_VER"
+mkdir -p "$STAGE/_platform_specific/linux_x64"
+cp -a "$RPM_SO" "$STAGE/_platform_specific/linux_x64/"
+cp -a "$RPM_CDM/manifest.json" "$STAGE/"
+[ -f "$RPM_CDM/LICENSE" ] && cp -a "$RPM_CDM/LICENSE" "$STAGE/" || true
+install_component_layout "$TMP/stage/WidevineCdm"
+log "Bootstrap complete — restart Helium and Spotify playback will work."
