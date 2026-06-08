@@ -23,6 +23,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - [Install Applications with OpenCode](./how-to/opencode-install-app.md) - Install and manage applications
 - [Manage Encrypted Keys with OpenCode](./how-to/opencode-manage-keys.md) - Securely add and validate encrypted keys
 - [Create Custom Scripts with OpenCode](./how-to/opencode-create-scripts.md) - Create automation scripts
+- [Benchmark Pi with Terminal-Bench](./how-to/pi-terminal-bench.html) - Run repeatable Harbor/Terminal-Bench benchmarks for the Pi harness
 - [Add Antigravity Authentication for OpenCode](./how-to/opencode-antigravity-setup.md) - Set up Google Gemini models via Antigravity OAuth
 - [Add Encrypted Keys](./how-to/add-encrypted-keys.md) - Securely add private keys to your dotfiles
 - [Write Git Commits](./how-to/git-commits.md) - Follow conventional commit standards
@@ -87,6 +88,7 @@ Welcome to the documentation for your dotfiles repository. This documentation is
 - **Find shell aliases** → [Shell Aliases & Functions](./reference/shell-aliases.md)
 - **Add a private key** → [Add Encrypted Keys](./how-to/add-encrypted-keys.md)
 - **Write a proper commit message** → [Write Git Commits](./how-to/git-commits.md)
+- **Benchmark the Pi harness** → [Benchmark Pi with Terminal-Bench](./how-to/pi-terminal-bench.html)
 - **Understand the documentation structure** → [Diátaxis Framework](./explanation/diataxis-framework.md)
 - **Learn about containers** → [Daily-Driver Containers](./explanation/daily-driver-containers.md)
 - **Understand the remediation** → [Security Remediation](./explanation/security-remediation.md)

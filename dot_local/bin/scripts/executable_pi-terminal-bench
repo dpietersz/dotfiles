@@ -1,0 +1,188 @@
+#!/bin/bash
+# Repeatable Terminal-Bench runner for this Pi harness via Harbor.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  pi-terminal-bench oracle [options]
+  pi-terminal-bench pi [options]
+  pi-terminal-bench view [--jobs-dir DIR]
+  pi-terminal-bench install
+
+Common options:
+  --dataset NAME          Harbor dataset (default: terminal-bench/terminal-bench-2)
+  --path PATH             Local Harbor task/dataset path instead of --dataset
+  --task-pattern GLOB     Include only matching task name, e.g. '*openssl*'
+  --tasks N               Max tasks to run (default: 1)
+  --concurrency N         Concurrent trials (default: 1)
+  --attempts N            Attempts per task (default: 1)
+  --jobs-dir DIR          Results dir (default: ~/benchmarks/terminal-bench/jobs)
+  --env-file FILE         .env file for Harbor/provider secrets
+  --dry-run               Print command only
+
+Pi options:
+  --model PROVIDER/MODEL  Default: ${PI_TBENCH_MODEL:-openai/gpt-4o-mini}
+  --thinking LEVEL        off|minimal|low|medium|high|xhigh (default: off)
+  --config-dir DIR        Pi config to upload. Default: checked-in dot_pi/agent
+  --pi-package PKG        npm package (default: @earendil-works/pi-coding-agent)
+  --pi-version VERSION    npm package version (default: latest)
+  --pi-args ARGS          Extra args passed to pi (default: --no-context-files)
+  --agent-import PATH     Adapter import path
+
+Examples:
+  pi-terminal-bench install
+  pi-terminal-bench oracle --task-pattern '*openssl*' --tasks 1
+  pi-terminal-bench pi --model openai/gpt-4o-mini --task-pattern '*openssl*' --tasks 1
+  pi-terminal-bench pi --model anthropic/claude-haiku-4-5 --thinking low --tasks 5
+  pi-terminal-bench oracle --path examples/tasks/llm-judge-example
+  pi-terminal-bench view
+
+Notes:
+  - For repeatable harness comparisons, keep dataset, task subset, model,
+    thinking, attempts, and Pi config constant.
+  - Default --config-dir uses the tracked dotfiles Pi config, not ~/.pi/agent,
+    to avoid copying auth.json into containers.
+EOF
+}
+
+find_dotfiles_pi_config() {
+  local src=""
+  if command -v chezmoi >/dev/null 2>&1; then
+    src="$(chezmoi source-path 2>/dev/null || true)"
+    if [[ -n "$src" && -d "$src/dot_pi/agent" ]]; then
+      printf '%s\n' "$src/dot_pi/agent"
+      return
+    fi
+  fi
+  if [[ -d "$HOME/dotfiles/dot_pi/agent" ]]; then
+    printf '%s\n' "$HOME/dotfiles/dot_pi/agent"
+    return
+  fi
+  printf '%s\n' "$HOME/.pi/agent"
+}
+
+subcmd="${1:-help}"
+if [[ $# -gt 0 ]]; then shift; fi
+
+DATASET="${PI_TBENCH_DATASET:-terminal-bench/terminal-bench-2}"
+LOCAL_PATH="${PI_TBENCH_PATH:-}"
+TASK_PATTERN="${PI_TBENCH_TASK_PATTERN:-}"
+TASKS="${PI_TBENCH_TASKS:-1}"
+CONCURRENCY="${PI_TBENCH_CONCURRENCY:-1}"
+ATTEMPTS="${PI_TBENCH_ATTEMPTS:-1}"
+JOBS_DIR="${PI_TBENCH_JOBS_DIR:-$HOME/benchmarks/terminal-bench/jobs}"
+ENV_FILE="${PI_TBENCH_ENV_FILE:-}"
+DRY_RUN=0
+
+MODEL="${PI_TBENCH_MODEL:-openai/gpt-4o-mini}"
+THINKING="${PI_TBENCH_THINKING:-off}"
+CONFIG_DIR="${PI_TBENCH_CONFIG_DIR:-$(find_dotfiles_pi_config)}"
+PI_PACKAGE="${PI_TBENCH_PI_PACKAGE:-@earendil-works/pi-coding-agent}"
+PI_VERSION="${PI_TBENCH_PI_VERSION:-}"
+PI_ARGS="${PI_TBENCH_PI_ARGS:---no-context-files}"
+AGENT_IMPORT="${PI_TBENCH_AGENT_IMPORT:-$HOME/.config/harbor/agents/pi_earendil.py:PiEarendil}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dataset) DATASET="$2"; LOCAL_PATH=""; shift 2 ;;
+    --path|-p) LOCAL_PATH="$2"; shift 2 ;;
+    --task-pattern|--include-task-name) TASK_PATTERN="$2"; shift 2 ;;
+    --tasks|--n-tasks) TASKS="$2"; shift 2 ;;
+    --concurrency|-n) CONCURRENCY="$2"; shift 2 ;;
+    --attempts|--n-attempts) ATTEMPTS="$2"; shift 2 ;;
+    --jobs-dir|-o) JOBS_DIR="$2"; shift 2 ;;
+    --env-file) ENV_FILE="$2"; shift 2 ;;
+    --model|-m) MODEL="$2"; shift 2 ;;
+    --thinking) THINKING="$2"; shift 2 ;;
+    --config-dir) CONFIG_DIR="$2"; shift 2 ;;
+    --pi-package) PI_PACKAGE="$2"; shift 2 ;;
+    --pi-version) PI_VERSION="$2"; shift 2 ;;
+    --pi-args) PI_ARGS="$2"; shift 2 ;;
+    --agent-import) AGENT_IMPORT="$2"; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+run_cmd() {
+  printf 'Running:' >&2
+  printf ' %q' "$@" >&2
+  printf '\n' >&2
+  if [[ "$DRY_RUN" == 1 ]]; then
+    return 0
+  fi
+  "$@"
+}
+
+case "$subcmd" in
+  help|--help|-h)
+    usage
+    ;;
+  install)
+    run_cmd uv tool install --upgrade harbor
+    ;;
+  view)
+    run_cmd harbor view "$JOBS_DIR"
+    ;;
+  oracle)
+    mkdir -p "$JOBS_DIR"
+    dataset_args=(-d "$DATASET")
+    [[ -n "$LOCAL_PATH" ]] && dataset_args=(-p "$LOCAL_PATH")
+    cmd=(harbor run "${dataset_args[@]}" -a oracle -l "$TASKS" -n "$CONCURRENCY" -k "$ATTEMPTS" -o "$JOBS_DIR" -y)
+    [[ -n "$TASK_PATTERN" ]] && cmd+=(--include-task-name "$TASK_PATTERN")
+    [[ -n "$ENV_FILE" ]] && cmd+=(--env-file "$ENV_FILE")
+    run_cmd "${cmd[@]}"
+    ;;
+  pi)
+    mkdir -p "$JOBS_DIR"
+    AGENT_MODULE_IMPORT="$AGENT_IMPORT"
+    if [[ "${AGENT_IMPORT%%:*}" == */* ]]; then
+      agent_file="${AGENT_IMPORT%%:*}"
+      agent_class="${AGENT_IMPORT#*:}"
+      if [[ ! -f "$agent_file" ]]; then
+        echo "Pi Harbor adapter not found: $agent_file" >&2
+        echo "Run chezmoi apply, or pass --agent-import PATH:Class." >&2
+        exit 1
+      fi
+      export PYTHONPATH="$(dirname "$agent_file"):${PYTHONPATH:-}"
+      AGENT_MODULE_IMPORT="$(basename "$agent_file" .py):$agent_class"
+    fi
+    if [[ ! -d "$CONFIG_DIR" ]]; then
+      echo "Pi config dir not found: $CONFIG_DIR" >&2
+      exit 1
+    fi
+    if [[ "$CONFIG_DIR" == "$HOME/.pi/agent" && -f "$CONFIG_DIR/auth.json" ]]; then
+      echo "WARNING: --config-dir is ~/.pi/agent and contains auth.json." >&2
+      echo "Prefer checked-in dot_pi/agent plus provider API env vars." >&2
+    fi
+    dataset_args=(-d "$DATASET")
+    [[ -n "$LOCAL_PATH" ]] && dataset_args=(-p "$LOCAL_PATH")
+    cmd=(
+      harbor run
+      "${dataset_args[@]}"
+      --agent-import-path "$AGENT_MODULE_IMPORT"
+      -m "$MODEL"
+      --ak "thinking=$THINKING"
+      --ak "pi_config_dir=$CONFIG_DIR"
+      --ak "pi_package=$PI_PACKAGE"
+      --ak "extra_pi_args=$PI_ARGS"
+      -l "$TASKS"
+      -n "$CONCURRENCY"
+      -k "$ATTEMPTS"
+      -o "$JOBS_DIR"
+      -y
+    )
+    [[ -n "$PI_VERSION" ]] && cmd+=(--ak "version=$PI_VERSION")
+    [[ -n "$TASK_PATTERN" ]] && cmd+=(--include-task-name "$TASK_PATTERN")
+    [[ -n "$ENV_FILE" ]] && cmd+=(--env-file "$ENV_FILE")
+    run_cmd "${cmd[@]}"
+    ;;
+  *)
+    echo "Unknown subcommand: $subcmd" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

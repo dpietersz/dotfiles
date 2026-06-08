@@ -1,0 +1,38 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# Harbor install/update for Terminal-Bench benchmarking.
+# Re-run trigger: harbor installer v1
+
+set -euo pipefail
+
+# uv is provided by the shared Brewfile. chezmoi's subshell may not inherit
+# brew shellenv, so source it explicitly when needed.
+if ! command -v uv >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ -x "$cand" ]]; then
+      eval "$("$cand" shellenv bash)"
+      break
+    fi
+  done
+fi
+
+if command -v uv >/dev/null 2>&1; then
+  echo "[harbor] Installing/updating Harbor via uv tool..."
+  uv tool install --upgrade harbor
+  echo "[harbor] ✓ $(harbor --version 2>/dev/null || echo installed)"
+  exit 0
+fi
+
+MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+if command -v "$MISE_BIN_PATH" >/dev/null 2>&1; then
+  echo "[harbor] uv not on PATH; trying mise fallback..."
+  "$MISE_BIN_PATH" exec -- uv tool install --upgrade harbor
+  echo "[harbor] ✓ installed via mise fallback"
+  exit 0
+fi
+
+echo "[harbor] ERROR: uv not found. Brewfile should install uv before this script."
+exit 1

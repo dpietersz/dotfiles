@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to Benchmark Pi with Terminal-Bench</title>
+  <meta name="doc-template" content="how-to">
+  <meta name="diataxis" content="how-to">
+  <meta name="doc-status" content="draft">
+  <meta name="audience" content="Maintainer of this Pi agent harness and dotfiles repository">
+  <meta name="generated-by" content="pi html-docs skill">
+  <script type="application/json" id="html-docs-metadata">{"template":"how-to","diataxis":["how-to"],"status":"draft","visuals":[{"type":"inline-svg","id":"benchmark-loop","purpose":"Show repeatable benchmark loop"}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-doc-bg: #0a0e1a;
+      --color-doc-panel: #111827;
+      --color-doc-panel-2: #172033;
+      --color-doc-line: #263244;
+      --color-doc-ink: #f8fafc;
+      --color-doc-muted: #94a3b8;
+      --color-doc-accent: #60a5fa;
+      --color-doc-cyan: #22d3ee;
+      --color-doc-amber: #f59e0b;
+      --color-doc-green: #34d399;
+      --color-doc-red: #f87171;
+    }
+    @layer components {
+      .doc-shell { @apply min-h-screen bg-doc-bg text-doc-ink antialiased; }
+      .doc-wrap { @apply mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-14; }
+      .doc-hero { @apply overflow-hidden rounded-3xl border border-doc-line bg-gradient-to-br from-doc-panel via-doc-panel to-blue-950/40 p-8 shadow-2xl shadow-black/20 lg:p-12; }
+      .doc-kicker { @apply text-sm font-bold uppercase tracking-[0.22em] text-doc-cyan; }
+      .doc-title { @apply mt-3 text-4xl font-black tracking-tight text-white md:text-6xl; }
+      .doc-summary { @apply mt-5 max-w-4xl text-lg leading-8 text-slate-200; }
+      .doc-section { @apply my-6 rounded-2xl border border-doc-line bg-doc-panel/90 p-6 shadow-xl shadow-black/10 lg:p-8; }
+      .doc-section-title { @apply mb-4 border-b border-doc-line pb-3 text-2xl font-bold tracking-tight text-doc-cyan; }
+      .doc-card { @apply rounded-2xl border border-doc-line bg-doc-panel-2/80 p-5 shadow-lg shadow-black/10; }
+      .doc-grid { @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3; }
+      .doc-badge { @apply inline-flex items-center rounded-full border border-doc-line bg-white/5 px-3 py-1 text-xs font-medium text-doc-muted; }
+      .doc-callout { @apply rounded-2xl border-l-4 border-doc-accent bg-blue-500/10 p-4 text-slate-200; }
+      .doc-callout-warning { @apply border-doc-amber bg-amber-500/10; }
+      .doc-callout-risk { @apply border-doc-red bg-red-500/10; }
+      .doc-callout-ok { @apply border-doc-green bg-emerald-500/10; }
+      .doc-figure { @apply my-6 overflow-hidden rounded-2xl border border-doc-line bg-black/20 p-3; }
+      .doc-figcaption { @apply mt-3 px-1 text-sm leading-6 text-doc-muted; }
+      .doc-table { @apply w-full border-collapse overflow-hidden rounded-xl text-left text-sm; }
+      .doc-table th { @apply border-b border-doc-line bg-white/5 px-4 py-3 font-semibold text-doc-cyan; }
+      .doc-table td { @apply border-b border-doc-line px-4 py-3 align-top text-slate-200; }
+      .doc-prose { @apply max-w-none text-slate-200; }
+      .doc-prose p { @apply my-4 leading-8; }
+      .doc-prose ul { @apply my-4 list-disc space-y-2 pl-6; }
+      .doc-prose ol { @apply my-4 list-decimal space-y-2 pl-6; }
+      .doc-prose code { @apply rounded-md border border-doc-line bg-slate-950 px-1.5 py-0.5 text-sm text-doc-amber; }
+      .doc-prose pre { @apply overflow-auto rounded-2xl border border-doc-line bg-slate-950 p-4 text-sm text-slate-100; }
+      .doc-link { @apply text-doc-accent underline decoration-doc-accent/40 underline-offset-4 hover:text-doc-cyan; }
+    }
+  </style>
+</head>
+<body class="doc-shell">
+  <main class="doc-wrap">
+    <article class="space-y-6" data-doc-template="how-to">
+      <header class="doc-hero">
+        <p class="doc-kicker">How-To Guide</p>
+        <h1 class="doc-title">Benchmark Pi with Terminal-Bench</h1>
+        <p class="doc-summary">Use <code>pi-terminal-bench</code> to run repeatable Harbor / Terminal-Bench evaluations against this checked-in Pi agent harness, then compare success rate, cost, token use, and failure modes across harness changes.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="doc-badge">Target: Bluefin ThinkPad P14 + macOS</span>
+          <span class="doc-badge">Harness: Pi via Harbor adapter</span>
+          <span class="doc-badge">Dataset: terminal-bench/terminal-bench-2</span>
+          <span class="doc-badge">Results: Harbor jobs/</span>
+        </div>
+        <figure class="doc-figure" aria-labelledby="benchmark-loop-caption">
+          <svg viewBox="0 0 1000 260" role="img" aria-label="Benchmark loop from choosing a task set, running baseline, changing Pi, re-running the same task set, and comparing Harbor results" class="w-full rounded-xl bg-slate-950">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="#60a5fa" /></marker>
+            </defs>
+            <g fill="none" stroke="#60a5fa" stroke-width="3" marker-end="url(#arrow)">
+              <path d="M170 130 H300" /><path d="M450 130 H580" /><path d="M730 130 H860" />
+              <path d="M870 170 C830 230 170 230 130 170" />
+            </g>
+            <g font-family="ui-sans-serif, system-ui" text-anchor="middle">
+              <rect x="40" y="70" width="150" height="100" rx="18" fill="#172033" stroke="#263244" />
+              <text x="115" y="112" fill="#22d3ee" font-size="18" font-weight="700">Pin inputs</text>
+              <text x="115" y="140" fill="#cbd5e1" font-size="14">tasks, model, config</text>
+              <rect x="310" y="70" width="150" height="100" rx="18" fill="#172033" stroke="#263244" />
+              <text x="385" y="112" fill="#22d3ee" font-size="18" font-weight="700">Run baseline</text>
+              <text x="385" y="140" fill="#cbd5e1" font-size="14">current Pi harness</text>
+              <rect x="590" y="70" width="150" height="100" rx="18" fill="#172033" stroke="#263244" />
+              <text x="665" y="112" fill="#22d3ee" font-size="18" font-weight="700">Change Pi</text>
+              <text x="665" y="140" fill="#cbd5e1" font-size="14">prompt/tool/config</text>
+              <rect x="850" y="70" width="120" height="100" rx="18" fill="#172033" stroke="#263244" />
+              <text x="910" y="112" fill="#22d3ee" font-size="18" font-weight="700">Compare</text>
+              <text x="910" y="140" fill="#cbd5e1" font-size="14">reward + traces</text>
+            </g>
+          </svg>
+          <figcaption id="benchmark-loop-caption" class="doc-figcaption">Good benchmarks are paired comparisons: keep inputs fixed, change one harness variable, then compare Harbor results and trajectories.</figcaption>
+        </figure>
+      </header>
+
+      <nav class="doc-section" aria-label="Table of contents">
+        <h2 class="doc-section-title">Quick Navigation</h2>
+        <ol class="grid gap-2 text-slate-200 md:grid-cols-2">
+          <li><a class="doc-link" href="#when">When to use this guide</a></li>
+          <li><a class="doc-link" href="#prerequisites">Prerequisites</a></li>
+          <li><a class="doc-link" href="#first-run">Run first benchmark</a></li>
+          <li><a class="doc-link" href="#pi-runs">Run Pi harness benchmarks</a></li>
+          <li><a class="doc-link" href="#compare">Compare results</a></li>
+          <li><a class="doc-link" href="#tips">Benchmarking tips and tricks</a></li>
+          <li><a class="doc-link" href="#troubleshooting">Troubleshooting</a></li>
+          <li><a class="doc-link" href="#commands">Command reference</a></li>
+        </ol>
+      </nav>
+
+      <section id="when" class="doc-section" data-doc-part="when">
+        <h2 class="doc-section-title">When To Use This Guide</h2>
+        <div class="doc-prose">
+          <p>Use this guide when you want to answer: <strong>“Did my Pi harness change make the agent better or worse on terminal tasks?”</strong></p>
+          <p><code>pi-terminal-bench</code> wraps Harbor so you can run Terminal-Bench without remembering the long command line. It uses a custom adapter for the current Earendil Pi package instead of Harbor’s built-in legacy Pi adapter.</p>
+        </div>
+        <div class="doc-grid mt-6">
+          <div class="doc-card"><h3 class="font-bold text-doc-green">Good fit</h3><p class="mt-2 text-slate-300">Regression testing prompt, tool, extension, model, or config changes in this Pi harness.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-amber">Use care</h3><p class="mt-2 text-slate-300">Comparing hosted models. Providers may update models server-side, so repeat runs can drift.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-red">Bad fit</h3><p class="mt-2 text-slate-300">One-off “is Pi good?” claims from a single task and one attempt. That is anecdote, not benchmark.</p></div>
+        </div>
+      </section>
+
+      <section id="prerequisites" class="doc-section" data-doc-part="prerequisites">
+        <h2 class="doc-section-title">Prerequisites</h2>
+        <div class="doc-prose">
+          <ul>
+            <li>Dotfiles applied so <code>pi-terminal-bench</code> is on <code>PATH</code>.</li>
+            <li>Harbor installed with <code>uv tool install --upgrade harbor</code> or <code>pi-terminal-bench install</code>.</li>
+            <li>Docker running. Terminal-Bench tasks run in containers.</li>
+            <li>Provider API key exported in the host shell for real Pi runs, such as <code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>, <code>GEMINI_API_KEY</code>, or <code>OPENCODE_API_KEY</code>.</li>
+            <li>Enough time. First runs download task metadata/images and install Pi in the task container.</li>
+          </ul>
+        </div>
+        <aside class="doc-callout doc-callout-warning mt-6">
+          <strong>Auth tip:</strong> prefer API keys from environment variables. Do not point <code>--config-dir</code> at <code>~/.pi/agent</code> unless you deliberately want to copy local auth/session config into benchmark containers.
+        </aside>
+      </section>
+
+      <section id="first-run" class="doc-section" data-doc-part="steps">
+        <h2 class="doc-section-title">Run Your First Benchmark</h2>
+        <div class="doc-prose">
+          <p>Start with the Oracle agent. Oracle runs the known solution, proving Harbor, Docker, the dataset, and the verifier are working before Pi is involved.</p>
+          <pre><code>pi-terminal-bench install
+pi-terminal-bench oracle --task-pattern '*openssl*' --tasks 1 --concurrency 1</code></pre>
+          <p>Expected shape:</p>
+          <pre><code>terminal-bench/terminal-bench-2 • oracle
+Trials: 1
+Exceptions: 0
+Mean: 1.000
+Reward: 1.0</code></pre>
+          <p>If Oracle fails, fix Harbor/Docker/dataset first. Do not debug Pi until Oracle passes.</p>
+        </div>
+      </section>
+
+      <section id="pi-runs" class="doc-section" data-doc-part="steps">
+        <h2 class="doc-section-title">Run Pi Harness Benchmarks</h2>
+        <div class="doc-prose">
+          <p>Run the same task against Pi:</p>
+          <pre><code>pi-terminal-bench pi \
+  --model openai/gpt-4o-mini \
+  --thinking off \
+  --task-pattern '*openssl*' \
+  --tasks 1 \
+  --concurrency 1</code></pre>
+          <p>For your normal harness model, choose the exact provider/model you want to measure:</p>
+          <pre><code>pi-terminal-bench pi \
+  --model openai-codex/gpt-5.5 \
+  --thinking high \
+  --task-pattern '*openssl*' \
+  --tasks 1</code></pre>
+          <p>For a broader smoke test:</p>
+          <pre><code>pi-terminal-bench pi \
+  --model openai-codex/gpt-5.5 \
+  --thinking high \
+  --tasks 10 \
+  --concurrency 1 \
+  --attempts 1</code></pre>
+        </div>
+        <aside class="doc-callout mt-6">
+          <strong>Task pattern gotcha:</strong> Terminal-Bench task names are registered with prefixes such as <code>terminal-bench/openssl-selfsigned-cert</code>. Use globs like <code>'*openssl*'</code> rather than only <code>openssl-selfsigned-cert</code>.
+        </aside>
+      </section>
+
+      <section id="compare" class="doc-section" data-doc-part="verify">
+        <h2 class="doc-section-title">Compare Results</h2>
+        <div class="doc-prose">
+          <p>Harbor writes timestamped jobs under <code>~/benchmarks/terminal-bench/jobs</code> by default.</p>
+          <pre><code>pi-terminal-bench view</code></pre>
+          <p>Look at these files when you want raw facts:</p>
+          <pre><code>~/benchmarks/terminal-bench/jobs/&lt;job&gt;/result.json
+~/benchmarks/terminal-bench/jobs/&lt;job&gt;/&lt;trial&gt;/result.json
+~/benchmarks/terminal-bench/jobs/&lt;job&gt;/&lt;trial&gt;/agent/pi.jsonl
+~/benchmarks/terminal-bench/jobs/&lt;job&gt;/&lt;trial&gt;/verifier/test-stdout.txt</code></pre>
+        </div>
+        <div class="overflow-x-auto mt-6">
+          <table class="doc-table">
+            <thead><tr><th>Signal</th><th>What it tells you</th><th>Use for</th></tr></thead>
+            <tbody>
+              <tr><td><code>reward</code> / mean</td><td>Verifier pass/fail or score.</td><td>Main benchmark outcome.</td></tr>
+              <tr><td>Exceptions</td><td>Harness, environment, timeout, auth, or install failures.</td><td>Infrastructure reliability.</td></tr>
+              <tr><td>Verifier logs</td><td>Why the task passed or failed.</td><td>Debugging actual task quality.</td></tr>
+              <tr><td><code>agent/pi.jsonl</code></td><td>Pi events, tool calls, tool results, token usage, model output.</td><td>Root-causing harness behavior.</td></tr>
+              <tr><td>Cost / tokens</td><td>Provider usage parsed from Pi JSON events.</td><td>Efficiency comparison.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tips" class="doc-section" data-doc-part="benchmarking-tips">
+        <h2 class="doc-section-title">Tips and Tricks for Proper Benchmarking</h2>
+        <div class="doc-grid">
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Pin everything</h3><p class="mt-2 text-slate-300">Keep dataset, task subset, model, thinking level, Pi package version, config dir, concurrency, and attempts constant between runs.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Change one thing</h3><p class="mt-2 text-slate-300">Change only one harness variable per experiment: prompt, tool policy, model, extension, or config. Otherwise wins are hard to explain.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Use paired comparisons</h3><p class="mt-2 text-slate-300">Run baseline and candidate on the same task list. Compare pairwise by task, not just aggregate means.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Repeat noisy tasks</h3><p class="mt-2 text-slate-300">Use <code>--attempts 3</code> or higher for meaningful comparisons. Hosted LLMs are not perfectly deterministic.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Start small</h3><p class="mt-2 text-slate-300">Use one task and Oracle first. Then run 5–10 tasks. Only run the full dataset after the adapter and auth are proven.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Prefer serial concurrency</h3><p class="mt-2 text-slate-300">Use <code>--concurrency 1</code> for clean local debugging. Increase only when you trust Docker resources and provider rate limits.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Track failure classes</h3><p class="mt-2 text-slate-300">Separate task failures from infrastructure exceptions. A reward 0 means different thing than install/auth/timeout exception.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Read trajectories</h3><p class="mt-2 text-slate-300">When a run fails, inspect <code>agent/pi.jsonl</code>. Look for tool ordering, wrong paths, hidden assumptions, and skipped verification.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-doc-cyan">Keep benchmark prompts stable</h3><p class="mt-2 text-slate-300">If you add benchmark-specific system prompt text, version it and keep it identical across baseline/candidate unless prompt is the tested variable.</p></div>
+        </div>
+        <aside class="doc-callout doc-callout-ok mt-6">
+          <strong>Useful signal from the first Pi smoke test:</strong> <code>gpt-4o-mini</code> failed <code>*openssl*</code> because it issued dependent commands in one turn and Pi executed sibling tool calls in parallel. That is not an adapter failure; it is benchmark evidence about model/tool-execution interaction.
+        </aside>
+      </section>
+
+      <section class="doc-section" data-doc-part="experiment-recipes">
+        <h2 class="doc-section-title">Recommended Experiment Recipes</h2>
+        <div class="overflow-x-auto">
+          <table class="doc-table">
+            <thead><tr><th>Goal</th><th>Command shape</th><th>What to compare</th></tr></thead>
+            <tbody>
+              <tr><td>Prove setup</td><td><code>pi-terminal-bench oracle --task-pattern '*openssl*' --tasks 1</code></td><td>Reward 1.0, zero exceptions.</td></tr>
+              <tr><td>Adapter smoke</td><td><code>pi-terminal-bench pi --model openai/gpt-4o-mini --task-pattern '*openssl*' --tasks 1</code></td><td>No infrastructure exception; inspect reward separately.</td></tr>
+              <tr><td>Harness regression</td><td>Run same 10-task subset before and after change.</td><td>Per-task reward, exceptions, tokens, cost, trace differences.</td></tr>
+              <tr><td>Model comparison</td><td>Run same harness with two <code>--model</code> values.</td><td>Success rate normalized by cost and runtime.</td></tr>
+              <tr><td>Stability check</td><td>Add <code>--attempts 3</code> to same task subset.</td><td>Variance and pass@k-like behavior.</td></tr>
+              <tr><td>Local judge tutorial</td><td><code>pi-terminal-bench oracle --path examples/tasks/llm-judge-example</code></td><td>Custom judge wiring and verifier secrets.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="commands" class="doc-section" data-doc-part="reference">
+        <h2 class="doc-section-title">Command Reference</h2>
+        <div class="doc-prose">
+          <pre><code>pi-terminal-bench oracle [options]
+pi-terminal-bench pi [options]
+pi-terminal-bench view [--jobs-dir DIR]
+pi-terminal-bench install</code></pre>
+          <h3 class="mt-6 text-xl font-bold text-doc-cyan">Common options</h3>
+          <pre><code>--dataset NAME          Default: terminal-bench/terminal-bench-2
+--path PATH             Local Harbor task/dataset instead of --dataset
+--task-pattern GLOB     Include matching task names
+--tasks N               Max tasks to run
+--concurrency N         Concurrent trials
+--attempts N            Attempts per task
+--jobs-dir DIR          Results directory
+--env-file FILE         Load provider/verifier secrets
+--dry-run               Print command only</code></pre>
+          <h3 class="mt-6 text-xl font-bold text-doc-cyan">Pi options</h3>
+          <pre><code>--model PROVIDER/MODEL  Model to benchmark
+--thinking LEVEL        off|minimal|low|medium|high|xhigh
+--config-dir DIR        Pi config uploaded into container
+--pi-package PKG        npm package, default @earendil-works/pi-coding-agent
+--pi-version VERSION    npm package version
+--pi-args ARGS          Extra Pi CLI args
+--agent-import PATH     Custom adapter import path</code></pre>
+        </div>
+      </section>
+
+      <section id="troubleshooting" class="doc-section" data-doc-part="troubleshooting">
+        <h2 class="doc-section-title">Troubleshooting</h2>
+        <div class="overflow-x-auto">
+          <table class="doc-table">
+            <thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr><td>Oracle fails</td><td>Docker, Harbor, dataset, or verifier issue.</td><td>Fix Oracle first. Pi is not involved yet.</td></tr>
+              <tr><td>No tasks matched</td><td>Task names include registry prefixes.</td><td>Use globs: <code>'*openssl*'</code>, <code>'*git*'</code>.</td></tr>
+              <tr><td>Auth/API error</td><td>Provider key not in environment passed to Harbor.</td><td>Export API key before running or use <code>--env-file</code>.</td></tr>
+              <tr><td>Adapter not found</td><td>Chezmoi not applied or path not on Python import path.</td><td>Run <code>chezmoi apply</code> or pass <code>--agent-import /path/pi_earendil.py:PiEarendil</code>.</td></tr>
+              <tr><td>Reward 0 but no exception</td><td>Agent completed but verifier failed.</td><td>Inspect verifier logs and <code>agent/pi.jsonl</code>.</td></tr>
+              <tr><td>Install slow</td><td>First task run installs Node and Pi in container.</td><td>Expected. Re-runs are often faster if images/layers are cached.</td></tr>
+              <tr><td>Rate limits</td><td>Too much concurrency or too many attempts.</td><td>Lower <code>--concurrency</code>, use cheaper model, or wait.</td></tr>
+              <tr><td>Secrets risk warning</td><td><code>--config-dir ~/.pi/agent</code> contains <code>auth.json</code>.</td><td>Use tracked <code>dot_pi/agent</code> config and env API keys instead.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section" data-doc-part="related">
+        <h2 class="doc-section-title">Related Files and Docs</h2>
+        <div class="doc-prose">
+          <ul>
+            <li><code>dot_local/bin/scripts/executable_pi-terminal-bench</code> — wrapper script.</li>
+            <li><code>dot_config/harbor/agents/pi_earendil.py</code> — custom Harbor agent adapter.</li>
+            <li><code>.chezmoiscripts/run_onchange_after_02c-install-harbor.sh.tmpl</code> — chezmoi-managed Harbor install.</li>
+            <li><code>Plans/terminal-bench-pi-harbor.md</code> — implementation plan and validation notes.</li>
+            <li><code>.ai/ref-docs/www.harborframework.com/</code> — cached Harbor docs.</li>
+            <li><code>.ai/ref-docs/pi.dev/</code> — cached Pi docs.</li>
+          </ul>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>
