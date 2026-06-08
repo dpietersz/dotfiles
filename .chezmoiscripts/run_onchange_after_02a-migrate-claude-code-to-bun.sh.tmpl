@@ -1,0 +1,64 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# Migration: Claude Code moved from Homebrew cask to Bun global package.
+# Runs after run_onchange_after_02a-install-bun-globals.sh.tmpl.
+# Keeping this as run_onchange_ lets migration rerun if the recipe changes.
+# migration-version: 1
+
+set -euo pipefail
+
+# Find Bun global bin dir. Bun normally uses ~/.bun/bin, even when Bun itself is
+# installed by Homebrew, but ask Bun when available for future compatibility.
+BUN_GLOBAL_BIN="$HOME/.bun/bin"
+if command -v bun >/dev/null 2>&1; then
+  BUN_GLOBAL_BIN="$(bun pm bin -g 2>/dev/null || echo "$BUN_GLOBAL_BIN")"
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+  BUN_GLOBAL_BIN="$($HOME/.bun/bin/bun pm bin -g 2>/dev/null || echo "$BUN_GLOBAL_BIN")"
+fi
+
+if [ ! -x "$BUN_GLOBAL_BIN/claude" ]; then
+  echo "[claude-code-migration] Bun Claude binary missing: $BUN_GLOBAL_BIN/claude"
+  echo "[claude-code-migration] Leaving existing Homebrew/npm installs in place. Re-run after Bun globals install."
+  exit 0
+fi
+
+# Ensure brew is available in chezmoi's non-interactive shell on macOS/Linuxbrew.
+if ! command -v brew >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$cand" ] && eval "$("$cand" shellenv bash)" && break
+  done
+fi
+
+if command -v brew >/dev/null 2>&1; then
+  if brew list --cask claude-code >/dev/null 2>&1; then
+    echo "[claude-code-migration] Uninstalling Homebrew cask claude-code..."
+    brew uninstall --cask claude-code || true
+  fi
+
+  # Defensive: in case Homebrew ever exposed it as a formula or a prior machine
+  # had a local formula install.
+  if brew list --formula claude-code >/dev/null 2>&1; then
+    echo "[claude-code-migration] Uninstalling Homebrew formula claude-code..."
+    brew uninstall claude-code || true
+  fi
+else
+  echo "[claude-code-migration] brew not found; skipping Homebrew cleanup."
+fi
+
+# Defensive cleanup for any old manual npm-global install. Bun replacement is
+# already verified, and ~/.bun/bin is prepended later than ~/.local/share/npm/bin
+# in shell PATH, but removing old bins avoids ambiguity for services/scripts.
+LEGACY_NPM_ROOT="$HOME/.local/share/npm/node_modules"
+LEGACY_NPM_BIN="$LEGACY_NPM_ROOT/.bin"
+LEGACY_PATH_BIN="$HOME/.local/share/npm/bin"
+if [ -d "$LEGACY_NPM_ROOT/@anthropic-ai/claude-code" ]; then
+  echo "[claude-code-migration] Removing legacy npm package @anthropic-ai/claude-code..."
+  rm -rf "$LEGACY_NPM_ROOT/@anthropic-ai/claude-code"
+  rmdir "$LEGACY_NPM_ROOT/@anthropic-ai" 2>/dev/null || true
+fi
+rm -f "$LEGACY_NPM_BIN/claude" "$LEGACY_PATH_BIN/claude" 2>/dev/null || true
+
+echo "[claude-code-migration] ✓ Using Bun Claude Code: $BUN_GLOBAL_BIN/claude"
