@@ -32,6 +32,11 @@ spawn-at-startup "sh" "-c" "sleep 3 && exec \"$HOME/Applications/VibeTyper.AppIm
 // dot_config/noctalia/config.toml.tmpl).
 spawn-at-startup "niri-idle-daemon.sh"
 
+// Auto power profile: battery → power-saver, AC → balanced (on transitions only;
+// manual noctalia/keybind choices are respected in between). Sets the same
+// net.hadess.PowerProfiles the noctalia widget reads.
+spawn-at-startup "power-profile-auto.sh"
+
 // Workspace-follows-external-monitor hotplug daemon. Subscribes to niri's
 // JSON event stream; on OutputAdded moves all dynamic workspaces to the new
 // monitor, on OutputRemoved lets niri's default fallback take over.
