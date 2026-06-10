@@ -23,11 +23,12 @@
 .zen/
 {{- end }}
 
-{{- if or .isMacOS (not (and (hasKey . "hasFingerprintReader") .hasFingerprintReader)) }}
-# Fingerprint lockscreen stack — only deploy on Linux machines with a supported sensor.
-# Other Linux machines keep noctalia v5's built-in lockscreen. macOS skips entirely.
+{{- if not (and (hasKey . "isBluefin") .isBluefin) }}
+# Idle/lock stack (hyprlock + the swayidle idle daemon) deploys on Bluefin only.
+# macOS, the headless server, and remote/devcontainers keep their own / none.
 .config/hypr/
 .local/bin/scripts/niri-idle-daemon.sh
+.local/bin/scripts/niri-lock.sh
 {{- end }}
 
 {{- if .isServer }}

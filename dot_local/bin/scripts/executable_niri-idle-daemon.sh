@@ -10,7 +10,8 @@
 #   Battery:  blank 5m  → lock 10m → suspend 20m  (suspend = 10m after lock)
 #   AC:       blank 15m → lock 30m → suspend 60m  (suspend = 30m after lock)
 #
-# Spawned from niri config via spawn-at-startup, gated on .hasFingerprintReader.
+# Spawned from niri config via spawn-at-startup on every niri (Bluefin) machine.
+# hyprlock authenticates by fingerprint where a sensor exists, password otherwise.
 #
 # ──────────────────────────────────────────────────────────────────────────────
 # The lock cascade and its real fix (journal-confirmed 2026-06-10 10:07):

@@ -26,13 +26,11 @@ spawn-at-startup "/usr/libexec/polkit-mate-authentication-agent-1"
 // service so vibe-typer's saved token can be decrypted.
 spawn-at-startup "sh" "-c" "sleep 3 && exec \"$HOME/Applications/VibeTyper.AppImage\" --password-store=gnome-libsecret --autostart"
 
-{{- if .hasFingerprintReader }}
-
-// Fingerprint lockscreen stack: swayidle drives screen-off / hyprlock / suspend.
-// noctalia's own idle handlers are disabled on these machines (see
+// Idle/lock stack: swayidle drives screen-off → hyprlock → suspend on every niri
+// machine. hyprlock authenticates by fingerprint where a sensor exists and by
+// password otherwise. noctalia's own idle handlers are disabled (see
 // dot_config/noctalia/config.toml.tmpl).
 spawn-at-startup "niri-idle-daemon.sh"
-{{- end }}
 
 // Workspace-follows-external-monitor hotplug daemon. Subscribes to niri's
 // JSON event stream; on OutputAdded moves all dynamic workspaces to the new
@@ -313,11 +311,7 @@ binds {
     // === Session ===
     Ctrl+Alt+Delete hotkey-overlay-title=null { quit; }
     Mod+Escape allow-inhibiting=false hotkey-overlay-title="Toggle keyboard-shortcut inhibitor" { toggle-keyboard-shortcuts-inhibit; }
-    {{- if .hasFingerprintReader }}
-    Ctrl+Alt+L hotkey-overlay-title="Lock Screen (hyprlock + fingerprint)" { spawn "niri-lock.sh"; }
-    {{- else }}
-    Ctrl+Alt+L hotkey-overlay-title="Lock Screen" { spawn "noctalia" "msg" "screen-lock"; }
-    {{- end }}
+    Ctrl+Alt+L hotkey-overlay-title="Lock Screen (hyprlock)" { spawn "niri-lock.sh"; }
     Mod+Backspace hotkey-overlay-title="Session menu" { spawn "noctalia" "msg" "panel-toggle" "session"; }
 
     // === Overview / hotkey overlay ===

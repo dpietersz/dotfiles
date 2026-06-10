@@ -1,8 +1,8 @@
-# hyprlock — Wayland session locker with native fprintd integration.
-# Used on machines where .hasFingerprintReader is true (noctalia v5's built-in
-# lockscreen does password-only PAM and can't share the sensor with fprintd
-# concurrently). PAM service falls back to /etc/pam.d/system-auth, which has
-# pam_fprintd.so wired via `authselect enable-feature with-fingerprint`.
+# hyprlock — Wayland session locker, used on EVERY niri machine (replaces
+# noctalia's built-in lockscreen so the idle/lock stack is identical across both
+# laptops). Authenticates by fingerprint where .hasFingerprintReader is true (PAM
+# falls back to /etc/pam.d/system-auth with pam_fprintd.so wired via
+# `authselect enable-feature with-fingerprint`) and by password everywhere else.
 
 general {
     grace = 2
@@ -19,14 +19,16 @@ background {
     blur_passes = 0
 }
 
-# Fingerprint authentication — the whole point of this swap.
 auth {
+{{- if .hasFingerprintReader }}
+    # Fingerprint auth on machines with a libfprint sensor; password still works.
     fingerprint {
         enabled = true
         ready_message = "Touch the fingerprint sensor or type password"
         present_message = "Verifying…"
         retry_delay = 250
     }
+{{- end }}
     pam {
         enabled = true
     }
@@ -44,7 +46,11 @@ input-field {
     inner_color = rgba(3c3836ff)
     font_color = rgba(ebdbb2ff)
     fade_on_empty = true
+{{- if .hasFingerprintReader }}
     placeholder_text = <i>Password or fingerprint…</i>
+{{- else }}
+    placeholder_text = <i>Password…</i>
+{{- end }}
     fail_text = <i>$FAIL <b>($ATTEMPTS)</b></i>
     fail_color = rgba(cc241dff)
     check_color = rgba(98971aff)
