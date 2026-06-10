@@ -13,10 +13,13 @@
 --
 -- How it reads the session from outside kitty: niri reports the focused
 -- window's app_id + pid; kitty's `listen_on unix:/tmp/kitty` creates one RC
--- socket per process at /tmp/kitty-<pid>, so we query that socket and take the
--- `is_focused` window's session_name (kitty exposes it in `@ ls`).
+-- socket per process at /tmp/kitty-<pid>, so we query that socket. Sessions are
+-- kitty TABS in one window, and window-level is_focused/is_active are per-tab
+-- (every tab's current window reads true), so we must descend by the ACTIVE
+-- TAB: focused OS-window -> active tab -> active window -> session_name.
 
-local POLL_MS = 2500    -- responsive without being chatty; text only redraws on change
+local POLL_MS = 1000    -- session switches are kitty tab-flips (niri focus doesn't change),
+                        -- so polling is the only way to see them; text only redraws on change
 local TIMEOUT_MS = 4000
 local GLYPH = "app-window"
 
@@ -31,7 +34,7 @@ sock="/tmp/kitty-$pid"
 [ -S "$sock" ] || { printf KEEP; exit 0; }
 kc=kitten; command -v kitten >/dev/null 2>&1 || kc="kitty +kitten"
 name=$($kc @ --to "unix:$sock" ls 2>/dev/null \
-  | jq -r '[.[].tabs[].windows[] | select(.is_focused==true) | .session_name] | map(select(. != null and . != "")) | first // ""')
+  | jq -r '[.[] | select(.is_focused==true) | .tabs[] | select(.is_active==true) | .windows[] | select(.is_active==true) | .session_name] | map(select(. != null and . != "")) | first // ""')
 if [ -n "$name" ]; then printf 'SESSION:%s' "$name"; else printf KEEP; fi
 ]]
 
