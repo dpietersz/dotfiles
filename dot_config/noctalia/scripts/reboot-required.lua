@@ -22,8 +22,8 @@ local TIMEOUT_MS = 8000 -- rpm-ostree can briefly block on the daemon lock
 -- failing rpm-ostree (errored pipe) falls through to CLEAR (stay hidden).
 local CHECK = [[rpm-ostree status --json 2>/dev/null | jq -e 'any(.deployments[]?; .staged == true)' >/dev/null 2>&1 && echo STAGED || echo CLEAR]]
 
--- Glyph (Tabler alias). Alternatives if you prefer: "refresh", "power-cycle", "alert".
-local GLYPH = "update"
+-- Glyph (valid noctalia alias). Alternatives: "alert", "power-cycle".
+local GLYPH = "refresh"
 
 local staged = false
 local primed = false

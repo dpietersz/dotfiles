@@ -22,15 +22,13 @@ type       = "scripted"
 script     = "{{ .chezmoi.homeDir }}/.config/noctalia/scripts/reboot-required.lua"
 hot_reload = true
 {{ end }}
-# kitty-session: scripted widget showing the active kitty session name.
-# NOTE: the script path below is your existing GUI config and currently fails
-# to load — noctalia logs "failed to read '.../kitty-session --name-stream'"
-# because a scripted widget expects a Lua *file* path, not a command. Carried
-# over verbatim so the bar matches today; tell me to fix or drop it.
+# kitty-session: scripted widget showing the active kitty session name, sticky
+# (keeps the last session when focus leaves kitty; only changes on a different
+# kitty session). Script + rationale: dot_config/noctalia/scripts/kitty-session.lua.
 [widget.kitty-session]
-type   = "scripted"
-scope  = "shared"
-script = "kitty-session --name-stream"
+type       = "scripted"
+script     = "{{ .chezmoi.homeDir }}/.config/noctalia/scripts/kitty-session.lua"
+hot_reload = true
 
 [brightness]
 enable_ddcutil = true
