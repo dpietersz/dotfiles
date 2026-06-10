@@ -25,8 +25,24 @@
 # why the previous wtype-based attempt never worked.
 set -uo pipefail
 
-# Seconds locked before we suspend. Overridable for fast testing.
-SUSPEND_AFTER="${NIRI_LOCK_SUSPEND_AFTER:-1020}"
+# On wall power? (type=Mains supply online — USB-C charging registers here too.)
+on_ac() {
+    local ps
+    for ps in /sys/class/power_supply/*; do
+        [ -r "$ps/type" ] || continue
+        [ "$(cat "$ps/type" 2>/dev/null)" = "Mains" ] || continue
+        [ "$(cat "$ps/online" 2>/dev/null)" = "1" ] && return 0
+    done
+    return 1
+}
+
+# Seconds locked before we suspend. NIRI_LOCK_SUSPEND_AFTER overrides (fast test).
+# Otherwise: 600s on battery (lock 10m + 10m = suspend at 20m), 1800s on AC
+# (lock 30m + 30m = suspend at 60m). Power read at lock time.
+SUSPEND_AFTER="${NIRI_LOCK_SUSPEND_AFTER:-}"
+if [ -z "$SUSPEND_AFTER" ]; then
+    if on_ac; then SUSPEND_AFTER=1800; else SUSPEND_AFTER=600; fi
+fi
 
 # Never stack a second locker on a live one: niri#2986 — restarting a locker
 # during an active lock wedges niri into an unrecoverable blank state.

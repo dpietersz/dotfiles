@@ -1,16 +1,16 @@
 #!/bin/bash
-# niri-idle-daemon — swayidle wrapper driving the idle chain on niri machines
-# that use the fingerprint lockscreen stack (hyprlock).
+# niri-idle-daemon — power-aware idle supervisor for niri machines using the
+# fingerprint lockscreen stack (hyprlock).
 #
 # noctalia v5's own idle daemon is disabled on these machines (see
-# dot_config/noctalia/config.toml.tmpl), so this script owns:
-#   90s    → blank monitors (resume on input)
-#   180s   → hyprlock via niri-lock.sh (which also arms the suspend timer)
-#   sleep  → ensure hyprlock is up before suspending (no flash of unlocked desktop)
-# Suspend itself is owned by niri-lock.sh (lock-scoped timer), NOT swayidle.
+# dot_config/noctalia/config.toml.tmpl), so this script owns the idle chain.
+# It picks timeouts based on AC vs battery and relaunches swayidle when the
+# power source changes:
+#
+#   Battery:  blank 5m  → lock 10m → suspend 20m  (suspend = 10m after lock)
+#   AC:       blank 15m → lock 30m → suspend 60m  (suspend = 30m after lock)
 #
 # Spawned from niri config via spawn-at-startup, gated on .hasFingerprintReader.
-# Single-instance guard so chezmoi-apply re-launches don't double up.
 #
 # ──────────────────────────────────────────────────────────────────────────────
 # The lock cascade and its real fix (journal-confirmed 2026-06-10 10:07):
@@ -21,54 +21,87 @@
 # before-sleep re-locks — so you unlock, land straight back on a lock screen,
 # suspend, resume, and must unlock again. That is the cascade.
 #
-# Because the suspend fires AT unlock, no post-unlock reset can prevent it (the
-# suspend is already in flight before hyprlock exits). So swayidle must not drive
-# suspend at all. niri-lock.sh arms a lock-scoped suspend timer instead and kills
-# it on unlock, making unlocking always cancel the pending suspend.
-#
-# niri-lock.sh also injects a real evdev event via ydotool (/dev/uinput) on
-# unlock, so niri clears its stale idle-since and swayidle re-arms its
-# screen-off/lock timers for the next cycle — a fingerprint unlock otherwise
-# sends zero compositor input. The earlier `wtype -k Shift_L` attempt failed
-# because wtype's virtual-keyboard protocol is not counted by niri as activity.
+# Because the suspend fires AT unlock, no post-unlock reset can prevent it. So
+# swayidle does NOT drive suspend here. niri-lock.sh arms a lock-scoped suspend
+# timer instead and kills it on unlock, so unlocking always cancels the pending
+# suspend. niri-lock.sh also injects a real evdev event via ydotool on unlock so
+# niri clears its stale idle-since and swayidle re-arms (a fingerprint unlock
+# sends zero compositor input; wtype's virtual-keyboard protocol is not counted
+# by niri as activity, which is why the earlier wtype attempt failed), plus a
+# short debounce to swallow the spurious re-lock niri emits at unlock.
 #
 # hypridle is NOT an option: niri does not implement hyprland-lock-notify-v1
-# (niri#3459), so hypridle cannot lock before sleep on niri. swayidle stays as
-# the screen-off/lock driver.
+# (niri#3459), so hypridle cannot lock before sleep on niri.
 #
 # NOTE: there is intentionally NO fprintd restart on resume. An earlier image
 # hook (`/usr/lib/systemd/system-sleep/50-fprintd-resume.sh`) did that and
-# CAUSED "Device was already claimed" by racing hyprlock's sensor claim on
-# resume; it has been removed. With a single clean locker the sensor re-claims
-# fine on its own.
+# CAUSED "Device was already claimed" by racing hyprlock's sensor claim; removed.
 # ──────────────────────────────────────────────────────────────────────────────
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCK="$SCRIPT_DIR/niri-lock.sh"
+RUNDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-if pgrep -u "$USER" -x swayidle >/dev/null 2>&1; then
-    echo "[niri-idle-daemon] swayidle already running; nothing to do."
+# Single-instance guard (this supervisor). Survives chezmoi re-apply; a fresh
+# niri launch starts exactly one.
+PIDFILE="$RUNDIR/niri-idle-daemon.pid"
+if [ -r "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+    echo "[niri-idle-daemon] already running; nothing to do."
     exit 0
 fi
+echo $$ > "$PIDFILE"
 
-# ydotoold provides the uinput injection socket that niri-lock.sh uses to reset
-# niri's idle clock on unlock. Single-instance guard; default socket lands at
-# $XDG_RUNTIME_DIR/.ydotool_socket owned by this user.
+# ydotoold provides the uinput socket niri-lock.sh uses to reset niri's idle on
+# unlock. Single-instance; default socket at $XDG_RUNTIME_DIR/.ydotool_socket.
 if ! pgrep -u "$USER" -x ydotoold >/dev/null 2>&1; then
     ydotoold &>/dev/null &
 fi
 
-# `niri msg action power-off-monitors` toggles DPMS off; any input wakes it.
-# We pass `resume true` so swayidle marks the screen-off timeout reusable.
-# NOTE: swayidle does NOT drive suspend. On niri the idle-suspend timer is frozen
-# while the session is locked and fires at unlock, causing an unlock→suspend→relock
-# cascade (niri#2006, reproduced 2026-06-10). Suspend is instead armed by
-# niri-lock.sh when we lock and cancelled on unlock. swayidle only blanks the
-# screen and locks.
-exec swayidle -w \
-    timeout 90  'niri msg action power-off-monitors' \
-                resume 'true' \
-    timeout 180 "$LOCK" \
-    before-sleep "$LOCK"
+# On wall power? Canonical signal is a type=Mains supply reporting online (USB-C
+# charging registers here too on this ThinkPad).
+on_ac() {
+    local ps
+    for ps in /sys/class/power_supply/*; do
+        [ -r "$ps/type" ] || continue
+        [ "$(cat "$ps/type" 2>/dev/null)" = "Mains" ] || continue
+        [ "$(cat "$ps/online" 2>/dev/null)" = "1" ] && return 0
+    done
+    return 1
+}
+
+SWAY=""
+start_swayidle() {
+    local mon lock
+    if on_ac; then
+        mon=900;  lock=1800      # AC:      blank 15m, lock 30m
+    else
+        mon=300;  lock=600       # Battery: blank 5m,  lock 10m
+    fi
+    # swayidle does NOT drive suspend — niri-lock.sh owns it (see header). It
+    # reads the power state itself to pick the suspend delay.
+    swayidle -w \
+        timeout "$mon"  'niri msg action power-off-monitors' resume 'true' \
+        timeout "$lock" "$LOCK" \
+        before-sleep "$LOCK" &
+    SWAY=$!
+}
+
+cleanup() { [ -n "$SWAY" ] && kill "$SWAY" 2>/dev/null; rm -f "$PIDFILE"; }
+trap cleanup EXIT TERM INT
+
+start_swayidle
+prev=$(on_ac && echo ac || echo bat)
+
+# Re-pick timeouts when the power source changes. Polling (≤20s lag) is plenty —
+# timer reconfiguration on plug/unplug need not be instant — and avoids udev
+# orphan handling.
+while sleep 20; do
+    cur=$(on_ac && echo ac || echo bat)
+    if [ "$cur" != "$prev" ]; then
+        prev=$cur
+        kill "$SWAY" 2>/dev/null
+        start_swayidle
+    fi
+done
