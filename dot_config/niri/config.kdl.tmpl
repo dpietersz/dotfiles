@@ -140,6 +140,14 @@ layout {
 debug {
     // Let noctalia trigger window activation reliably.
     honor-xdg-activation-with-invalid-serial
+{{- if .hasNvidia }}
+    // Render the desktop on the Intel iGPU so the NVIDIA dGPU can reach D3cold
+    // (RTD3) when idle (~0W) instead of being held awake at ~2.4W by the
+    // compositor. The dGPU stays available on demand via nvidia-offload/PRIME
+    // (CUDA, NVENC, games). All display outputs are wired to the iGPU, so nothing
+    // is lost. by-path is stable across reboots (PCI 00:02.0 = Intel iGPU).
+    render-drm-device "/dev/dri/by-path/pci-0000:00:02.0-render"
+{{- end }}
 }
 
 // ----------------------------------------------------------------------------
