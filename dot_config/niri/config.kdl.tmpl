@@ -79,7 +79,7 @@ input {
     mouse {
         accel-profile "flat"
         accel-speed 0.65
-        scroll-factor 2.0
+        scroll-factor 1.75
     }
 }
 
@@ -314,7 +314,7 @@ binds {
     Ctrl+Alt+Delete hotkey-overlay-title=null { quit; }
     Mod+Escape allow-inhibiting=false hotkey-overlay-title="Toggle keyboard-shortcut inhibitor" { toggle-keyboard-shortcuts-inhibit; }
     {{- if .hasFingerprintReader }}
-    Ctrl+Alt+L hotkey-overlay-title="Lock Screen (hyprlock + fingerprint)" { spawn "hyprlock"; }
+    Ctrl+Alt+L hotkey-overlay-title="Lock Screen (hyprlock + fingerprint)" { spawn "niri-lock.sh"; }
     {{- else }}
     Ctrl+Alt+L hotkey-overlay-title="Lock Screen" { spawn "noctalia" "msg" "screen-lock"; }
     {{- end }}
@@ -342,6 +342,7 @@ binds {
     Mod+Shift+Return hotkey-overlay-title="Kitty: list open sessions (switch / kill)" { spawn "kitty-session" "--list"; }
     Mod+Tab          hotkey-overlay-title="Kitty: alternate session (toggle last two)" { spawn "kitty-session" "--alt"; }
     Ctrl+Alt+S       hotkey-overlay-title="Toggle scratchpad terminal" { spawn "scratchpad-toggle"; }
+    Ctrl+Alt+M       hotkey-overlay-title="Toggle external monitor: mirror ↔ extend" { spawn "niri-mirror-toggle"; }
     Mod+V            hotkey-overlay-title="Launch kitty terminal" { spawn "kitty"; }
     Mod+Space        hotkey-overlay-title="Launcher (Noctalia)" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
     Mod+Shift+V      hotkey-overlay-title="Clipboard history" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
@@ -374,7 +375,7 @@ binds {
     Mod+Ctrl+Equal  hotkey-overlay-title="Mouse: accel-speed +0.10"   { spawn "niri-mouse-tune" "accel" "up"; }
     Mod+Ctrl+Minus  hotkey-overlay-title="Mouse: accel-speed 0.65"   { spawn "niri-mouse-tune" "accel" "down"; }
     Mod+Ctrl+Period hotkey-overlay-title="Mouse: scroll-factor +0.25" { spawn "niri-mouse-tune" "scroll" "up"; }
-    Mod+Ctrl+Comma  hotkey-overlay-title="Mouse: scroll-factor -0.25" { spawn "niri-mouse-tune" "scroll" "down"; }
+    Mod+Ctrl+Comma  hotkey-overlay-title="Mouse: scroll-factor 1.75" { spawn "niri-mouse-tune" "scroll" "down"; }
 
     // === Window / column ===
     Mod+Q repeat=false hotkey-overlay-title=null { close-window; }
