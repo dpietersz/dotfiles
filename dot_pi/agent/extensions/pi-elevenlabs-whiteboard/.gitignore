@@ -1,0 +1,11 @@
+node_modules/
+web/node_modules/
+web/dist/
+extension/hub/web-dist/
+.pi/
+.pi-data/
+.env
+.piwb.local.env
+*.log
+.DS_Store
+snapshots/

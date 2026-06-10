@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pi × ElevenLabs Voice Whiteboard Dashboard Architecture</title>
+  <meta name="doc-template" content="architecture">
+  <meta name="diataxis" content="explanation, reference">
+  <meta name="doc-status" content="draft">
+  <meta name="audience" content="Pi extension builders, frontend implementers, and agent workflow designers">
+  <meta name="generated-by" content="pi html-docs skill">
+  <script type="application/json" id="html-docs-metadata">{"template":"architecture","diataxis":["explanation","reference"],"status":"draft","slug":"pi-elevenlabs-whiteboard-dashboard","visuals":["system-context","component-map","dashboard-dark","whiteboard-light","realtime-flow","excalidraw-context-pipeline","excalidraw-fallback-ladder"],"componentLibrary":"shadcn/ui + Excalidraw","voiceProvider":"ElevenLabs Conversational AI Custom LLM","voiceId":"pq3wL6Xv3fuEM14W6ZCg"}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-gruv-bg: #282828;
+      --color-gruv-bg-soft: #32302f;
+      --color-gruv-panel: #3c3836;
+      --color-gruv-panel-2: #504945;
+      --color-gruv-line: #665c54;
+      --color-gruv-ink: #fbf1c7;
+      --color-gruv-muted: #a89984;
+      --color-gruv-yellow: #fabd2f;
+      --color-gruv-orange: #fe8019;
+      --color-gruv-aqua: #8ec07c;
+      --color-gruv-blue: #83a598;
+      --color-gruv-red: #fb4934;
+      --color-gruv-light-bg: #fbf1c7;
+      --color-gruv-light-panel: #f2e5bc;
+      --color-gruv-light-panel-2: #ebdbb2;
+      --color-gruv-light-ink: #3c3836;
+      --color-gruv-light-muted: #7c6f64;
+    }
+    @layer components {
+      .doc-shell { @apply min-h-screen bg-gruv-bg text-gruv-ink antialiased; }
+      .doc-wrap { @apply mx-auto max-w-7xl px-5 py-8 md:px-8 lg:py-12; }
+      .doc-hero { @apply overflow-hidden rounded-3xl border border-gruv-line bg-gradient-to-br from-gruv-panel via-gruv-bg-soft to-black/30 p-7 shadow-2xl shadow-black/30 md:p-10; }
+      .doc-kicker { @apply text-xs font-bold uppercase tracking-[0.22em] text-gruv-yellow; }
+      .doc-title { @apply mt-3 max-w-5xl text-4xl font-black tracking-tight text-gruv-ink md:text-6xl; }
+      .doc-summary { @apply mt-5 max-w-4xl text-lg leading-8 text-gruv-ink/85; }
+      .doc-section { @apply my-6 rounded-2xl border border-gruv-line bg-gruv-panel/85 p-5 shadow-xl shadow-black/20 md:p-7; }
+      .doc-section-title { @apply mb-4 border-b border-gruv-line pb-3 text-2xl font-bold tracking-tight text-gruv-yellow; }
+      .doc-card { @apply rounded-2xl border border-gruv-line bg-gruv-panel-2/70 p-5; }
+      .doc-card-light { @apply rounded-2xl border border-[#d5c4a1] bg-gruv-light-panel p-5 text-gruv-light-ink; }
+      .doc-grid { @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3; }
+      .doc-badge { @apply inline-flex items-center rounded-full border border-gruv-line bg-black/20 px-3 py-1 text-xs font-medium text-gruv-muted; }
+      .doc-badge-hot { @apply border-gruv-yellow/50 bg-gruv-yellow/10 text-gruv-yellow; }
+      .doc-callout { @apply rounded-2xl border-l-4 border-gruv-blue bg-gruv-blue/10 p-4 text-gruv-ink/90; }
+      .doc-callout-warning { @apply border-gruv-orange bg-gruv-orange/10; }
+      .doc-callout-risk { @apply border-gruv-red bg-gruv-red/10; }
+      .doc-callout-ok { @apply border-gruv-aqua bg-gruv-aqua/10; }
+      .doc-figure { @apply my-6 overflow-hidden rounded-2xl border border-gruv-line bg-black/20 p-3; }
+      .doc-figure img, .doc-figure svg { @apply w-full rounded-xl; }
+      .doc-figcaption { @apply mt-3 px-1 text-sm leading-6 text-gruv-muted; }
+      .doc-table { @apply w-full border-collapse overflow-hidden rounded-xl text-left text-sm; }
+      .doc-table th { @apply border-b border-gruv-line bg-black/20 px-4 py-3 font-semibold text-gruv-yellow; }
+      .doc-table td { @apply border-b border-gruv-line px-4 py-3 align-top text-gruv-ink/90; }
+      .doc-prose { @apply max-w-none text-gruv-ink/90; }
+      .doc-prose p { @apply my-4 leading-8; }
+      .doc-prose ul { @apply my-4 list-disc space-y-2 pl-6; }
+      .doc-prose ol { @apply my-4 list-decimal space-y-2 pl-6; }
+      .doc-prose code { @apply rounded-md border border-gruv-line bg-black/30 px-1.5 py-0.5 text-sm text-gruv-yellow; }
+      .doc-prose pre { @apply overflow-auto rounded-2xl border border-gruv-line bg-black/40 p-4 text-sm text-gruv-ink; }
+      .toc-link { @apply block rounded-lg px-3 py-2 text-sm text-gruv-muted hover:bg-gruv-panel-2 hover:text-gruv-ink; }
+      .flow-node { @apply rounded-xl border border-gruv-line bg-gruv-panel-2 px-4 py-3 text-center text-sm font-semibold text-gruv-ink; }
+      .flow-arrow { @apply text-gruv-yellow; }
+    }
+  </style>
+</head>
+<body class="doc-shell">
+  <main class="doc-wrap">
+    <article class="space-y-6" data-doc-template="architecture">
+      <header class="doc-hero">
+        <p class="doc-kicker">Architecture · Voice-first Pi whiteboard</p>
+        <h1 class="doc-title">Pi × ElevenLabs Voice Whiteboard Dashboard</h1>
+        <p class="doc-summary">A Pi-native React dashboard where ElevenLabs Conversational AI handles microphone, turn detection, speech-to-text, and text-to-speech while Pi remains the only reasoning engine, codebase actor, prompt owner, and whiteboard decision maker.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="doc-badge doc-badge-hot">Decision: WebRTC + SSE + WebSocket, not gRPC</span>
+          <span class="doc-badge">Voice ID pq3wL6Xv3fuEM14W6ZCg</span>
+          <span class="doc-badge">React + shadcn/ui + Excalidraw</span>
+          <span class="doc-badge">Gruvbox dark/light</span>
+        </div>
+      </header>
+
+      <nav aria-label="Table of contents" class="doc-section">
+        <h2 class="doc-section-title">Read This First</h2>
+        <div class="grid gap-2 md:grid-cols-3">
+          <a class="toc-link" href="#context">System context</a>
+          <a class="toc-link" href="#drivers">Architecture drivers</a>
+          <a class="toc-link" href="#components">Component model</a>
+          <a class="toc-link" href="#ux">UX previews</a>
+          <a class="toc-link" href="#flows">Real-time flow</a>
+          <a class="toc-link" href="#excalidraw-llm">Excalidraw ↔ LLM</a>
+          <a class="toc-link" href="#implementation">Implementation plan</a>
+          <a class="toc-link" href="#decisions">Decisions</a>
+          <a class="toc-link" href="#risks">Risks</a>
+          <a class="toc-link" href="#questions">Open questions</a>
+        </div>
+      </nav>
+
+      <section id="context" class="doc-section" data-doc-part="context">
+        <h2 class="doc-section-title">System Context</h2>
+        <figure class="doc-figure" data-image-slot="system-context">
+          <img src="../assets/pi-elevenlabs-whiteboard-dashboard/system-context.png" alt="System context showing Browser Dashboard, ElevenLabs Voice, Custom LLM Gateway, Pi Hub, Pi Session, and Whiteboard State split by HTTPS and local boundaries.">
+          <figcaption class="doc-figcaption"><strong>Reader question:</strong> What are the system boundaries? ElevenLabs owns voice transport outside the local boundary; Pi owns reasoning, code tools, prompts, and whiteboard state inside the local boundary.</figcaption>
+        </figure>
+        <div class="doc-prose">
+          <p>The core design is not “embed a voice chatbot beside Pi.” The design is “make ElevenLabs call Pi as its Custom LLM.” That keeps the voice layer useful while preventing ElevenLabs from becoming the planner, coder, or explainer.</p>
+          <div class="doc-callout doc-callout-ok">
+            <strong>Boundary rule:</strong> ElevenLabs may transcribe and speak. Pi decides what to say, which tools to call, how to update the whiteboard, and which prompts govern behavior.
+          </div>
+        </div>
+      </section>
+
+      <section id="drivers" class="doc-section" data-doc-part="drivers">
+        <h2 class="doc-section-title">Architecture Drivers</h2>
+        <div class="doc-grid">
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Control</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">Prompts, model selection, tool policy, and whiteboard mechanics live in Pi extension files and Pi session state, not in ElevenLabs agent behavior.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Real-time feel</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">Use WebRTC for browser voice, OpenAI-compatible SSE for streamed Pi text back to ElevenLabs, and WebSocket for dashboard updates.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Minimal UI</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">Use shadcn/ui cards, buttons, tabs, badges, and command-list patterns. Use Excalidraw only for the canvas/editor surface.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Session safety</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">Every voice turn targets one explicit Pi session. Per-session locks prevent voice and TUI input from conflicting.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">No PAI dependency</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">The PAI daemon remains separate. This system uses ElevenLabs ConvAI directly and does not call PAI Pulse voice routes.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Explainable diagrams</h3><p class="mt-2 text-sm leading-6 text-gruv-ink/80">Generated UX and architecture visuals establish the mental model; inline tables and flows define the implementation contract.</p></div>
+        </div>
+      </section>
+
+      <section id="components" class="doc-section" data-doc-part="components">
+        <h2 class="doc-section-title">Component Model</h2>
+        <figure class="doc-figure" data-image-slot="component-map">
+          <img src="../assets/pi-elevenlabs-whiteboard-dashboard/component-map.png" alt="Component map showing Web UI, Session Registry, Voice Gateway, Pi Bridge, Whiteboard Store, Prompt Templates, Auth Token, and Event Stream.">
+          <figcaption class="doc-figcaption"><strong>Reader question:</strong> What must be built? The Pi Bridge is the only component that talks to Pi sessions. The Voice Gateway translates ElevenLabs Custom LLM requests into Pi-controlled prompts.</figcaption>
+        </figure>
+        <div class="overflow-x-auto">
+          <table class="doc-table">
+            <thead><tr><th>Component</th><th>Responsibility</th><th>Technology</th><th>Owns</th></tr></thead>
+            <tbody>
+              <tr><td>Dashboard Web UI</td><td>Collapsible left pane with Sessions dropdown, compact Active status, Mic controls, and Transcript; right pane reserved for whiteboard.</td><td>React, Vite, shadcn/ui, Tailwind, Excalidraw.</td><td>Client UI state only.</td></tr>
+              <tr><td>Session Registry</td><td>Tracks live and persisted Pi sessions exposed to dashboard.</td><td>Pi extension state or SDK helper.</td><td>Session metadata, selection, liveness.</td></tr>
+              <tr><td>Voice Gateway</td><td>OpenAI-compatible endpoint for ElevenLabs Custom LLM.</td><td>Bun/Node HTTP server, SSE.</td><td>Streaming response adapter, auth, turn routing.</td></tr>
+              <tr><td>Pi Bridge</td><td>Submits prompts to selected Pi session and streams Pi events.</td><td>Pi extension events; SDK/RPC fallback.</td><td>Prompt injection, event fan-out, session lock.</td></tr>
+              <tr><td>Whiteboard Store</td><td>Stores Excalidraw scene JSON, semantic index, sanitized LLM context packets, and Playwright-rendered snapshots.</td><td><code>.excalidraw</code> scene JSON + sidecar metadata in Pi custom entries or local files.</td><td>Visual scene, semantic graph, cleanup rules, revision history.</td></tr>
+              <tr><td>Prompt Templates</td><td>Control voice prompt, whiteboard generation, update rules.</td><td>Pi prompt/template files bundled in extension.</td><td>Behavior contract and prompt governance.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="ux" class="doc-section" data-doc-part="ux-previews">
+        <h2 class="doc-section-title">UX Direction: Left Pane Controls, Right Pane Whiteboard</h2>
+        <div class="doc-prose">
+          <p>The frontend should feel like a focused developer instrument, not an observability wall. All conversation controls belong in one collapsible left pane so the right side can become the whiteboard workspace. The left pane has exactly four functional blocks: <strong>Sessions</strong>, <strong>Active</strong>, <strong>Mic</strong>, and <strong>Transcript</strong>.</p>
+          <p>The mic icon and Start button are part of the Mic block. Active is intentionally small: model and voice badges belong there, but they should not compete with the transcript or canvas.</p>
+        </div>
+        <div class="grid gap-6 lg:grid-cols-2">
+          <figure class="doc-figure" data-image-slot="dashboard-dark">
+            <img src="../assets/pi-elevenlabs-whiteboard-dashboard/dashboard-dark.png" alt="Gruvbox dark dashboard preview with a collapsible left pane containing Sessions, Active, Mic, and Transcript, and a large right whiteboard area.">
+            <figcaption class="doc-figcaption"><strong>Dashboard preview:</strong> The left pane owns Sessions dropdown, compact Active status, Mic controls, and Transcript. The right side stays free for the whiteboard surface.</figcaption>
+          </figure>
+          <figure class="doc-figure" data-image-slot="whiteboard-light">
+            <img src="../assets/pi-elevenlabs-whiteboard-dashboard/whiteboard-light.png" alt="Gruvbox light whiteboard preview with Sessions, Active, Mic, and Transcript in a collapsible left pane and a large Excalidraw canvas on the right.">
+            <figcaption class="doc-figcaption"><strong>Whiteboard preview:</strong> Gruvbox light reserves most of the viewport for Excalidraw. The collapsible left pane can shrink to icon-only mode when the user wants maximum canvas room.</figcaption>
+          </figure>
+        </div>
+        <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(240px,320px)_1fr]">
+          <div class="doc-card-light">
+            <h3 class="font-bold">Expanded left pane contract</h3>
+            <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6">
+              <li><strong>Sessions:</strong> dropdown selector, not a long permanent list.</li>
+              <li><strong>Active:</strong> compact model + voice badges and connection state.</li>
+              <li><strong>Mic:</strong> mic icon, Start/Stop, mute, and level meter.</li>
+              <li><strong>Transcript:</strong> scrollable user/assistant voice transcript.</li>
+            </ol>
+          </div>
+          <div class="doc-card-light">
+            <h3 class="font-bold">Collapsed left pane contract</h3>
+            <p class="mt-3 text-sm leading-6">Collapsed mode shows only four icons in the same order: Sessions, Active, Mic, Transcript. Hover or click expands the pane. The whiteboard width grows immediately; no transcript content remains on the canvas side.</p>
+          </div>
+        </div>
+        <div class="doc-grid mt-4">
+          <div class="doc-card-light"><h3 class="font-bold">Component library</h3><p class="mt-2 text-sm leading-6">Use <strong>shadcn/ui</strong> for Select, Card, Badge, Button, ScrollArea, Sheet, Separator, Tooltip, and Toggle. The left pane can be a resizable/collapsible sidebar component.</p></div>
+          <div class="doc-card-light"><h3 class="font-bold">Canvas library</h3><p class="mt-2 text-sm leading-6">Use <strong>Excalidraw</strong> for the right-side canvas. Scene, Sync, Render, and Cleanup live in a minimal top toolbar; transcript and mic never occupy right-side space.</p></div>
+          <div class="doc-card-light"><h3 class="font-bold">Theme</h3><p class="mt-2 text-sm leading-6">Support dark and light Gruvbox. Keep semantic tokens identical so collapsed/expanded states and canvas controls remain consistent across themes.</p></div>
+        </div>
+      </section>
+
+      <section id="flows" class="doc-section" data-doc-part="flows">
+        <h2 class="doc-section-title">Key Real-time Flow</h2>
+        <figure class="doc-figure" data-image-slot="realtime-flow">
+          <img src="../assets/pi-elevenlabs-whiteboard-dashboard/realtime-flow.png" alt="Sequence showing Speak, STT, Pi Prompt, Tool Use, Stream Text, TTS, Canvas Update, and Done.">
+          <figcaption class="doc-figcaption"><strong>Reader question:</strong> How does one spoken turn become a streamed Pi answer and whiteboard update? Pi produces both the spoken text stream and any canvas mutation.</figcaption>
+        </figure>
+        <div class="rounded-2xl border border-gruv-line bg-black/20 p-5">
+          <div class="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
+            <div class="flow-node">Browser mic<br><span class="text-xs text-gruv-muted">WebRTC</span></div><div class="flow-arrow hidden md:block">→</div>
+            <div class="flow-node">ElevenLabs STT<br><span class="text-xs text-gruv-muted">voice only</span></div><div class="flow-arrow hidden md:block">→</div>
+            <div class="flow-node">Custom LLM Gateway<br><span class="text-xs text-gruv-muted">SSE adapter</span></div><div class="flow-arrow hidden md:block">→</div>
+            <div class="flow-node">Pi Session<br><span class="text-xs text-gruv-muted">reason + tools</span></div>
+          </div>
+          <div class="mt-5 grid gap-3 md:grid-cols-2">
+            <div class="doc-callout"><strong>Speech output:</strong> Pi assistant deltas stream back as OpenAI-compatible SSE chunks for ElevenLabs to speak.</div>
+            <div class="doc-callout doc-callout-ok"><strong>Canvas output:</strong> Pi whiteboard tools apply Excalidraw patches, update the semantic sidecar, and publish scene revisions through the dashboard WebSocket.</div>
+          </div>
+        </div>
+        <div class="doc-prose">
+          <pre><code>POST /v1/chat/completions  # ElevenLabs Custom LLM calls this
+→ extract latest user transcript
+→ resolve selected Pi session
+→ render Pi voice prompt template
+→ pi.sendUserMessage(...) or SDK session.prompt(...)
+→ stream message_update text_delta as SSE
+→ emit whiteboard tool updates over dashboard WebSocket</code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section" data-doc-part="data">
+        <h2 class="doc-section-title">Data Model & Ownership</h2>
+        <div class="overflow-x-auto">
+          <table class="doc-table">
+            <thead><tr><th>Data</th><th>Owner</th><th>Persistence</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Pi messages</td><td>Pi Session</td><td>Pi session JSONL</td><td>Source of truth for reasoning history.</td></tr>
+              <tr><td>Voice transcript</td><td>Dashboard Hub</td><td>Session-scoped JSON/custom entries</td><td>Mirror of user/assistant voice turns for UI and debugging.</td></tr>
+              <tr><td>Whiteboard scenes</td><td>Whiteboard Store</td><td>Session custom entries, <code>.pi/whiteboards/</code>, and exportable <code>.excalidraw</code> files</td><td>Excalidraw elements/files/appState plus semantic sidecar, cleanup checksum, snapshot hash, and revision ID.</td></tr>
+              <tr><td>Prompt templates</td><td>Extension package</td><td>Files under extension/prompts</td><td>Versioned behavior contract.</td></tr>
+              <tr><td>ElevenLabs token</td><td>Voice Gateway</td><td>Ephemeral</td><td>Never expose API key to browser.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="excalidraw-llm" class="doc-section" data-doc-part="excalidraw-llm-contract">
+        <h2 class="doc-section-title">Excalidraw → Pi/LLM Understanding Contract</h2>
+        <div class="doc-prose">
+          <p>Excalidraw is the right visual editor, but Pi must never reason over a noisy raw <code>.excalidraw</code> file alone. Every voice turn builds a compact <strong>Whiteboard Context Packet</strong> from the scene, the semantic sidecar, recent canvas events, selected elements, and—when needed—a Playwright-rendered image snapshot.</p>
+          <div class="doc-callout doc-callout-ok"><strong>Reliability rule:</strong> Pi can mutate the whiteboard only after it has both a semantic target and a validated Excalidraw patch. If the scene is ambiguous, Pi asks a clarifying question or renders a screenshot fallback before editing.</div>
+        </div>
+        <div class="grid gap-6 lg:grid-cols-2">
+          <figure class="doc-figure" data-image-slot="excalidraw-context-pipeline">
+            <img src="../assets/pi-elevenlabs-whiteboard-dashboard/excalidraw-context-pipeline.png" alt="Pipeline showing raw Excalidraw scene becoming a cleaned semantic context packet for Pi, with Playwright snapshot as visual fallback.">
+            <figcaption class="doc-figcaption"><strong>Reader question:</strong> How does Pi read a drawing without getting lost in visual noise? The cleanup compiler strips low-value fields, keeps semantic links, and adds a rendered image only when visual layout matters.</figcaption>
+          </figure>
+          <figure class="doc-figure" data-image-slot="excalidraw-fallback-ladder">
+            <img src="../assets/pi-elevenlabs-whiteboard-dashboard/excalidraw-fallback-ladder.png" alt="Fallback ladder from semantic JSON to targeted element JSON, Playwright PNG snapshot, vision/image reasoning, and user clarification.">
+            <figcaption class="doc-figcaption"><strong>Reader question:</strong> What prevents whiteboard blindness? Pi escalates from structured context to rendered visual evidence, then asks the user rather than making destructive guesses.</figcaption>
+          </figure>
+        </div>
+        <div class="grid gap-4 xl:grid-cols-3">
+          <div class="doc-card">
+            <h3 class="font-bold text-gruv-yellow">1. Preserve visual truth</h3>
+            <p class="mt-2 text-sm leading-6 text-gruv-ink/80">Persist normal Excalidraw scene JSON: <code>elements</code>, <code>appState</code>, and <code>files</code>. Use <code>serializeAsJSON</code>, <code>loadFromBlob</code>, <code>onChange</code>, and <code>updateScene</code> so exported files stay portable.</p>
+          </div>
+          <div class="doc-card">
+            <h3 class="font-bold text-gruv-yellow">2. Add semantic anchors</h3>
+            <p class="mt-2 text-sm leading-6 text-gruv-ink/80">Store <code>customData.semanticId</code>, <code>semanticType</code>, ownership, tags, and source references on elements. Keep a sidecar graph that maps shapes and arrows to brainstorm concepts.</p>
+          </div>
+          <div class="doc-card">
+            <h3 class="font-bold text-gruv-yellow">3. Compile LLM context</h3>
+            <p class="mt-2 text-sm leading-6 text-gruv-ink/80">Before each Pi turn, compile selected elements, text labels, bound arrows, viewport, recent events, and a compact scene summary. Never send base64 files or full style noise by default.</p>
+          </div>
+        </div>
+        <div class="doc-prose">
+          <h3 class="mt-6 text-xl font-bold text-gruv-yellow">Whiteboard Context Packet</h3>
+          <pre><code>{
+  "revisionId": "wb_42",
+  "selected": ["svc.piHub"],
+  "viewport": { "x": 0, "y": 0, "zoom": 0.8 },
+  "nodes": [
+    {
+      "id": "svc.piHub",
+      "elementIds": ["el_pi_hub_rect", "el_pi_hub_label"],
+      "kind": "service",
+      "title": "Pi Hub",
+      "summary": "Owns prompts, tools, sessions, and whiteboard decisions"
+    }
+  ],
+  "edges": [
+    {
+      "from": "voice.elevenlabs",
+      "to": "svc.piHub",
+      "arrowElementId": "el_custom_llm_arrow",
+      "label": "Custom LLM HTTPS SSE",
+      "kind": "voice"
+    }
+  ],
+  "recentEvents": ["user selected Pi Hub", "user asked for Excalidraw integration"],
+  "snapshot": { "available": true, "path": "snapshots/wb_42.png", "reason": "layout_or_ambiguous_scene" }
+}</code></pre>
+        </div>
+        <div class="overflow-x-auto mt-5">
+          <table class="doc-table">
+            <thead><tr><th>Noise source in <code>.excalidraw</code></th><th>Cleanup action</th><th>Kept for Pi?</th></tr></thead>
+            <tbody>
+              <tr><td>Deleted elements, stale collaborator state, transient UI state</td><td>Drop unless debugging revision history.</td><td>No</td></tr>
+              <tr><td>Style defaults, seeds, version nonces, roughness, opacity</td><td>Collapse to semantic style only when it conveys meaning.</td><td>Usually no</td></tr>
+              <tr><td>Large <code>files[*].dataURL</code> image payloads</td><td>Replace with MIME type, hash, dimensions, filename, and optional rendered snapshot path.</td><td>No base64</td></tr>
+              <tr><td>Freehand strokes and decorative arrows</td><td>Summarize as annotations unless selected or connected to semantic elements.</td><td>Only summary</td></tr>
+              <tr><td>Text elements and bound arrows</td><td>Normalize into nodes, labels, and edges with stable semantic IDs.</td><td>Yes</td></tr>
+              <tr><td>Frames, groups, selected element IDs, viewport</td><td>Keep as context boundaries and user focus.</td><td>Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="doc-prose">
+          <h3 class="mt-6 text-xl font-bold text-gruv-yellow">Fallback ladder for “can Pi understand this canvas?”</h3>
+          <ol>
+            <li><strong>Semantic packet first:</strong> use sidecar graph + cleaned Excalidraw elements for normal brainstorming.</li>
+            <li><strong>Targeted raw JSON:</strong> include only selected/nearby elements when exact geometry, bindings, or text is relevant.</li>
+            <li><strong>Playwright snapshot:</strong> render the Excalidraw canvas in-browser and capture a PNG when layout, overlap, handwriting, or visual gestalt matters.</li>
+            <li><strong>Image reasoning fallback:</strong> send the PNG snapshot to the vision-capable model with a strict prompt: identify visible objects, ambiguities, and proposed safe edits.</li>
+            <li><strong>User clarification:</strong> if semantic target and visual target disagree, ask before editing. No silent destructive update.</li>
+          </ol>
+          <h3 class="mt-6 text-xl font-bold text-gruv-yellow">Pi whiteboard tool contract</h3>
+          <pre><code>whiteboard_get_context({ includeSnapshot?: boolean, scope?: "selected" | "viewport" | "all" })
+whiteboard_apply_excalidraw_patch({ baseRevisionId, operations, rationale })
+whiteboard_cleanup_scene({ baseRevisionId, preserveExports: true })
+whiteboard_render_snapshot({ scope: "selected" | "viewport" | "all", reason })
+whiteboard_add_shape({ kind, title, summary, x?, y? })
+whiteboard_add_arrow({ fromSemanticId, toSemanticId, label, kind })
+whiteboard_explain_selection()</code></pre>
+          <p>Each mutating tool returns a validated patch, a human-readable summary for the transcript, and a new revision ID. The dashboard applies patches with Excalidraw <code>updateScene</code>; the store then recomputes the semantic sidecar and cleanup checksum.</p>
+        </div>
+      </section>
+
+      <section id="implementation" class="doc-section" data-doc-part="implementation-plan">
+        <h2 class="doc-section-title">Implementation Plan</h2>
+        <ol class="relative ml-3 space-y-4 border-l border-gruv-line pl-6">
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Transport spike.</strong> Build Pi extension + dashboard hub. List active sessions, open dashboard, stream Pi <code>message_update</code> events to browser.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Excalidraw whiteboard spike.</strong> Embed <code>@excalidraw/excalidraw</code> in the right pane. Wire <code>initialData</code>, <code>onChange</code>, <code>excalidrawAPI</code>, <code>updateScene</code>, export/import, and revision persistence.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Whiteboard cleanup compiler.</strong> Convert noisy <code>.excalidraw</code> scenes into semantic sidecar + compact Whiteboard Context Packet. Strip base64 files, deleted elements, style defaults, and transient app state.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Playwright visual fallback.</strong> Add <code>whiteboard_render_snapshot</code> using Pi's Playwright tool path. Capture selected/viewport/all screenshots for visual reasoning, layout critique, and ambiguity resolution.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Custom LLM gateway.</strong> Add <code>/v1/chat/completions</code> SSE endpoint. Configure ElevenLabs agent to use Custom LLM and voice ID <code>pq3wL6Xv3fuEM14W6ZCg</code>.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Voice session UI.</strong> Build the collapsible left pane: Sessions dropdown, compact Active status, Mic block with mic icon + Start/Stop/Mute, and scrollable Transcript.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Pi whiteboard tools.</strong> Register <code>whiteboard_get_context</code>, <code>whiteboard_apply_excalidraw_patch</code>, <code>whiteboard_cleanup_scene</code>, <code>whiteboard_render_snapshot</code>, <code>whiteboard_add_shape</code>, and <code>whiteboard_add_arrow</code>.</li>
+          <li><span class="absolute -left-2 mt-1 h-4 w-4 rounded-full bg-gruv-yellow"></span><strong>Hardening.</strong> Add auth token, session locks, public tunnel allowlist, truncation, logging, patch validation, confidence thresholds, and abort/interruption handling.</li>
+        </ol>
+      </section>
+
+      <section id="decisions" class="doc-section" data-doc-part="decisions">
+        <h2 class="doc-section-title">Decision Records</h2>
+        <div class="overflow-x-auto">
+          <table class="doc-table">
+            <thead><tr><th>Decision</th><th>Chosen</th><th>Why</th><th>Rejected</th></tr></thead>
+            <tbody>
+              <tr><td>Voice integration</td><td>ElevenLabs ConvAI Custom LLM</td><td>ElevenLabs handles voice; Pi provides streamed answer.</td><td>Normal ConvAI client-tool delegation, because ElevenLabs would still decide too much.</td></tr>
+              <tr><td>Realtime protocol</td><td>WebRTC + SSE + WebSocket</td><td>Matches browser voice, Custom LLM streaming, and dashboard live updates.</td><td>gRPC, because Pi has no documented gRPC surface and browser gRPC adds proxy complexity.</td></tr>
+              <tr><td>Frontend stack</td><td>React + shadcn/ui + Excalidraw</td><td>Minimal, accessible component primitives plus a mature portable whiteboard editor.</td><td>Heavy bespoke design system, React Flow as primary canvas.</td></tr>
+              <tr><td>Whiteboard substrate</td><td>Excalidraw scene JSON + semantic sidecar</td><td>Excalidraw handles editing/export; sidecar and cleanup compiler make the scene reliable for LLM reasoning.</td><td>Raw Excalidraw-only prompts, because visual JSON is too noisy and weakly semantic.</td></tr>
+              <tr><td>Voice ID</td><td><code>pq3wL6Xv3fuEM14W6ZCg</code></td><td>User preference; can be default or runtime TTS override.</td><td>Using PAI daemon voice route.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section" data-doc-part="qualities">
+        <h2 class="doc-section-title">Quality Attributes</h2>
+        <div class="doc-grid">
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Latency</h3><p class="mt-2 text-sm leading-6">Stream buffer words early when Pi needs tool time. Prefer concise spoken responses.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Security</h3><p class="mt-2 text-sm leading-6">Public gateway requires bearer auth and never exposes ElevenLabs or Pi credentials to the browser.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Operability</h3><p class="mt-2 text-sm leading-6">Each turn records transcript, target session, prompt template version, whiteboard revision, and stream status.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Prompt control</h3><p class="mt-2 text-sm leading-6">All behavior prompts live in Pi extension files. ElevenLabs agent prompt stays minimal and non-authoritative.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Accessibility</h3><p class="mt-2 text-sm leading-6">Voice is optional. Every voice event appears as transcript text. Whiteboard changes are summarized textually.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-aqua">Theme clarity</h3><p class="mt-2 text-sm leading-6">Gruvbox dark for dashboard focus; Gruvbox light for diagram legibility. Both use identical semantic tokens.</p></div>
+        </div>
+      </section>
+
+      <section id="risks" class="doc-section" data-doc-part="risks">
+        <h2 class="doc-section-title">Risks & Mitigations</h2>
+        <div class="space-y-4">
+          <aside class="doc-callout doc-callout-risk"><strong>Risk: ElevenLabs becomes the agent.</strong> Mitigation: configure Custom LLM; keep ElevenLabs prompt minimal; no client tools that answer substantive questions except pass-through control tools.</aside>
+          <aside class="doc-callout doc-callout-warning"><strong>Risk: public endpoint exposure.</strong> Mitigation: require signed session tokens, rate limits, and tunnel allowlist; never bind sensitive services publicly.</aside>
+          <aside class="doc-callout doc-callout-warning"><strong>Risk: voice latency during codebase inspection.</strong> Mitigation: stream a short acknowledgement chunk, then let Pi inspect; show progress in transcript and canvas status.</aside>
+          <aside class="doc-callout"><strong>Risk: session collision.</strong> Mitigation: one selected session per voice conversation; lock or queue voice turns while Pi is streaming.</aside>
+          <aside class="doc-callout doc-callout-risk"><strong>Risk: Pi misreads the Excalidraw scene.</strong> Mitigation: semantic sidecar, cleanup compiler, selected-element context, Playwright snapshot fallback, image reasoning fallback, and clarify-before-destructive-edit policy.</aside>
+          <aside class="doc-callout doc-callout-warning"><strong>Risk: <code>.excalidraw</code> files become prompt-noisy.</strong> Mitigation: remove deleted elements, transient app state, base64 file payloads, style defaults, and unrelated viewport content before every LLM turn.</aside>
+        </div>
+      </section>
+
+      <section class="doc-section" data-doc-part="operations">
+        <h2 class="doc-section-title">Deployment & Operations</h2>
+        <div class="doc-prose">
+          <ul>
+            <li><strong>Local hub:</strong> bind dashboard hub to <code>127.0.0.1</code> by default.</li>
+            <li><strong>Public gateway:</strong> expose only the Custom LLM endpoint through Cloudflare Tunnel, ngrok, or a small VPS reverse proxy.</li>
+            <li><strong>ElevenLabs setup:</strong> configure agent Custom LLM endpoint; enable TTS Voice ID override if using runtime voice override; otherwise set default voice to <code>pq3wL6Xv3fuEM14W6ZCg</code>.</li>
+            <li><strong>Logging:</strong> record turn ID, Pi session ID, ElevenLabs conversation ID, whiteboard revision ID, stream start/end, and errors.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="questions" class="doc-section" data-doc-part="questions">
+        <h2 class="doc-section-title">Assumptions & Open Questions</h2>
+        <div class="doc-grid">
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Assumption</h3><p class="mt-2 text-sm leading-6">The first implementation can use a public tunnel for the Custom LLM endpoint during development.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-yellow">Assumption</h3><p class="mt-2 text-sm leading-6">The target ElevenLabs plan supports ConvAI Custom LLM and the selected voice ID.</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-orange">Open</h3><p class="mt-2 text-sm leading-6">Should dashboard-created sessions use the Pi SDK directly, or should every session be a normal Pi TUI session registered by an extension?</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-orange">Open</h3><p class="mt-2 text-sm leading-6">Should Excalidraw scene JSON, semantic sidecar, snapshots, and cleanup metadata be stored in Pi session custom entries, project <code>.pi/whiteboards/</code>, or both?</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-orange">Open</h3><p class="mt-2 text-sm leading-6">Which tunnel/auth strategy should be standard for the Custom LLM endpoint?</p></div>
+          <div class="doc-card"><h3 class="font-bold text-gruv-orange">Open</h3><p class="mt-2 text-sm leading-6">Should the voice session interrupt Pi on user speech, or queue steering messages until the current turn reaches a safe point?</p></div>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

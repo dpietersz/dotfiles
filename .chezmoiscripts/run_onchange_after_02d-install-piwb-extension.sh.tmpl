@@ -1,0 +1,41 @@
+#!/bin/bash
+# piwb root package hash: {{ include "dot_pi/agent/extensions/pi-elevenlabs-whiteboard/package.json" | sha256sum }}
+# piwb root lock hash:    {{ include "dot_pi/agent/extensions/pi-elevenlabs-whiteboard/bun.lock" | sha256sum }}
+# piwb web package hash:  {{ include "dot_pi/agent/extensions/pi-elevenlabs-whiteboard/web/package.json" | sha256sum }}
+# piwb web lock hash:     {{ include "dot_pi/agent/extensions/pi-elevenlabs-whiteboard/web/bun.lock" | sha256sum }}
+# piwb service hash:      {{ include "dot_config/systemd/user/piwb-public-voice-setup.service" | sha256sum }}
+
+set -euo pipefail
+
+{{- if .remote }}
+echo "[piwb] Skipping on remote host."
+exit 0
+{{- end }}
+
+BUN="{{ if $b := lookPath "bun" }}{{ $b }}{{ else if stat (joinPath .chezmoi.homeDir ".bun/bin/bun") }}{{ joinPath .chezmoi.homeDir ".bun/bin/bun" }}{{ else }}/home/linuxbrew/.linuxbrew/bin/bun{{ end }}"
+EXT_DIR="$HOME/.pi/agent/extensions/pi-elevenlabs-whiteboard"
+
+if [ ! -x "$BUN" ]; then
+  echo "[piwb] bun not found at $BUN — skipping until bun is installed"
+  exit 0
+fi
+if [ ! -d "$EXT_DIR" ]; then
+  echo "[piwb] extension directory missing: $EXT_DIR"
+  exit 1
+fi
+
+export PATH="$HOME/.bun/bin:/home/linuxbrew/.linuxbrew/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+echo "[piwb] Installing root dependencies..."
+cd "$EXT_DIR"
+"$BUN" install --frozen-lockfile
+
+echo "[piwb] Installing web dependencies..."
+cd "$EXT_DIR/web"
+"$BUN" install --frozen-lockfile
+
+echo "[piwb] Building dashboard..."
+cd "$EXT_DIR"
+"$BUN" run build:web
+
+echo "[piwb] Done."

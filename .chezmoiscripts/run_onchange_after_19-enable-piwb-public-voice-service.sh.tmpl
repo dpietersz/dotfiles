@@ -1,0 +1,51 @@
+#!/bin/bash
+# piwb-public-voice-setup.service hash: {{ include "dot_config/systemd/user/piwb-public-voice-setup.service" | sha256sum }}
+# piwb package hash:                    {{ include "dot_pi/agent/extensions/pi-elevenlabs-whiteboard/package.json" | sha256sum }}
+
+set -euo pipefail
+
+{{- if or .remote .isMacOS .isServer (not .isBluefin) }}
+echo "[piwb-voice] Skipping: {{ if .remote }}remote{{ else if .isMacOS }}macOS{{ else if .isServer }}server{{ else }}non-bluefin host{{ end }}."
+exit 0
+{{- end }}
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "[piwb-voice] systemctl not available — skipping."
+  exit 0
+fi
+if ! systemctl --user show-environment >/dev/null 2>&1; then
+  echo "[piwb-voice] systemd --user not running — skipping."
+  exit 0
+fi
+if ! command -v tailscale >/dev/null 2>&1; then
+  echo "[piwb-voice] tailscale not found — skipping public voice setup."
+  exit 0
+fi
+if ! command -v pass >/dev/null 2>&1; then
+  echo "[piwb-voice] pass not found — skipping public voice setup."
+  exit 0
+fi
+if ! pass show Sites/elevenlabs.com/api-key/pi >/dev/null 2>&1; then
+  echo "[piwb-voice] ElevenLabs pass entry missing/unavailable — skipping public voice setup."
+  exit 0
+fi
+
+SERVICE_FILE="$HOME/.config/systemd/user/piwb-public-voice-setup.service"
+if [ ! -f "$SERVICE_FILE" ]; then
+  echo "[piwb-voice] Missing unit file: $SERVICE_FILE — chezmoi may not have applied yet"
+  exit 1
+fi
+
+systemctl --user daemon-reload
+systemctl --user enable piwb-public-voice-setup.service
+
+# Start best-effort. If this machine lacks Tailscale Funnel/operator permission,
+# do not fail the entire chezmoi apply; user can run the command from README.
+if systemctl --user restart piwb-public-voice-setup.service; then
+  echo "[piwb-voice] Public voice setup OK."
+  systemctl --user --no-pager status piwb-public-voice-setup.service | head -n 10 || true
+else
+  echo "[piwb-voice] Public voice setup failed; leaving service enabled for manual retry."
+  echo "[piwb-voice] Try: systemctl --user restart piwb-public-voice-setup.service"
+  systemctl --user --no-pager status piwb-public-voice-setup.service | head -n 20 || true
+fi

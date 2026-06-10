@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Gruvbox theme mapped onto shadcn/ui semantic tokens.
+ * Light = Gruvbox light (diagram legibility). Dark = Gruvbox dark (focus).
+ * Both expose identical token names so collapsed/expanded panes and canvas
+ * controls stay consistent across themes (architecture: "Theme clarity").
+ */
+:root {
+  --radius: 0.65rem;
+
+  --background: #fbf1c7;
+  --foreground: #3c3836;
+  --card: #f2e5bc;
+  --card-foreground: #3c3836;
+  --popover: #f2e5bc;
+  --popover-foreground: #3c3836;
+  --primary: #b57614;
+  --primary-foreground: #fbf1c7;
+  --secondary: #ebdbb2;
+  --secondary-foreground: #3c3836;
+  --muted: #ebdbb2;
+  --muted-foreground: #7c6f64;
+  --accent: #d5c4a1;
+  --accent-foreground: #3c3836;
+  --destructive: #cc241d;
+  --destructive-foreground: #fbf1c7;
+  --border: #d5c4a1;
+  --input: #d5c4a1;
+  --ring: #b57614;
+
+  --aqua: #427b58;
+  --blue: #076678;
+  --yellow: #b57614;
+  --orange: #af3a03;
+  --red: #cc241d;
+
+  --sidebar: #f2e5bc;
+  --sidebar-foreground: #3c3836;
+  --sidebar-primary: #b57614;
+  --sidebar-primary-foreground: #fbf1c7;
+  --sidebar-accent: #ebdbb2;
+  --sidebar-accent-foreground: #3c3836;
+  --sidebar-border: #d5c4a1;
+  --sidebar-ring: #b57614;
+}
+
+.dark {
+  --background: #282828;
+  --foreground: #fbf1c7;
+  --card: #3c3836;
+  --card-foreground: #fbf1c7;
+  --popover: #3c3836;
+  --popover-foreground: #fbf1c7;
+  --primary: #fabd2f;
+  --primary-foreground: #282828;
+  --secondary: #504945;
+  --secondary-foreground: #fbf1c7;
+  --muted: #3c3836;
+  --muted-foreground: #a89984;
+  --accent: #504945;
+  --accent-foreground: #fbf1c7;
+  --destructive: #fb4934;
+  --destructive-foreground: #282828;
+  --border: #665c54;
+  --input: #504945;
+  --ring: #fabd2f;
+
+  --aqua: #8ec07c;
+  --blue: #83a598;
+  --yellow: #fabd2f;
+  --orange: #fe8019;
+  --red: #fb4934;
+
+  --sidebar: #32302f;
+  --sidebar-foreground: #fbf1c7;
+  --sidebar-primary: #fabd2f;
+  --sidebar-primary-foreground: #282828;
+  --sidebar-accent: #3c3836;
+  --sidebar-accent-foreground: #fbf1c7;
+  --sidebar-border: #665c54;
+  --sidebar-ring: #fabd2f;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-aqua: var(--aqua);
+  --color-blue: var(--blue);
+  --color-yellow: var(--yellow);
+  --color-orange: var(--orange);
+  --color-red: var(--red);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+      Arial, sans-serif;
+  }
+}
+
+/* Excalidraw paints its own surface; keep it edge-to-edge in the right pane. */
+.excalidraw .App-menu__left {
+  box-shadow: none;
+}

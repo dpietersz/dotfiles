@@ -1,0 +1,37 @@
+{
+  "name": "pi-elevenlabs-whiteboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Pi x ElevenLabs voice whiteboard dashboard. Pi is the only reasoning engine; ElevenLabs handles voice transport via a Custom LLM gateway.",
+  "scripts": {
+    "build:web": "cd web && bun run build",
+    "dev:web": "cd web && bun run dev",
+    "hub": "bun extension/hub/standalone.ts",
+    "hub:mock": "PIWB_BRIDGE=mock bun extension/hub/standalone.ts",
+    "create:elevenlabs-agent": "bun scripts/create-elevenlabs-agent.ts",
+    "setup:elevenlabs-agent": "bun scripts/create-elevenlabs-agent.ts",
+    "setup:public-voice": "bun scripts/setup-public-voice.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test extension/hub/cleanup.test.ts extension/hub/whiteboard-store.test.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./extension/index.ts"
+    ]
+  },
+  "dependencies": {
+    "ws": "8.21.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "0.79.0",
+    "@earendil-works/pi-coding-agent": "0.79.0",
+    "@types/node": "22.10.2",
+    "@types/ws": "8.18.1",
+    "typebox": "1.2.3",
+    "typescript": "5.7.2"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.60.0"
+  }
+}
