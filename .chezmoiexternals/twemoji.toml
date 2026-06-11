@@ -1,0 +1,16 @@
+# Twemoji — flat Twitter-style color emoji, preferred over Noto in Chromium/
+# Electron apps (Helium, teams-for-linux). See dot_config/fontconfig/conf.d/
+# 75-emoji-color.conf for the fallback wiring.
+#
+# MUST be the Mozilla COLR build (family "Twemoji Mozilla"), NOT the SVGinOT
+# "Twitter Color Emoji" build. Chromium/Skia cannot render SVG-in-OpenType
+# color glyphs — the SVGinOT build shows up as black outlines (verified by
+# headless render). The COLR build renders the full color set correctly.
+#
+# v0.7.0 tracks Twemoji 13.1 (~2021); newer codepoints it lacks fall through to
+# Noto Color Emoji via the conf's secondary <prefer>. Single .ttf, not an
+# archive, so type="file" landing directly in ~/.fonts/ (scanned recursively).
+[".fonts/Twemoji.Mozilla.ttf"]
+type = "file"
+url = "https://github.com/mozilla/twemoji-colr/releases/download/v0.7.0/Twemoji.Mozilla.ttf"
+refreshPeriod = "720h"
