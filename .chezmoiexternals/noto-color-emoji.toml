@@ -1,0 +1,20 @@
+# Noto Color Emoji — the CBDT/CBLC (bitmap) build, NOT the COLRv1 build.
+#
+# WHY THE BITMAP BUILD (read before "upgrading" to COLRv1):
+# The image's system font (google-noto-color-emoji-fonts) is COLRv1-only
+# (Noto-COLRv1.ttf). teams-for-linux (Electron) renders COLRv1 emoji as BLANK —
+# its bundled FreeType/Chromium doesn't draw the COLRv1 color layers, even
+# though desktop Chromium (system FreeType) does. The two emoji sets that worked
+# before (OpenMoji, Twemoji Mozilla) were COLRv0. CBDT (bitmap) is the format
+# Chrome shipped Noto emoji in for ~a decade, so it renders in every Chromium/
+# Electron incl. Teams. Same family name "Noto Color Emoji" and visually
+# identical to the COLRv1 art at UI sizes; this is the universally-compatible
+# Noto. The conf rejects the system COLRv1 file so this build is the one used.
+#
+# Placed user-scope (also covers the chance the cause was system-dir vs ~/.fonts
+# — both previously-working fonts lived in ~/.fonts). raw main = auto-current
+# Noto (Unicode 17.0+); ~10.6MB. License: OFL 1.1.
+[".fonts/NotoColorEmoji/NotoColorEmoji.ttf"]
+type = "file"
+url = "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/fonts/NotoColorEmoji.ttf"
+refreshPeriod = "720h"
