@@ -2,6 +2,7 @@ node_modules/
 web/node_modules/
 web/dist/
 extension/hub/web-dist/
+*.tsbuildinfo
 .pi/
 .pi-data/
 .env
