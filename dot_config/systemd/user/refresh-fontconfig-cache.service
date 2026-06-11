@@ -1,0 +1,21 @@
+[Unit]
+Description=Rebuild the user fontconfig cache with the system fontconfig binary
+Documentation=man:fc-cache(1)
+# Run early, before the graphical session (and the GUI apps niri spawns) comes
+# up, so Chromium/Electron apps (Helium, teams-for-linux) read a fresh, correct
+# ~/.cache/fontconfig instead of a stale post-image-update one and render color
+# emoji rather than tofu. See dot_config/fontconfig/conf.d/75-emoji-color.conf.
+Before=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Explicit /usr/bin/fc-cache — NOT the Homebrew fontconfig 2.18 that shadows it
+# first on PATH. Helium/Teams link the system libfontconfig (2.17, cache-9);
+# only the system binary refreshes the cache set they actually read. -f forces
+# regeneration even when ostree-normalized mtimes make a stale cache look fresh,
+# which is the exact bug being worked around.
+ExecStart=/usr/bin/fc-cache -f
+
+[Install]
+WantedBy=default.target

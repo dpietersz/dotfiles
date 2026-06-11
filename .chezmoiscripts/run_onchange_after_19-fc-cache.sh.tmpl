@@ -11,17 +11,27 @@
 # ibm-plex-sans: {{ include ".chezmoiexternals/ibm-plex-sans.toml" | sha256sum }}
 # meslo:         {{ include ".chezmoiexternals/meslo.toml.tmpl" | sha256sum }}
 # departuremono: {{ include ".chezmoiexternals/departuremono.toml" | sha256sum }}
+# emoji-conf:    {{ include "dot_config/fontconfig/conf.d/75-emoji-color.conf" | sha256sum }}
 set -euo pipefail
 
-if ! command -v fc-cache >/dev/null 2>&1; then
-    # macOS has no fc-cache; CoreText auto-discovers ~/Library/Fonts/. On Linux
-    # without fontconfig there's nothing useful to do here either.
-    exit 0
+# Use the SYSTEM fontconfig binary explicitly. Homebrew's fontconfig 2.18 sits
+# first on PATH and writes a parallel cache-11 set using brew's own config; the
+# GUI apps (Helium, teams-for-linux) link the system libfontconfig 2.17 and read
+# the cache-9 set, so a bare `fc-cache` here refreshed the wrong cache and left
+# the system one stale. Prefer /usr/bin/fc-cache; fall back to PATH only if it's
+# missing (e.g. macOS, which has no fc-cache and uses CoreText anyway).
+FC_CACHE=/usr/bin/fc-cache
+if [ ! -x "$FC_CACHE" ]; then
+    command -v fc-cache >/dev/null 2>&1 || exit 0
+    FC_CACHE=fc-cache
 fi
 
-# -f forces a rebuild of cached files even when mtimes look fresh; quiet stays
-# out of the apply log. ~/.fonts/ is the legacy path fontconfig still scans by
-# default — same dir the existing meslo/departuremono externals use.
-fc-cache -f "$HOME/.fonts" >/dev/null 2>&1 || true
+# Full force rebuild of every configured font dir (no path arg), not just
+# ~/.fonts/. -f forces regeneration even when ostree-normalized mtimes make a
+# stale cache look fresh — the root cause of color emoji rendering as tofu in
+# Chromium/Electron apps after an image update. This refreshes the same cache
+# the GUI apps read so emoji and just-extracted text fonts resolve on next
+# launch. The companion refresh-fontconfig-cache.service does the same at login.
+"$FC_CACHE" -f >/dev/null 2>&1 || true
 
-echo "→ fc-cache refreshed (font externals changed)"
+echo "→ fontconfig cache refreshed via $FC_CACHE (font set changed)"

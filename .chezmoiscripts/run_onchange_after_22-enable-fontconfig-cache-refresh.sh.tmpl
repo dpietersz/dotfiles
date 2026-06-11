@@ -1,0 +1,33 @@
+#!/bin/bash
+# unit hash: {{ include "dot_config/systemd/user/refresh-fontconfig-cache.service" | sha256sum }}
+# (Hash above forces this run_onchange script to re-fire whenever the unit changes.)
+
+set -euo pipefail
+
+# Enable a tiny oneshot that rebuilds the user fontconfig cache with the SYSTEM
+# fc-cache at every login, before the graphical session brings up GUI apps.
+#
+# WHY: the Bluefin image bakes Noto Color Emoji + a build-time fc-cache, but
+# ostree/rechunk normalizes font-dir mtimes after that cache is built, so at
+# runtime the baked cache looks stale and fontconfig falls back to whatever is
+# in ~/.cache/fontconfig. After a nightly image update that user cache is stale,
+# Chromium/Electron apps (Helium, teams-for-linux) resolve emoji to tofu and
+# cache the decision in-process until restarted. Refreshing the cache before the
+# session comes up closes that window so apps launch with correct emoji. Pairs
+# with dot_config/fontconfig/conf.d/75-emoji-color.conf (explicit fallback) and
+# run_onchange_after_19-fc-cache.sh.tmpl (refresh on chezmoi apply).
+
+{{- if or .remote .isMacOS .isServer }}
+exit 0
+{{- end }}
+
+UNIT=refresh-fontconfig-cache.service
+SERVICE_FILE="$HOME/.config/systemd/user/$UNIT"
+[ -f "$SERVICE_FILE" ] || { echo "[fontconfig-refresh] unit not found at $SERVICE_FILE"; exit 1; }
+
+systemctl --user daemon-reload
+systemctl --user enable "$UNIT" >/dev/null
+# Run now (and on every apply) — idempotent: rebuilding the cache is harmless.
+systemctl --user restart "$UNIT" || true
+
+echo "[fontconfig-refresh] enabled and applied: $UNIT"
