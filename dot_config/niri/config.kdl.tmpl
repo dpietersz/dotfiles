@@ -82,7 +82,7 @@ input {
     mouse {
         accel-profile "flat"
         accel-speed 0.65
-        scroll-factor 1.75
+        scroll-factor 1.50
     }
 }
 
@@ -308,6 +308,20 @@ window-rule {
     open-floating true
 }
 
+// Vibe Typer recording indicator — small floating timer/waveform pill that
+// pops up while transcribing. Shares app-id "vibe-typer" with the main window,
+// so scope on title. The newer version registers it as a real toplevel, so it
+// grabbed the focus-ring (the orange border). Kill the ring + border on it.
+window-rule {
+    match app-id="vibe-typer" title="Recording Indicator"
+    focus-ring {
+        off
+    }
+    border {
+        off
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Key binds
 // ----------------------------------------------------------------------------
@@ -374,7 +388,7 @@ binds {
     Mod+Ctrl+Equal  hotkey-overlay-title="Mouse: accel-speed +0.10"   { spawn "niri-mouse-tune" "accel" "up"; }
     Mod+Ctrl+Minus  hotkey-overlay-title="Mouse: accel-speed 0.65"   { spawn "niri-mouse-tune" "accel" "down"; }
     Mod+Ctrl+Period hotkey-overlay-title="Mouse: scroll-factor +0.25" { spawn "niri-mouse-tune" "scroll" "up"; }
-    Mod+Ctrl+Comma  hotkey-overlay-title="Mouse: scroll-factor 1.75" { spawn "niri-mouse-tune" "scroll" "down"; }
+    Mod+Ctrl+Comma  hotkey-overlay-title="Mouse: scroll-factor 1.50" { spawn "niri-mouse-tune" "scroll" "down"; }
 
     // === Window / column ===
     Mod+Q repeat=false hotkey-overlay-title=null { close-window; }
