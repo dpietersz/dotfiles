@@ -46,6 +46,13 @@ if [[ ! -f "$BREWFILE" ]]; then
   exit 1
 fi
 
+# Trust every tap this Brewfile declares (Homebrew 6.0+ skips untrusted taps).
+# Parsed from the file so it stays in sync; no-op for OS Brewfiles with no taps
+# and on pre-6.0 brew where `brew trust` doesn't exist.
+while IFS= read -r t; do
+  [[ -n "$t" ]] && brew trust --tap "$t" >/dev/null 2>&1 || true
+done < <(awk -F'"' '/^tap "/{print $2}' "$BREWFILE")
+
 echo "[brew-os] Installing/updating $LABEL Brewfile..."
 brew bundle install --file="$BREWFILE"
 

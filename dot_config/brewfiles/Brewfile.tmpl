@@ -12,12 +12,14 @@
 tap "hashicorp/tap"     # terraform (left core after BSL relicense)
 tap "fluxcd/tap"        # flux (fluxcd v2 — distinct from core's old `flux` v1)
 tap "oven-sh/bun"       # bun runtime
+tap "databricks/tap"    # databricks CLI
 
 # ---- core CLI ----
 brew "age"
 brew "awscli"
 brew "aws-nuke"
 brew "aws-vault"
+brew "backlog-md"       # Markdown-native task manager & Kanban for git repos
 brew "bat"
 brew "btop"
 brew "chezmoi"
@@ -63,7 +65,7 @@ brew "python@3.12"      # was mise python=3.12.12
 brew "hashicorp/tap/terraform"
 brew "fluxcd/tap/flux"  # was mise flux2
 brew "oven-sh/bun/bun"
-
+brew "databricks/tap/databricks"
 # ---- AI CLIs ----
 # Claude Code comes from Bun globals (@anthropic-ai/claude-code) so it tracks npm releases.
 cask "codex"

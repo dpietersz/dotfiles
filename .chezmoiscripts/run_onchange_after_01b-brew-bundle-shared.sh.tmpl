@@ -34,6 +34,14 @@ if [[ ! -f "$BREWFILE" ]]; then
   exit 1
 fi
 
+# Homebrew 6.0+ defaults HOMEBREW_REQUIRE_TAP_TRUST on, so non-core taps are
+# skipped (and their formulae never install) unless explicitly trusted. Trust
+# every tap THIS Brewfile declares — parsed from the file so it never drifts
+# out of sync. Errors suppressed: no-op on pre-6.0 brew (no `trust` subcommand).
+while IFS= read -r t; do
+  [[ -n "$t" ]] && brew trust --tap "$t" >/dev/null 2>&1 || true
+done < <(awk -F'"' '/^tap "/{print $2}' "$BREWFILE")
+
 echo "[brew-shared] Installing/updating shared Brewfile..."
 brew bundle install --file="$BREWFILE"
 
