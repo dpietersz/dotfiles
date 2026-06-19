@@ -1,0 +1,52 @@
+#!/bin/bash
+{{- if .remote }}
+exit 0
+{{- end }}
+
+# GitHub Spec Kit CLI (specify-cli) install/update via uv tool.
+#
+# spec-kit is NOT published on PyPI by GitHub — the only sanctioned install is
+# from a pinned git release tag (docs/installation.md). The latest tag is
+# resolved at render time and baked into SPECIFY_TAG below, so this
+# run_onchange_ script re-runs (and reinstalls) whenever upstream cuts a new
+# release — same upstream-version-tracking pattern as the bun globals.
+# Re-run trigger: specify-cli installer v1
+
+set -euo pipefail
+
+SPECIFY_TAG="{{ includeTemplate "github-latest-release.tmpl" (dict "repo" "github/spec-kit") }}"
+if [[ -z "$SPECIFY_TAG" ]]; then
+  echo "[specify-cli] Could not resolve latest spec-kit tag (network?); skipping."
+  exit 0
+fi
+
+# uv is provided by the shared Brewfile. chezmoi's subshell may not inherit
+# brew shellenv, so source it explicitly when needed.
+if ! command -v uv >/dev/null 2>&1; then
+  for cand in /home/linuxbrew/.linuxbrew/bin/brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ -x "$cand" ]]; then
+      eval "$("$cand" shellenv bash)"
+      break
+    fi
+  done
+fi
+
+SPEC_FROM="git+https://github.com/github/spec-kit.git@${SPECIFY_TAG}"
+
+if command -v uv >/dev/null 2>&1; then
+  echo "[specify-cli] Installing/updating specify-cli ${SPECIFY_TAG} via uv tool..."
+  uv tool install --force specify-cli --from "$SPEC_FROM"
+  echo "[specify-cli] ✓ $(specify --version 2>/dev/null || echo "installed ${SPECIFY_TAG}")"
+  exit 0
+fi
+
+MISE_BIN_PATH="{{ if $m := lookPath "mise" }}{{ $m }}{{ else if $l := lookPath (joinPath .chezmoi.homeDir ".local/bin/mise") }}{{ $l }}{{ else }}mise{{ end }}"
+if command -v "$MISE_BIN_PATH" >/dev/null 2>&1; then
+  echo "[specify-cli] uv not on PATH; trying mise fallback..."
+  "$MISE_BIN_PATH" exec -- uv tool install --force specify-cli --from "$SPEC_FROM"
+  echo "[specify-cli] ✓ installed ${SPECIFY_TAG} via mise fallback"
+  exit 0
+fi
+
+echo "[specify-cli] ERROR: uv not found. Brewfile should install uv before this script."
+exit 1

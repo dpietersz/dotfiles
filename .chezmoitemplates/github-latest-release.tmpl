@@ -1,0 +1,7 @@
+{{- /* Latest release tag for a GitHub repo, resolved at render time.
+       Usage: {{ includeTemplate "github-latest-release.tmpl" (dict "repo" "owner/name") }}
+       Uses git ls-remote (no auth, no API rate limits, no jq). Version-sorted,
+       pre-release tags (containing '-') filtered out. Network call bounded at 20s;
+       empty output on failure so callers can skip gracefully. */ -}}
+{{- $repo := .repo -}}
+{{- output "bash" "-lc" (printf "timeout 20 git ls-remote --tags --refs --sort=-v:refname 'https://github.com/%s.git' 'v*' 2>/dev/null | awk -F/ '{print $NF}' | grep -v -- '-' | head -1" $repo) | trim -}}
