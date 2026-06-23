@@ -1,0 +1,36 @@
+#!/bin/bash
+# unit hash:   {{ include "dot_config/systemd/user/teams-gpucache-guard.service" | sha256sum }}
+# worker hash: {{ include "dot_local/bin/scripts/executable_teams-gpucache-guard.sh" | sha256sum }}
+# (Hashes above force this run_onchange script to re-fire whenever the unit or
+#  the worker script changes.)
+
+set -euo pipefail
+
+# Enable a tiny oneshot that, at every login before the graphical session, wipes
+# teams-for-linux's Electron GPU shader cache IF the booted OS image changed.
+#
+# WHY: teams-for-linux is Electron; its cached GPU shaders go stale when the GPU
+# stack (NVIDIA driver / Mesa) updates inside a new image. A stale cache paints
+# incoming meeting video BLANK while audio still works — Teams then shows its
+# generic "couldn't connect / clear cache & restart" overlay even though the call
+# connected. Upstream (electron/electron#40366) declined to auto-fix it; the
+# standing remedy is to delete GPUCache. Keying the wipe on /etc/os-release
+# IMAGE_VERSION makes that happen automatically on the exact reboot where the
+# driver bumped. See dot_local/bin/scripts/teams-gpucache-guard.sh for detail.
+# Directly analogous to run_onchange_after_22-enable-fontconfig-cache-refresh.
+
+{{- if or .remote .isMacOS .isServer }}
+exit 0
+{{- end }}
+
+UNIT=teams-gpucache-guard.service
+SERVICE_FILE="$HOME/.config/systemd/user/$UNIT"
+[ -f "$SERVICE_FILE" ] || { echo "[teams-gpucache-guard] unit not found at $SERVICE_FILE"; exit 1; }
+
+systemctl --user daemon-reload
+systemctl --user enable "$UNIT" >/dev/null
+# Run now (and on every change) — idempotent: it no-ops unless the image version
+# moved, and never wipes while Teams is running.
+systemctl --user restart "$UNIT" || true
+
+echo "[teams-gpucache-guard] enabled and applied: $UNIT"

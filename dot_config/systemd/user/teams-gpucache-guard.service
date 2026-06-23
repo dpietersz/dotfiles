@@ -1,0 +1,17 @@
+[Unit]
+Description=Clear teams-for-linux GPU shader cache when the booted image changed
+Documentation=https://github.com/electron/electron/issues/40366
+# Run before the graphical session (and the apps niri spawns) comes up, so Teams
+# launches against a freshly-rebuildable GPU cache after an image update instead
+# of a stale shader cache that paints meeting video blank. See the script header
+# for the full rationale. Pairs with refresh-fontconfig-cache.service, which
+# solves the analogous stale-font-cache-after-image-update problem.
+Before=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=%h/.local/bin/scripts/teams-gpucache-guard.sh
+
+[Install]
+WantedBy=default.target
