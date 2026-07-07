@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -353,19 +354,57 @@ def cmd_close(name: str) -> int:
         return 0
 
     ws_id = ws["id"]
-    # Close windows BY WINDOW ID, not by PID. Helium (and any Chromium- or
-    # Electron-based app) runs every browser window under one master PID.
-    # Killing that PID nukes ALL of its windows across every workspace —
-    # including any active work on the workspace the user is currently on.
-    # `close-window --id` is the only safe primitive.
-    window_ids = [w["id"] for w in windows() if w["workspace_id"] == ws_id]
 
-    for wid in window_ids:
+    # Some apps minimise to a tray icon and keep running when their window is
+    # closed — `close-window` just hides them, the process lingers in the
+    # background. teams-for-linux is the motivating case. Templates mark such
+    # tabs with `quit_on_close = true`; for those we SIGTERM the process so
+    # the app fully quits instead of surviving in the tray.
+    #
+    # This is the ONE place we terminate by PID, and it's safe precisely
+    # because each tray app is its own process. Helium is the opposite: every
+    # browser window shares one master PID, so killing it would nuke ALL
+    # Helium windows across every workspace — including active work on the
+    # workspace you're currently on. Helium is therefore only ever closed by
+    # window id below, never by PID.
+    tpl = find_template_by_name(name)
+    quit_app_ids: set[str] = set()
+    if tpl:
+        for column in tpl.get("columns", []):
+            for tab in column.get("tabs", []):
+                if tab.get("quit_on_close") and tab.get("app_id"):
+                    quit_app_ids.add(tab["app_id"])
+
+    # Snapshot this workspace's windows once, before closing anything, so the
+    # tray-app PIDs are captured while their windows still exist.
+    ws_windows = [w for w in windows() if w["workspace_id"] == ws_id]
+    quit_pids = {
+        w["pid"]
+        for w in ws_windows
+        if w.get("app_id") in quit_app_ids and w.get("pid")
+    }
+
+    # Close every non-tray window by window id (the safe primitive). Tray
+    # apps are skipped here — `close-window` would only send them to the tray;
+    # the SIGTERM below is what actually quits them.
+    for w in ws_windows:
+        if w.get("pid") in quit_pids:
+            continue
         try:
-            niri_action("close-window", "--id", str(wid))
+            niri_action("close-window", "--id", str(w["id"]))
         except subprocess.CalledProcessError:
             # Window may have died between query and call. Don't bail — keep
             # closing the rest.
+            pass
+
+    # Gracefully terminate tray-persistent apps. SIGTERM lets Electron quit
+    # cleanly (the tray-minimise behaviour is bound to the window 'close'
+    # event, not to process signals, so this actually exits the app).
+    for pid in quit_pids:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            # Already gone, or not ours to signal. Don't bail.
             pass
 
     # Give windows up to ~3s to vanish.
@@ -375,6 +414,15 @@ def cmd_close(name: str) -> int:
         if not remaining:
             break
         time.sleep(0.15)
+
+    # Safety net: hard-kill any tray app that ignored SIGTERM so nothing is
+    # left running in the background — the whole point of closing the stack.
+    for pid in quit_pids:
+        if pid_alive(pid):
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
 
     # Unset the workspace name (requires focusing it first).
     niri_action("focus-workspace", str(ws["idx"]))
@@ -442,6 +490,19 @@ def cmd_picker() -> int:
 
 
 # ─── misc ───────────────────────────────────────────────────────────────────
+
+
+def pid_alive(pid: int) -> bool:
+    """True if the process still exists. `os.kill(pid, 0)` sends no signal —
+    it just probes: ProcessLookupError means gone, PermissionError means alive
+    but not ours (still counts as alive)."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
 
 
 def notify(msg: str) -> None:

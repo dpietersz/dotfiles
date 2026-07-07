@@ -27,7 +27,7 @@ Reopen the same template later → the engine focuses the existing workspace
 |---|---|
 | `Mod+E` | Floating kitty popup with fzf. Lists every template under `~/.config/workspace-templates/*.toml`. |
 | Enter on `[ OPEN  ] <name>` | Popup closes instantly. Engine claims the next empty workspace, names it `<name>`, spawns all declared windows and arranges them. Notifications: "opening 'X'…" then "'X' ready". |
-| Enter on `[ CLOSE ] <name>` | Closes every window on workspace `<name>` (by window-id — does **not** kill PIDs, so other workspaces' windows from the same app survive). Unsets the workspace name. Notification: "'X' closed". |
+| Enter on `[ CLOSE ] <name>` | Closes every window on workspace `<name>` by window-id, so other workspaces' windows from the same app survive. Tabs marked `quit_on_close = true` (tray-persistent apps like Teams) are additionally SIGTERM'd so they don't linger in the background. Unsets the workspace name. Notification: "'X' closed". |
 | `Mod+E` again while open | Same template shown as `[ CLOSE ]`. Opening the template a second time just focuses the existing workspace — no double-spawn. |
 
 Inside a tab-group column, `Mod+J` / `Mod+K` cycle through the tabs and
@@ -65,6 +65,7 @@ tabs = [
 | `helium`  | per tab | one-of | URL string. Spawns a fresh Helium window pointing at this URL (one URL per window — that's how each tab becomes its own niri tab). |
 | `command` | per tab | one-of | List of strings. Spawned via `subprocess.Popen`; `~` and `$HOME` expand. No shell, no PATH magic — give a real binary on PATH or an absolute path. |
 | `app_id`  | per `command` tab | no | niri `app_id` hint. See *App-ID hint* below. |
+| `quit_on_close` | per `command` tab | no | Boolean. On `[ CLOSE ]`, SIGTERM this app's process instead of only closing its window. Set it for **tray-persistent apps** (Teams) that minimise to a tray icon and keep running when their window is closed. Requires `app_id`. See *Closing a tray-persistent app* below. |
 
 Exactly one of `helium` or `command` per tab.
 
@@ -81,10 +82,20 @@ in two useful ways:
    that window to this workspace instead of trying to spawn a fresh copy.
 
 2. **Splash-screen apps** (Storage Explorer again) show a transient window
-   then replace it with the real main window — often with a different
-   app_id. The engine catches this regardless via a stability check (a
-   1.5-s hold; if the first window dies in that window, it waits for the
-   next one). The app_id hint is not required for splash handling.
+   then replace it with the real main window. Storage Explorer's splash and
+   main window share the **same** `app_id` (`StorageExplorerExe`) and differ
+   only by **title**: the splash is titled `StorageExplorer`, the real window
+   `Microsoft Azure Storage Explorer`. Two mechanisms handle this:
+   - `ignored_titles = ["StorageExplorer"]` skips the splash by title.
+   - A stability check (1.5-s hold; if the first-sighted window dies in that
+     window, the engine waits for the next) catches it even without the
+     title filter.
+
+   **Trap:** `app_id` is the WM class (`StorageExplorerExe`), *not* the
+   splash title (`StorageExplorer`). Crossing them makes the engine match
+   nothing, burn the full `wait_timeout`, skip the tab, and leave an orphan
+   window that corrupts the column's tab-group. Always read the real
+   `app_id` from `niri msg --json windows` — never guess it from the title.
 
 When **not** to set `app_id`:
 - VS Code opened on a specific folder. If you set `app_id = "code"` and a
@@ -92,6 +103,24 @@ When **not** to set `app_id`:
   would claim that window and you'd land on the wrong folder. For
   folder-specific VS Code, use `code -n <folder>` and **omit** `app_id`
   so a fresh window always spawns.
+
+### Closing a tray-persistent app — `quit_on_close`
+
+Some apps (Teams via `teams-for-linux`) minimise to a **tray icon** and keep
+running when you close their window. Plain `[ CLOSE ]` closes the window but
+leaves the process alive in the background — the app quietly keeps running.
+
+Set `quit_on_close = true` (alongside `app_id`) on that tab. On `[ CLOSE ]`,
+the engine snapshots the window's PID, then **SIGTERM**s the process (with a
+SIGKILL safety net if it ignores the term) so the app fully quits instead of
+lingering in the tray.
+
+This is the **only** place the engine terminates by PID, and it's safe
+because each tray app is its own process. It deliberately does **not** apply
+to Helium: every Helium browser window shares one master PID, so killing it
+would close every Helium window on every workspace. Helium is always closed
+by window id. `quit_on_close` therefore requires `app_id` and is meant for
+single-instance tray apps only.
 
 ---
 
@@ -116,14 +145,16 @@ tabs = [
   { helium  = "https://adf.azure.com/en/home" },
   { helium  = "https://adb-5244239616138753.13.azuredatabricks.net" },
   { command = ["code", "-n", "~/dev/Repos/dev.azure.com/Hilversum-IM/Lakehouse"] },
-  { command = ["launch-storage-explorer"], app_id = "storageexplorer" },
+  { command = ["launch-storage-explorer"], app_id = "StorageExplorerExe", wait_timeout = 60, ignored_titles = ["StorageExplorer"] },
   { helium  = "https://portal.azure.com" },
   { helium  = "https://outlook.office.com" },
 ]
 
 [[columns]]                                        # column 3: single command
 tabs = [
-  { command = ["teams-for-linux"], app_id = "teams-for-linux" },
+  # quit_on_close: Teams minimises to a tray icon and keeps running when its
+  # window is closed — SIGTERM it on close so the stack fully tears down.
+  { command = ["teams-for-linux"], app_id = "teams-for-linux", quit_on_close = true },
 ]
 ```
 
@@ -194,9 +225,13 @@ Result:
   (the action behind `Mod+[`). Deferring the merges to after all spawns
   settle means splash-screen race conditions can't break the layout.
 - **Safe close.** `[ CLOSE ]` uses `niri msg action close-window --id <wid>`
-  per window. It does **not** kill PIDs — Helium runs every browser window
-  under one master PID, and killing that would close every Helium window
-  across every workspace, including your active one.
+  per window. It does **not** kill Helium by PID — Helium runs every browser
+  window under one master PID, and killing that would close every Helium
+  window across every workspace, including your active one. The one exception
+  is tabs marked `quit_on_close = true` (tray-persistent apps like Teams):
+  those are SIGTERM'd by PID so they fully quit instead of surviving in the
+  tray. Safe because each such app is its own process — see
+  [`quit_on_close`](#closing-a-tray-persistent-app--quit_on_close).
 - **Zellij SIGWINCH kick.** At the end of every `open` and `close` the
   engine fires `pkill -WINCH zellij` so any zellij session whose cached
   dimensions desynced during the window-event storm re-detects size from

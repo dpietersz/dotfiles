@@ -27,6 +27,16 @@
 #                                                     spawn a second window.
 #                      wait_timeout = 60             # OPTIONAL per-command wait.
 #                      ignored_titles = ["Splash"]   # OPTIONAL transient titles.
+#                      quit_on_close = true          # OPTIONAL. On workspace
+#                                                     close, SIGTERM this app's
+#                                                     process instead of only
+#                                                     closing its window. Set
+#                                                     for tray-persistent apps
+#                                                     (teams-for-linux) that
+#                                                     minimise to a tray icon
+#                                                     and keep running when
+#                                                     their window is closed.
+#                                                     Requires app_id.
 
 name        = "Hilversum"
 description = "Citrix · Dev tools tab-group · Teams"
@@ -59,7 +69,16 @@ tabs = [
   # workspace. -n guarantees a fresh window for this template's folder.
   # The engine expands ~ at spawn time so the literal "~/dev/..." works.
   { command = ["code", "-n", "~/dev/Repos/dev.azure.com/Hilversum-IM/Lakehouse"] },
-  { command = ["launch-storage-explorer"],    app_id = "StorageExplorer", wait_timeout = 60, ignored_titles = ["StorageExplorer"] },
+  # app_id is "StorageExplorerExe" (verified via `niri msg windows`), NOT
+  # "StorageExplorer" — that string is the SPLASH window's *title*, filtered
+  # below. Getting these two crossed makes wait_for_new_window match nothing,
+  # burn the full wait_timeout, skip the tab, and leave an orphan SE window
+  # that corrupts the column's tab-group consume-walk. On a fresh launch SE
+  # emits: splash (app_id StorageExplorerExe, title "StorageExplorer") then
+  # the real main window (app_id StorageExplorerExe, title "Microsoft Azure
+  # Storage Explorer"). wait_timeout is 60s because SE cold-starts slowly
+  # through distrobox.
+  { command = ["launch-storage-explorer"],    app_id = "StorageExplorerExe", wait_timeout = 60, ignored_titles = ["StorageExplorer"] },
   { helium  = "https://portal.azure.com" },
   { helium  = "https://outlook.office.com" },
 ]
@@ -70,7 +89,12 @@ tabs = [
 # engine spot an already-running Teams window on a different workspace and
 # MOVE it here instead of spawning (and timing out waiting for a new window
 # that will never come).
+#
+# quit_on_close: Teams minimises to a tray icon and keeps running when its
+# window is closed. Without this, closing the Hilversum workspace would leave
+# Teams alive in the background. With it, the engine SIGTERMs the Teams
+# process on close so it fully quits.
 [[columns]]
 tabs = [
-  { command = ["teams-for-linux"], app_id = "teams-for-linux" },
+  { command = ["teams-for-linux"], app_id = "teams-for-linux", quit_on_close = true },
 ]
