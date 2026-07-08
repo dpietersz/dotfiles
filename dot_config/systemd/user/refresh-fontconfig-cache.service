@@ -1,21 +1,25 @@
 [Unit]
-Description=Rebuild the user fontconfig cache with the system fontconfig binary
+Description=Detect and heal a poisoned fontconfig cache before GUI apps start
 Documentation=man:fc-cache(1)
-# Run early, before the graphical session (and the GUI apps niri spawns) comes
-# up, so Chromium/Electron apps (Helium, teams-for-linux) read a fresh, correct
-# ~/.cache/fontconfig instead of a stale post-image-update one and render color
-# emoji rather than tofu. See dot_config/fontconfig/conf.d/75-emoji-color.conf.
-Before=graphical-session.target
+# Runs the fontconfig-heal script at every login. On this ostree/composefs image
+# fc-cache can write a valid-but-EMPTY cache for /usr/share/fonts (epoch checksum
+# validates forever), making Noto Serif/Liberation invisible so the user's Nerd
+# Fonts win generic serif/sans by coverage -> monospace digits + wrong serif +
+# tofu in Helium/teams-for-linux. The script detects that state and rebuilds the
+# user cache until real fonts are visible. See the script header and
+# dot_config/fontconfig/conf.d/75-emoji-color.conf.
+#
+# Deliberately NOT ordered Before=graphical-session.target: running that early is
+# what raced /usr/share/fonts materialization and poisoned the cache in the first
+# place. The script's own verify-and-retry loop makes start ordering irrelevant —
+# it heals whenever it runs — and Helium/Teams are user-launched (not a niri
+# spawn-at-startup), so they always come up after this has run.
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-# Explicit /usr/bin/fc-cache — NOT the Homebrew fontconfig 2.18 that shadows it
-# first on PATH. Helium/Teams link the system libfontconfig (2.17, cache-9);
-# only the system binary refreshes the cache set they actually read. -f forces
-# regeneration even when ostree-normalized mtimes make a stale cache look fresh,
-# which is the exact bug being worked around.
-ExecStart=/usr/bin/fc-cache -f
+# Absolute path — the script itself pins /usr/bin/fc-cache over Homebrew's.
+ExecStart=%h/.local/bin/scripts/fontconfig-heal.sh
 
 [Install]
 WantedBy=default.target

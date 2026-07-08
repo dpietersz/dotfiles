@@ -13,26 +13,28 @@
 # departuremono: {{ include ".chezmoiexternals/departuremono.toml" | sha256sum }}
 # noto-emoji:    {{ include ".chezmoiexternals/noto-color-emoji.toml" | sha256sum }}
 # emoji-conf:    {{ include "dot_config/fontconfig/conf.d/75-emoji-color.conf" | sha256sum }}
+# heal-script:   {{ include "dot_local/bin/scripts/executable_fontconfig-heal.sh" | sha256sum }}
 set -euo pipefail
 
-# Use the SYSTEM fontconfig binary explicitly. Homebrew's fontconfig 2.18 sits
-# first on PATH and writes a parallel cache-11 set using brew's own config; the
-# GUI apps (Helium, teams-for-linux) link the system libfontconfig 2.17 and read
-# the cache-9 set, so a bare `fc-cache` here refreshed the wrong cache and left
-# the system one stale. Prefer /usr/bin/fc-cache; fall back to PATH only if it's
-# missing (e.g. macOS, which has no fc-cache and uses CoreText anyway).
-FC_CACHE=/usr/bin/fc-cache
-if [ ! -x "$FC_CACHE" ]; then
-    command -v fc-cache >/dev/null 2>&1 || exit 0
-    FC_CACHE=fc-cache
+# Delegate to the shared verify-and-heal script rather than a blind `fc-cache -f`.
+# A blind rebuild is what caused the durable failure: on this ostree/composefs
+# image fc-cache can write a valid-but-EMPTY cache for /usr/share/fonts (epoch
+# checksum validates forever), making Noto Serif/Liberation invisible so the
+# ~360 Nerd Fonts win generic serif/sans and Chromium/Electron render monospace
+# digits + wrong serif + tofu. The heal script detects that state (canary font
+# missing / serif resolving to a Nerd Font) and rebuilds with an erase-and-retry
+# loop until real fonts are visible. It pins /usr/bin/fc-cache over Homebrew's
+# 2.18, and no-ops on macOS. The same script runs at login via
+# refresh-fontconfig-cache.service.
+HEAL="$HOME/.local/bin/scripts/fontconfig-heal.sh"
+if [ -x "$HEAL" ]; then
+    "$HEAL" || true
+    echo "→ fontconfig cache verified/healed (font set changed)"
+else
+    # Script not deployed yet (first apply ordering) — fall back to a plain
+    # rebuild with the system binary so this apply isn't a no-op.
+    FC_CACHE=/usr/bin/fc-cache
+    [ -x "$FC_CACHE" ] || FC_CACHE=$(command -v fc-cache || true)
+    [ -n "$FC_CACHE" ] && "$FC_CACHE" -f >/dev/null 2>&1 || true
+    echo "→ fontconfig cache refreshed (heal script not yet present)"
 fi
-
-# Full force rebuild of every configured font dir (no path arg), not just
-# ~/.fonts/. -f forces regeneration even when ostree-normalized mtimes make a
-# stale cache look fresh — the root cause of color emoji rendering as tofu in
-# Chromium/Electron apps after an image update. This refreshes the same cache
-# the GUI apps read so emoji and just-extracted text fonts resolve on next
-# launch. The companion refresh-fontconfig-cache.service does the same at login.
-"$FC_CACHE" -f >/dev/null 2>&1 || true
-
-echo "→ fontconfig cache refreshed via $FC_CACHE (font set changed)"
