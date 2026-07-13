@@ -1,9 +1,9 @@
 #!/bin/bash
-# Settings revision: 1  -- bump to force re-apply when the DESIRED block changes.
+# Settings revision: 2  -- bump to force re-apply when the DESIRED block changes.
 
 {{- if or .remote .isMacOS .isServer }}
-# LocalSend runs in data-toolbox (distrobox) on Linux laptops; no distrobox on
-# headless server, none on macOS, skip on remote.
+# LocalSend runs in ubuntu-gui-toolbox (distrobox) on Linux laptops; no distrobox
+# on headless server, none on macOS, skip on remote.
 exit 0
 {{- end }}
 
@@ -11,33 +11,86 @@ set -euo pipefail
 
 # ------------------ LocalSend authoritative settings ------------------
 # LocalSend (Flutter app) persists settings to a flat JSON file via
-# shared_preferences. Linux default path:
-#   ~/.local/share/com.localsend.localsend_app/shared_preferences.json
+# shared_preferences. It runs inside `ubuntu-gui-toolbox` (distrobox), but $HOME
+# is mounted from the host, so the file lives on the host filesystem and chezmoi
+# can manage it directly. The DESIRED block below is the cross-machine source of
+# truth, deep-merged into the existing config so per-machine state survives but
+# every key we declare here is enforced on each chezmoi apply.
 #
-# LocalSend runs inside `data-toolbox` (distrobox), but $HOME is mounted from
-# the host, so the file lives on the host filesystem and chezmoi can manage it
-# directly. The block below is the cross-machine source of truth, deep-merged
-# into the existing config so per-machine state survives but every key we
-# declare here is enforced on each chezmoi apply.
+# ── The config path depends on which BUILD of LocalSend is installed ──────────
+# Flutter derives the shared_preferences directory from the app's application ID:
+#
+#   ~/.local/share/localsend_app/              ← upstream .deb (CURRENT, ubuntu-gui-toolbox)
+#   ~/.local/share/org.localsend.localsend_app/ ← old AUR localsend-bin (udx-toolbox, retired)
+#   ~/.local/share/com.localsend.localsend_app/ ← never existed on this machine
+#
+# Revision 1 of this script targeted the `com.` path, which meant it hit the
+# "config not yet created; skipping" branch on EVERY apply and silently enforced
+# nothing for its whole life. Do not "restore" that path — verify against a real
+# directory listing before changing CONFIG.
 #
 # Intentionally NOT enforced (machine-specific / runtime state):
-#   - flutter.ls_security_context (TLS cert, generated on first run)
+#   - flutter.ls_security_context (TLS cert + keypair — device identity)
 #   - flutter.ls_favorites
 #   - flutter.ls_receive_history
 #   - window placement, last-seen release notes, etc.
 #
 # All keys are flat and prefixed `flutter.ls_*` (a SharedPreferences quirk).
 
-{{- if or .remote .isMacOS }}
-exit 0
-{{- end }}
+CONFIG="$HOME/.local/share/localsend_app/shared_preferences.json"
+LEGACY="$HOME/.local/share/org.localsend.localsend_app/shared_preferences.json"
 
-CONFIG="$HOME/.local/share/com.localsend.localsend_app/shared_preferences.json"
+command -v jq >/dev/null 2>&1 || { echo "[localsend-config] jq not installed; skipping."; exit 0; }
+
+# ── One-time migration off the retired AUR build's config directory ───────────
+# LocalSend moved from udx-toolbox (Arch) to ubuntu-gui-toolbox (Ubuntu .deb) on
+# 2026-07-13 because its Flutter binary stopped initialising against Arch's
+# glibc. The .deb uses a DIFFERENT application ID, so it starts from an empty
+# profile: new random device alias, new TLS identity, empty transfer history.
+#
+# Gate on a marker file, NOT on "does the new config have an identity yet". The
+# app generates a fresh TLS identity the first time it launches, so by the time
+# this script ever runs the new profile already HAS one — an identity-based gate
+# silently decides there is nothing to migrate and strands the old history.
+#
+# Carry two things across explicitly:
+#   ls_security_context — the TLS keypair/cert. This IS the device identity;
+#                         keeping it means already-paired peers still recognise
+#                         this machine instead of seeing a brand-new device.
+#   ls_receive_history  — the user's transfer history. Real data, not state.
+# Everything else the new build wrote is left alone, and DESIRED below still has
+# the final say on the keys we manage.
+MIGRATION_MARKER="$HOME/.local/state/localsend-migrated-from-aur"
+
+if [ -f "$LEGACY" ] && [ ! -f "$MIGRATION_MARKER" ]; then
+    echo "[localsend-config] migrating profile from retired AUR build (identity + history)"
+    mkdir -p "$(dirname "$CONFIG")" "$(dirname "$MIGRATION_MARKER")"
+
+    if [ -f "$CONFIG" ]; then
+        merged=$(jq -s '
+          .[0] as $legacy | .[1] as $new
+          | $new
+          | if ($legacy | has("flutter.ls_security_context"))
+              then .["flutter.ls_security_context"] = $legacy["flutter.ls_security_context"] else . end
+          | if ($legacy | has("flutter.ls_receive_history"))
+              then .["flutter.ls_receive_history"] = $legacy["flutter.ls_receive_history"] else . end
+        ' "$LEGACY" "$CONFIG")
+    else
+        merged=$(cat "$LEGACY")
+    fi
+
+    tmp=$(mktemp "${CONFIG}.XXXXXX")
+    trap 'rm -f "$tmp"' EXIT
+    printf '%s\n' "$merged" > "$tmp"
+    mv -f "$tmp" "$CONFIG"
+    trap - EXIT
+    touch "$MIGRATION_MARKER"
+fi
+
 if [ ! -f "$CONFIG" ]; then
     echo "[localsend-config] config not yet created (launch LocalSend once, then re-apply); skipping."
     exit 0
 fi
-command -v jq >/dev/null 2>&1 || { echo "[localsend-config] jq not installed; skipping."; exit 0; }
 
 DESIRED=$(cat <<JSON
 {
