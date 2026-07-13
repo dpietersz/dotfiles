@@ -303,8 +303,12 @@ window-rule {
 }
 
 // LocalSend (StartupWMClass empty — verify with `niri msg windows`).
+// The app-id depends on which build is running: the old AUR `localsend-bin`
+// (Arch udx-toolbox) reported "localsend", while upstream's .deb — which is
+// what ubuntu-gui-toolbox now ships — reports "localsend_app". Match both, so
+// the floating rule survives the move and any future repackaging.
 window-rule {
-    match app-id="(?i)^localsend$"
+    match app-id="(?i)^localsend(_app)?$"
     open-floating true
 }
 

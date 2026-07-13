@@ -1,0 +1,37 @@
+# ubuntu-gui-toolbox — Ubuntu LTS companion box for upstream-built GUI apps
+# that cannot run on the rolling Arch udx-toolbox.
+#
+# Holds: LocalSend.
+#
+# Why LocalSend is not in udx-toolbox: it ships a Flutter binary built against
+# an Ubuntu LTS toolchain (upstream has not rebuilt since v1.17.0 / Feb 2025).
+# On Arch's current glibc (2.43) its Dart VM fails to initialise — the window
+# maps, nothing ever paints, and stderr stays empty (an unusable black window).
+# The same binary runs correctly on Ubuntu 24.04 (glibc 2.39), which is what
+# this image pins. See boxkit/scripts/ubuntu-gui-toolbox.sh for the diagnosis.
+#
+# See boxkit/QUICK_START.md for the /etc/distrobox-export.list contract.
+
+[ubuntu-gui-toolbox]
+container_name=ubuntu-gui-toolbox
+
+image=ghcr.io/dpietersz/ubuntu-gui-toolbox:latest
+
+container_manager=podman
+home_mount_path=$HOME
+privileged=false
+init=true
+pull=true
+
+# NVIDIA passthrough is deliberately OFF, even on the P14s. Nothing in this box
+# needs the dGPU (LocalSend is a file-transfer UI), and `--nvidia` mounts the
+# host NVIDIA stack including /usr/share/glvnd/egl_vendor.d/10_nvidia.json,
+# which outranks 50_mesa.json and points EGL at the dGPU while the compositor
+# renders on the Intel iGPU. That is a known black-window trap for GTK/GL apps
+# (flutter#188966). No GPU need here, so don't take on the risk.
+nvidia=false
+
+# init_hooks runs the export script inside the container after distrobox-assemble
+# creates it, reading /etc/distrobox-export.list and exporting each .desktop to
+# the host launcher via distrobox-export.
+init_hooks="${HOME}/.local/bin/scripts/distrobox-auto-export.sh"

@@ -46,3 +46,10 @@
 # 2026-05-29). Migrated off zellij/tmux to kitty's goto_session workflow.
 .local/bin/kitty-zellij-pick
 .local/bin/zellij-switch
+
+# LocalSend moved from udx-toolbox (Arch) to ubuntu-gui-toolbox (2026-07-13).
+# The Arch build's Dart VM stopped initialising against glibc 2.43 — black
+# window, empty stderr. The stale export points at a binary that no longer
+# exists in udx-toolbox, so remove it; the init_hook re-exports the working
+# one from ubuntu-gui-toolbox as ubuntu-gui-toolbox-localsend_app.desktop.
+.local/share/applications/udx-toolbox-localsend.desktop

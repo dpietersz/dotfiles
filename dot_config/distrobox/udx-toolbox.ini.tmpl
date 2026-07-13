@@ -1,8 +1,11 @@
 # udx-toolbox — companion distrobox to bluefin-udx (host image).
 # Holds GUI apps that don't have viable Fedora-native packaging:
 #   Storage Explorer (MS AppImage only), Obsidian (no maintained COPR/RPM),
-#   Polypane (no RPM), Bruno (no x86_64 RPM), LocalSend (no RPM),
-#   plus extras like Anytype, Legcord, Ferdium.
+#   Polypane (no RPM), Bruno (no x86_64 RPM), Legcord,
+#   plus LibreOffice and darktable.
+# Anytype and Ferdium were removed 2026-07-13 (unused).
+# LocalSend is NOT here — it needs an older glibc than this rolling Arch base
+# provides, and lives in ubuntu-gui-toolbox.ini instead. See that file.
 # See boxkit/QUICK_START.md for the export-list contract.
 
 [udx-toolbox]
