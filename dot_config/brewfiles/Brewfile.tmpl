@@ -47,7 +47,13 @@ brew "neovim"           # NOTE: brew tracks latest; pin to 0.11.4 lost in migrat
 brew "opencode"
 brew "pandoc"
 brew "ripgrep"
-brew "rtk"             # LLM token-saving CLI proxy (pi agent extension; see run_onchange 02b-configure-rtk)
+# REMOVED 2026-07-17: brew "rtk" — LLM token-saving CLI proxy. Do NOT re-add.
+#   Its agent rewrite silently swapped `rg` -> `rtk grep`, which use DIFFERENT regex
+#   dialects (rg = ERE, `|` is alternation; rtk grep = BRE, `|` is a literal char).
+#   So `rg 'a|b'` returned 0 matches, exit 0, no error — a silent false negative in
+#   the agent's primary search tool. Unsound by construction; no rtk version fixes it.
+#   Upstream siblings: rtk-ai/rtk #2647, #1436, #236, #838, #1282. The paired
+#   run_onchange_after_02b-configure-rtk.sh.tmpl was deleted in the same change.
 brew "starship"         # NOTE: brew tracks latest; pin to 1.23.0 lost in migration
 brew "swag"
 brew "typst"
