@@ -17,15 +17,18 @@
  *
  * Do NOT reintroduce provider wrapping via `getOAuthProvider`. That runtime
  * export was removed upstream — `@earendil-works/pi-ai/oauth` is a type-only
- * entry point as of pi 0.80.x, and the built-in OAuth flows under
- * `pi-ai/dist/auth/oauth/` are not in the package's `exports` map. Syncing at
- * the auth.json layer is provider-agnostic and survives upstream churn.
+ * entry point as of pi 0.80.8 (`dist/oauth.js` is literally `export {}`), and
+ * the built-in OAuth flows under `pi-ai/dist/auth/oauth/` are deliberately
+ * absent from the package's `exports` map. Syncing at the auth.json layer is
+ * provider-agnostic and version-agnostic: the on-disk credential shape is
+ * identical on 0.78.0 and 0.80.10, so this file works unchanged on both and
+ * survives upstream churn.
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const DAEMON_URL = "http://127.0.0.1:8484";
 const AUTH_PATH = path.join(os.homedir(), ".pi", "agent", "auth.json");
@@ -169,6 +172,8 @@ export default function register(pi: ExtensionAPI): void {
 					pushing = false;
 				});
 		}, WATCH_DEBOUNCE_MS);
+		// Never let a pending push keep a headless `pi -p` process alive.
+		debounce.unref?.();
 	};
 
 	pi.on("session_start", async (_event, ctx) => {
@@ -197,6 +202,8 @@ export default function register(pi: ExtensionAPI): void {
 		}
 	});
 
+	// Note: the event is `session_shutdown` — there is no `session_end`. Getting
+	// this wrong leaks the file watcher silently.
 	pi.on("session_shutdown", () => {
 		if (debounce) clearTimeout(debounce);
 		watcher?.close();
