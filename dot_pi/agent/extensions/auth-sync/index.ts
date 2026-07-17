@@ -1,44 +1,56 @@
 /**
  * auth-sync — Centralized OAuth token sync via minion-daemon
  *
- * Wraps the built-in OAuth providers (anthropic, openai-codex, google-gemini-cli)
- * to intercept token refresh and login events. When tokens change, POSTs them to
- * the local daemon which syncs to Postgres. Other daemons receive the change via
- * LISTEN/NOTIFY and update their auth.json.
+ * Syncs ~/.pi/agent/auth.json with the local daemon, which persists to Postgres.
+ * Other daemons receive changes via LISTEN/NOTIFY and update their own auth.json.
  *
- * On session_start, fetches the latest tokens from the daemon in case another
- * machine refreshed while this pi instance wasn't running.
+ * Pull: on session_start, fetch tokens from the daemon and adopt any that are
+ * fresher than the local copy (another machine may have refreshed while this
+ * pi instance was down).
  *
- * Fail-safe: if daemon is unreachable, pi works normally (built-in refresh).
+ * Push: watch auth.json and POST any credential whose `expires` advances past
+ * what we last exchanged with the daemon. Pi's built-in OAuth refresh writes
+ * auth.json, so watching the file catches every refresh and login without
+ * hooking into pi's provider internals.
+ *
+ * Fail-safe: if the daemon is unreachable, pi works normally (built-in refresh).
+ *
+ * Do NOT reintroduce provider wrapping via `getOAuthProvider`. That runtime
+ * export was removed upstream — `@earendil-works/pi-ai/oauth` is a type-only
+ * entry point as of pi 0.80.x, and the built-in OAuth flows under
+ * `pi-ai/dist/auth/oauth/` are not in the package's `exports` map. Syncing at
+ * the auth.json layer is provider-agnostic and survives upstream churn.
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { getOAuthProvider } from "@mariozechner/pi-ai/oauth";
 
 const DAEMON_URL = "http://127.0.0.1:8484";
 const AUTH_PATH = path.join(os.homedir(), ".pi", "agent", "auth.json");
+const AUTH_DIR = path.dirname(AUTH_PATH);
+const WATCH_DEBOUNCE_MS = 250;
 
-// Providers to wrap. These must match the provider IDs in pi's OAuth registry.
-const OAUTH_PROVIDERS = ["anthropic", "openai-codex", "google-gemini-cli"] as const;
-
-type OAuthCredentials = {
-	access: string;
-	refresh: string;
-	expires: number;
-	[key: string]: unknown; // accountId, projectId, email, etc.
+type StoredCredential = {
+	type?: string;
+	access?: string;
+	refresh?: string;
+	expires?: number;
+	[key: string]: unknown;
 };
+
+/** Last `expires` per provider that we know the daemon has. Prevents push/pull echo. */
+const lastSynced = new Map<string, number>();
 
 // ── Daemon communication ────────────────────────────────────────────────────
 
-async function postTokens(provider: string, credentials: OAuthCredentials): Promise<boolean> {
+async function postTokens(provider: string, credentials: StoredCredential): Promise<boolean> {
 	try {
 		const res = await fetch(`${DAEMON_URL}/api/v1/auth/tokens`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ provider, credentials: { type: "oauth", ...credentials } }),
+			body: JSON.stringify({ provider, credentials: { ...credentials, type: "oauth" } }),
 			signal: AbortSignal.timeout(5000),
 		});
 		if (!res.ok) {
@@ -47,20 +59,19 @@ async function postTokens(provider: string, credentials: OAuthCredentials): Prom
 			return false;
 		}
 		return true;
-	} catch (err) {
+	} catch {
 		// Daemon not running — silently continue.
-		console.error(`[auth-sync] daemon unreachable for POST: ${(err as Error).message}`);
 		return false;
 	}
 }
 
-async function getTokens(): Promise<Record<string, unknown> | null> {
+async function getTokens(): Promise<Record<string, StoredCredential> | null> {
 	try {
 		const res = await fetch(`${DAEMON_URL}/api/v1/auth/tokens`, {
 			signal: AbortSignal.timeout(5000),
 		});
 		if (!res.ok) return null;
-		return (await res.json()) as Record<string, unknown>;
+		return (await res.json()) as Record<string, StoredCredential>;
 	} catch {
 		// Daemon not running — silently continue.
 		return null;
@@ -69,7 +80,7 @@ async function getTokens(): Promise<Record<string, unknown> | null> {
 
 // ── auth.json helpers ───────────────────────────────────────────────────────
 
-function readAuthJSON(): Record<string, unknown> {
+function readAuthJSON(): Record<string, StoredCredential> {
 	try {
 		return JSON.parse(fs.readFileSync(AUTH_PATH, "utf-8"));
 	} catch {
@@ -77,10 +88,9 @@ function readAuthJSON(): Record<string, unknown> {
 	}
 }
 
-function writeAuthJSON(data: Record<string, unknown>): void {
-	const dir = path.dirname(AUTH_PATH);
-	if (!fs.existsSync(dir)) {
-		fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+function writeAuthJSON(data: Record<string, StoredCredential>): void {
+	if (!fs.existsSync(AUTH_DIR)) {
+		fs.mkdirSync(AUTH_DIR, { recursive: true, mode: 0o700 });
 	}
 	const tmp = AUTH_PATH + ".tmp";
 	fs.writeFileSync(tmp, JSON.stringify(data, null, 2), { mode: 0o600 });
@@ -89,108 +99,107 @@ function writeAuthJSON(data: Record<string, unknown>): void {
 
 function getExpires(cred: unknown): number {
 	if (typeof cred === "object" && cred !== null && "expires" in cred) {
-		return (cred as { expires: number }).expires;
+		const expires = (cred as { expires: unknown }).expires;
+		return typeof expires === "number" ? expires : 0;
 	}
 	return 0;
+}
+
+function isOAuth(cred: unknown): cred is StoredCredential {
+	return typeof cred === "object" && cred !== null && (cred as StoredCredential).type === "oauth";
+}
+
+// ── Sync passes ─────────────────────────────────────────────────────────────
+
+/** Adopt daemon credentials that are fresher than local. Returns true if auth.json changed. */
+async function pullPass(): Promise<boolean> {
+	const dbTokens = await getTokens();
+	if (!dbTokens) return false;
+
+	const local = readAuthJSON();
+	let updated = false;
+
+	for (const [provider, dbCred] of Object.entries(dbTokens)) {
+		if (!isOAuth(dbCred)) continue;
+		const dbExpires = getExpires(dbCred);
+
+		// Record what the daemon holds so pushPass doesn't echo it straight back.
+		lastSynced.set(provider, Math.max(dbExpires, lastSynced.get(provider) ?? 0));
+
+		if (dbExpires > getExpires(local[provider])) {
+			local[provider] = dbCred;
+			updated = true;
+		}
+	}
+
+	if (updated) writeAuthJSON(local);
+	return updated;
+}
+
+/** POST local credentials that are fresher than what the daemon last showed us. */
+async function pushPass(): Promise<void> {
+	const local = readAuthJSON();
+
+	for (const [provider, cred] of Object.entries(local)) {
+		if (!isOAuth(cred)) continue;
+		const expires = getExpires(cred);
+		if (expires <= (lastSynced.get(provider) ?? 0)) continue;
+
+		if (await postTokens(provider, cred)) {
+			lastSynced.set(provider, expires);
+		}
+	}
 }
 
 // ── Extension entry point ───────────────────────────────────────────────────
 
 export default function register(pi: ExtensionAPI): void {
-	// CRITICAL: Capture original providers BEFORE registerProvider replaces them.
-	// registerProvider is queued during load, but getOAuthProvider still returns
-	// the built-in at this point. We store references to call in our wrappers.
-	const originals = new Map<string, { login: Function; refreshToken: Function; getApiKey: Function }>();
+	let watcher: fs.FSWatcher | undefined;
+	let debounce: ReturnType<typeof setTimeout> | undefined;
+	let pushing = false;
 
-	for (const providerId of OAUTH_PROVIDERS) {
-		const original = getOAuthProvider(providerId);
-		if (!original) {
-			console.error(`[auth-sync] Original OAuth provider ${providerId} not found, skipping`);
-			continue;
-		}
-		originals.set(providerId, {
-			login: original.login.bind(original),
-			refreshToken: original.refreshToken.bind(original),
-			getApiKey: original.getApiKey.bind(original),
-		});
-	}
+	const schedulePush = () => {
+		if (debounce) clearTimeout(debounce);
+		debounce = setTimeout(() => {
+			if (pushing) return;
+			pushing = true;
+			pushPass()
+				.catch(() => {})
+				.finally(() => {
+					pushing = false;
+				});
+		}, WATCH_DEBOUNCE_MS);
+	};
 
-	// Now register wrapped providers. These replace the built-in OAuth handlers
-	// but use the captured originals for actual OAuth flows.
-	for (const providerId of OAUTH_PROVIDERS) {
-		const original = originals.get(providerId);
-		if (!original) continue;
-
-		pi.registerProvider(providerId, {
-			oauth: {
-				name: `${providerId} (auth-sync)`,
-
-				async login(callbacks) {
-					const credentials = await original.login(callbacks);
-
-					// Sync to daemon (best-effort, non-blocking).
-					postTokens(providerId, credentials).catch(() => {});
-
-					return credentials;
-				},
-
-				async refreshToken(credentials) {
-					// Before hitting the provider's API, check if the daemon already
-					// has a fresher token (another machine may have just refreshed).
-					// This prevents redundant refresh calls that can trigger rate limits
-					// when multiple pi instances detect expiry at the same time.
-					try {
-						const dbTokens = await getTokens();
-						if (dbTokens) {
-							const dbCred = dbTokens[providerId] as Record<string, unknown> | undefined;
-							if (dbCred && getExpires(dbCred) > Date.now()) {
-								// DB has a valid (non-expired) token — use it instead of refreshing.
-								return dbCred as unknown as typeof credentials;
-							}
-						}
-					} catch {
-						// Daemon unreachable — fall through to normal refresh.
-					}
-
-					const newCredentials = await original.refreshToken(credentials);
-
-					// Sync to daemon (best-effort, non-blocking).
-					postTokens(providerId, newCredentials).catch(() => {});
-
-					return newCredentials;
-				},
-
-				getApiKey(credentials) {
-					return original.getApiKey(credentials);
-				},
-			},
-		});
-	}
-
-	// On session start, fetch latest tokens from daemon and update auth.json
-	// if the daemon has fresher tokens (another machine may have refreshed).
 	pi.on("session_start", async (_event, ctx) => {
-		const dbTokens = await getTokens();
-		if (!dbTokens) return; // Daemon unreachable, no-op.
-
-		const local = readAuthJSON();
-		let updated = false;
-
-		for (const [provider, dbCred] of Object.entries(dbTokens)) {
-			const localCred = local[provider];
-			const dbExpires = getExpires(dbCred);
-			const localExpires = getExpires(localCred);
-
-			if (dbExpires > localExpires) {
-				local[provider] = dbCred;
-				updated = true;
-			}
-		}
-
+		// Pull first so lastSynced reflects the daemon's state before we push.
+		const updated = await pullPass();
 		if (updated) {
-			writeAuthJSON(local);
-			// Reload the model registry so pi picks up the fresh tokens.
-			ctx.modelRegistry.refresh();
+			// Registry reads are synchronous but refresh is async as of pi 0.80.8.
+			await ctx.modelRegistry.refresh();
 		}
+
+		// Upload anything local that is fresher than the daemon (e.g. a refresh
+		// that happened while the daemon was down).
+		await pushPass();
+
+		if (watcher) return;
+		try {
+			if (!fs.existsSync(AUTH_DIR)) return;
+			// Watch the directory, not the file: writeAuthJSON and pi's own writes
+			// replace auth.json via rename, which breaks a file-scoped watch.
+			watcher = fs.watch(AUTH_DIR, (_type, filename) => {
+				if (filename === "auth.json") schedulePush();
+			});
+			watcher.unref?.();
+		} catch (err) {
+			console.error(`[auth-sync] auth.json watch unavailable: ${(err as Error).message}`);
+		}
+	});
+
+	pi.on("session_shutdown", () => {
+		if (debounce) clearTimeout(debounce);
+		watcher?.close();
+		watcher = undefined;
 	});
 }
