@@ -1,0 +1,13 @@
+[Unit]
+Description=Poll LAN reachability to auto-unmount media shares when we leave
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=30s
+AccuracySec=10s
+# After resume from sleep, fire promptly — a laptop that suspended on the LAN
+# and woke on a café network must drop the stale mount fast.
+OnUnitInactiveSec=30s
+
+[Install]
+WantedBy=timers.target

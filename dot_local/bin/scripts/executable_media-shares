@@ -1,0 +1,183 @@
+#!/bin/bash
+# media-shares — mount/unmount the Plex media SMB shares over the homelab LAN.
+#
+# Toggle (niri: Mod+Shift+P) mounts Music / Movies / TV-Shows from the NAS as
+# rootless rclone FUSE mounts under ~/Media, so VLC / mpv / any file manager see
+# them as plain local paths with instant seeking. Toggling again unmounts them.
+#
+# LAN-gated: we TCP-probe the SMB host before mounting and refuse (with a
+# notification) if it's unreachable — so this only ever mounts on the homelab
+# LAN, exactly like right now. A systemd *user* timer runs `media-shares guard`
+# every 30s and auto-unmounts if you've since left the LAN, so a stale mount can
+# never hang your media apps / file managers on the road.
+#
+# The SMB password is read from `pass` at run time and handed to rclone via an
+# env var (never argv, never the repo). Everything here is rootless — no sudo,
+# no fstab, no keyring — which is why it lives in dotfiles and not bluefin-udx.
+#
+# Deployed by chezmoi. Subcommands:
+#   toggle            mount if nothing's mounted, else unmount (the keybind)
+#   mount | unmount   force one direction
+#   status            show mount state of each share
+#   guard             unmount everything if we're no longer on the LAN (timer)
+set -uo pipefail
+
+# ── config ──────────────────────────────────────────────────────────────────
+# NON-SECRET values live here (safe to commit). The password does NOT — it's
+# pulled from `pass` at run time. Fill these four in:
+SMB_HOST="10.0.10.51"           # NAS1 (Synology DS713+) — serves the media library
+SMB_USER="serveradmin"          # NAS1 admin login (same account used elsewhere)
+PASS_PATH="Homelab/synology/nas1"  # `pass` entry holding NAS1's password (line 1)
+SHARE_PORT=445                  # SMB port (probed for the LAN gate)
+
+MOUNT_BASE="$HOME/Media"        # mountpoints land at $MOUNT_BASE/<local dir>
+
+# "<local dir>|<SMB share/subpath>" — the SMB shared folder is `data`; the media
+# library lives at data/media/* (= NAS1 /volume1/data/media, the same tree Plex
+# and the *arr stack serve). Names verified live against the NAS, case-sensitive.
+SHARES=(
+  "Music|data/media/music"
+  "Movies|data/media/movies"
+  "TV-Shows|data/media/tv"
+)
+
+# rclone VFS tuning. cache-mode=full makes each opened file behave like a truly
+# local file (instant scrub/seek in VLC & mpv — the most player-compatible
+# setup). Caps below bound the on-disk cache PER share, so three mounts use at
+# most ~3× this. Flip to `--vfs-cache-mode off` for pure streaming with zero
+# disk cache if you'd rather not spend the space.
+RCLONE_FLAGS=(
+  --read-only                   # playback only — never risk writing the library
+  --vfs-cache-mode full
+  --vfs-cache-max-size 4G       # per mount
+  --vfs-cache-max-age 6h
+  --dir-cache-time 24h
+  --buffer-size 32M
+  --attr-timeout 5s
+  --daemon                      # background; parent returns once mounted
+  --daemon-timeout 10m
+)
+# ─────────────────────────────────────────────────────────────────────────────
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/media-shares"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/media-shares"
+mkdir -p "$STATE" "$CACHE"
+
+c_blue=$'\033[1;34m'; c_grn=$'\033[1;32m'; c_red=$'\033[1;31m'; c_yel=$'\033[1;33m'; c_rst=$'\033[0m'
+note() { printf '%s▶%s %s\n' "$c_blue" "$c_rst" "$*"; }
+ok()   { printf '%s✓%s %s\n' "$c_grn" "$c_rst" "$*"; }
+warn() { printf '%s!%s %s\n' "$c_yel" "$c_rst" "$*" >&2; }
+err()  { printf '%s✗%s %s\n' "$c_red" "$c_rst" "$*" >&2; }
+# notify <urgency> <icon> <title> <body>
+notify() {
+  command -v notify-send >/dev/null 2>&1 || return 0
+  notify-send -a "Media Shares" -u "$1" -i "$2" "$3" "${4:-}" || true
+}
+
+# TCP-probe the SMB host — this is the "am I on the homelab LAN?" test. More
+# robust than SSID/subnet matching: it survives DHCP/VLAN changes and ignores
+# Tailscale (which could reach the NAS slowly from anywhere — we only want the
+# fast local path). 1s timeout so an off-LAN toggle fails instantly.
+lan_up() {
+  timeout 1 bash -c "exec 3<>/dev/tcp/${SMB_HOST}/${SHARE_PORT}" 2>/dev/null
+}
+
+any_mounted() {
+  local s d
+  for s in "${SHARES[@]}"; do d="${s%%|*}"; mountpoint -q "$MOUNT_BASE/$d" && return 0; done
+  return 1
+}
+
+mount_one() {
+  local dir="$1" share="$2" mp="$MOUNT_BASE/$dir"
+  mkdir -p "$mp"
+  mountpoint -q "$mp" && { ok "$dir already mounted"; return 0; }
+
+  RCLONE_SMB_PASS="$(pass show "$PASS_PATH" | head -n1 | rclone obscure -)" \
+  rclone mount \
+    --smb-host "$SMB_HOST" --smb-user "$SMB_USER" \
+    --cache-dir "$CACHE" \
+    --log-file "$STATE/rclone-${dir}.log" --log-level INFO \
+    "${RCLONE_FLAGS[@]}" \
+    ":smb:${share}" "$mp"
+
+  # --daemon returns once the mount is live; give it a couple beats to settle.
+  local i
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    mountpoint -q "$mp" && { ok "mounted $dir"; return 0; }
+    sleep 0.5
+  done
+  err "failed to mount $dir (see $STATE/rclone-${dir}.log)"
+  return 1
+}
+
+unmount_one() {
+  local dir="$1" mp="$MOUNT_BASE/$dir"
+  mountpoint -q "$mp" || { ok "$dir not mounted"; return 0; }
+  if fusermount -u "$mp" 2>/dev/null; then ok "unmounted $dir"; return 0; fi
+  # busy? force lazy so it detaches even if a player still holds a handle.
+  fusermount -uz "$mp" 2>/dev/null && { warn "$dir was busy — lazily unmounted"; return 0; }
+  err "could not unmount $dir"; return 1
+}
+
+do_mount() {
+  if ! lan_up; then
+    err "SMB host ${SMB_HOST}:${SHARE_PORT} unreachable — not on the homelab LAN."
+    notify normal network-offline "Not on homelab LAN" "Connect to the LAN, then try again."
+    return 1
+  fi
+  note "Mounting media shares from ${SMB_HOST}…"
+  local s dir share fail=0 done_names=()
+  for s in "${SHARES[@]}"; do
+    dir="${s%%|*}"; share="${s##*|}"
+    if mount_one "$dir" "$share"; then done_names+=("$dir"); else fail=1; fi
+  done
+  if (( fail )); then
+    notify critical dialog-error "Media shares: partial mount" "Some shares failed — see logs in $STATE."
+    return 1
+  fi
+  ok "All shares mounted under $MOUNT_BASE"
+  notify normal network-server "Media shares mounted" "$(IFS=', '; echo "${done_names[*]}") → $MOUNT_BASE"
+}
+
+do_unmount() {
+  note "Unmounting media shares…"
+  local s dir fail=0
+  for s in "${SHARES[@]}"; do dir="${s%%|*}"; unmount_one "$dir" || fail=1; done
+  if (( fail )); then
+    notify critical dialog-error "Media shares: unmount trouble" "One or more shares wouldn't detach — see $STATE."
+    return 1
+  fi
+  ok "All shares unmounted"
+  notify normal media-eject "Media shares unmounted" "Safe — nothing mounted."
+}
+
+do_status() {
+  local s dir mp
+  for s in "${SHARES[@]}"; do
+    dir="${s%%|*}"; mp="$MOUNT_BASE/$dir"
+    if mountpoint -q "$mp"; then ok "$dir  →  $mp"; else printf '  %s not mounted\n' "$dir"; fi
+  done
+  lan_up && note "homelab LAN: reachable (${SMB_HOST})" || warn "homelab LAN: NOT reachable (${SMB_HOST})"
+}
+
+# Timer entrypoint: only ever unmounts, and only when we've left the LAN. Quiet
+# by design — acts once on the transition, then no-ops (nothing mounted) so it
+# never spams. Never mounts.
+do_guard() {
+  any_mounted || exit 0
+  lan_up && exit 0
+  err "Off the homelab LAN with shares still mounted — auto-unmounting."
+  local s dir
+  for s in "${SHARES[@]}"; do dir="${s%%|*}"; unmount_one "$dir"; done
+  notify normal media-eject "Media shares auto-unmounted" "Left the homelab LAN — mounts released."
+}
+
+case "${1:-toggle}" in
+  toggle)   if any_mounted; then do_unmount; else do_mount; fi ;;
+  mount)    do_mount ;;
+  unmount)  do_unmount ;;
+  status)   do_status ;;
+  guard)    do_guard ;;
+  *) err "usage: media-shares [toggle|mount|unmount|status|guard]"; exit 2 ;;
+esac

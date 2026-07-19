@@ -354,6 +354,7 @@ binds {
     Mod+T     hotkey-overlay-title="fzf: switch focused window" { spawn "kitty" "--class" "window-switcher" "--" "niri-window-switch"; }
     Mod+E     hotkey-overlay-title="fzf: workspace template (Environment) — open/close" { spawn "kitty" "--class" "workspace-template-popup" "--" "niri-workspace-template-popup"; }
     Mod+Y     hotkey-overlay-title="Sync Hiby music microSD → safe eject" { spawn "kitty" "--class" "music-sync-popup" "--" "music-sync-sd.sh"; }
+    Mod+Shift+P hotkey-overlay-title="Toggle Plex media shares (mount/unmount ~/Media)" { spawn "media-shares" "toggle"; }
 
     // === Launchers ===
     Mod+Return       hotkey-overlay-title="Kitty: session picker (zoxide dirs + ssh)" { spawn "kitty-session" "--pick"; }

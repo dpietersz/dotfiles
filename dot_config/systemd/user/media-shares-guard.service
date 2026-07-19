@@ -1,0 +1,6 @@
+[Unit]
+Description=Auto-unmount Plex media shares when off the homelab LAN
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/scripts/media-shares guard

@@ -1,0 +1,15 @@
+{{- if and (not .remote) .isBluefin -}}
+#!/bin/bash
+# Enable the media-shares guard user timer (auto-unmounts the Plex media shares
+# when we leave the homelab LAN). Rootless; only meaningful on the niri laptops,
+# so it's gated on .isBluefin like the rest of the WM stack. Idempotent.
+set -euo pipefail
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "media-shares-guard: systemctl missing, skipping enable" >&2
+  exit 0
+fi
+
+systemctl --user daemon-reload
+systemctl --user enable --now media-shares-guard.timer
+{{- end }}
