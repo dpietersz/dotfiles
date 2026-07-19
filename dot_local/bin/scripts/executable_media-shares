@@ -41,22 +41,31 @@ SHARES=(
   "TV-Shows|data/media/tv"
 )
 
-# rclone VFS tuning. cache-mode=full makes each opened file behave like a truly
-# local file (instant scrub/seek in VLC & mpv — the most player-compatible
-# setup). Caps below bound the on-disk cache PER share, so three mounts use at
-# most ~3× this. Flip to `--vfs-cache-mode off` for pure streaming with zero
-# disk cache if you'd rather not spend the space.
+# Playback cache strategy — flip CACHE_MODE to switch (that's the only change):
+#   full → each opened file is cached to disk, so it behaves like a truly local
+#          file: instant scrub/seek in VLC & mpv (the most player-compatible
+#          setup). Bounded by the caps below, PER mount — three mounts use at
+#          most ~3× VFS_CACHE_MAX_SIZE of disk, auto-evicted by size + age.
+#   off  → pure streaming, zero disk cache. Reads go straight to SMB (which
+#          supports range reads, so seeking still works). Pick this if large
+#          movies churn the laptop SSD; costs a little more network on seek.
+CACHE_MODE="full"               # "full" (default) or "off"
+VFS_CACHE_MAX_SIZE="4G"         # per mount — only used when CACHE_MODE=full
+VFS_CACHE_MAX_AGE="6h"          # per mount — only used when CACHE_MODE=full
+
 RCLONE_FLAGS=(
   --read-only                   # playback only — never risk writing the library
-  --vfs-cache-mode full
-  --vfs-cache-max-size 4G       # per mount
-  --vfs-cache-max-age 6h
+  --vfs-cache-mode "$CACHE_MODE"
   --dir-cache-time 24h
   --buffer-size 32M
   --attr-timeout 5s
   --daemon                      # background; parent returns once mounted
   --daemon-timeout 10m
 )
+# Cache caps only apply to full mode; in off mode nothing is written to disk.
+if [ "$CACHE_MODE" = "full" ]; then
+  RCLONE_FLAGS+=(--vfs-cache-max-size "$VFS_CACHE_MAX_SIZE" --vfs-cache-max-age "$VFS_CACHE_MAX_AGE")
+fi
 # ─────────────────────────────────────────────────────────────────────────────
 
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/media-shares"
