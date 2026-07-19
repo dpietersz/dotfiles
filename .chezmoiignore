@@ -1,7 +1,8 @@
 # Files chezmoi should NOT manage in the destination.
 #
 # .pi/agent/settings.json — pi mutates this at runtime (theme, default model,
-#   changelog version). Templating it would clobber user preferences on every
+#   changelog version). Templating it would clobber runtime state on every
 #   apply. The starter template at dot_pi/agent/settings.json stays in source
-#   for documentation only and is not deployed.
+#   for documentation only and is not deployed. Managed preferences such as
+#   the Gruvbox theme are merged by run_onchange_after_02e-configure-pi-theme.
 .pi/agent/settings.json

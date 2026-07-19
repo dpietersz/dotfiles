@@ -18,13 +18,16 @@ extensions/
 └── tools/                  # Custom tools (auto-discovered by index.ts)
 skills/                     # 9 skills loaded on-demand via progressive disclosure
 standards/                  # Code quality and security rules
-settings.json               # Pi preferences: model, theme, packages
+themes/                     # Managed custom themes (Gruvbox Dark)
+settings.json               # Starter/reference preferences; runtime file is merge-managed
 traits.yaml                 # Behavioral trait definitions (expertise, personality, approach)
 ```
 
 ## Key Files
 
-- `settings.json` — Default provider/model (`openai-codex` / `gpt-5.5`), theme (`midnight-ocean`), thinking level (`high`), installed packages
+- `settings.json` — Starter/reference provider/model (`openai-codex` / `gpt-5.5`), theme (`gruvbox-dark`), thinking level (`high`), installed packages
+- `themes/gruvbox-dark.json` — Managed Pi Gruvbox theme; deployed to `~/.pi/agent/themes/`
+- `.chezmoiscripts/run_onchange_after_02e-configure-pi-theme.sh.tmpl` — Atomically merges the selected theme into Pi's mutable runtime settings
 - `traits.yaml` — Three trait dimensions (expertise, personality, approach) + presets (security-auditor, careful-implementer, deep-researcher, etc.)
 - `agents/agent-template.hbs` — Handlebars template composing agent context + traits into system prompt
 - `extensions/caveman-mode.ts` — Injects always-on Caveman full-mode brevity rules into the system prompt

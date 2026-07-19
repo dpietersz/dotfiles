@@ -1,0 +1,30 @@
+#!/bin/bash
+# Pi theme hash: {{ include "dot_pi/agent/themes/gruvbox-dark.json" | sha256sum }}
+
+set -euo pipefail
+
+SETTINGS="$HOME/.pi/agent/settings.json"
+THEME="gruvbox-dark"
+
+command -v jq >/dev/null 2>&1 || {
+  echo "[pi-theme] jq not installed; skipping."
+  exit 0
+}
+
+mkdir -p "$(dirname "$SETTINGS")"
+if [ ! -f "$SETTINGS" ]; then
+  printf '{}\n' > "$SETTINGS"
+  chmod 600 "$SETTINGS"
+fi
+
+if [ "$(jq -r '.theme // empty' "$SETTINGS")" = "$THEME" ]; then
+  exit 0
+fi
+
+echo "[pi-theme] selecting $THEME"
+tmp=$(mktemp "${SETTINGS}.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+jq --arg theme "$THEME" '.theme = $theme' "$SETTINGS" > "$tmp"
+chmod --reference="$SETTINGS" "$tmp"
+mv -f "$tmp" "$SETTINGS"
+trap - EXIT

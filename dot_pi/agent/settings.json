@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.61.0",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
-  "theme": "midnight-ocean",
+  "theme": "gruvbox-dark",
   "defaultThinkingLevel": "high",
   "packages": [
     "npm:pi-powerline-footer",
